@@ -1,11 +1,21 @@
 "use client";
+import Toolbar from "@/components/PublicToolbar";
+
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="font-sans min-h-screen bg-white text-[#1a2940]">
-      {/* Main content */}
-      <main className="flex flex-col gap-8 items-center justify-center min-h-[80vh] p-8 bg-white border border-[#e5e7eb] rounded-xl shadow-md mx-4 mt-8">
-        <h1 className="text-3xl font-bold text-[#1a2940] text-center mb-2 mt-2">Fast, Secure, and Hassle-Free NDAs.</h1>
-        <p className="text-lg text-[#233366] text-center mb-4">CONFIDO helps companies create, negotiate, and sign NDAs in minutes — not days.</p>
+      {/* Top bar */}
+      <nav className="flex items-center justify-between px-6 py-4 border-b bg-[#1a2940] text-white">
+        {/* Left: Dropdown menu */}
+        <div className="relative flex-1">
+        <button
+          className="px-4 py-2 rounded bg-[#233366] hover:bg-[#2d4373] font-medium text-sm flex items-center gap-2 transition text-white"
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <Toolbar />
+          <span>Menu</span>
+        </button>
         <button
           className="bg-[#2563eb] hover:bg-[#1e40af] text-white font-semibold text-lg px-6 py-3 rounded-full shadow transition mb-6"
           onClick={() => {
