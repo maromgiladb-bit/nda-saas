@@ -40,6 +40,9 @@ export default function Toolbar({ }: { showSignOut?: boolean }) {
                 <Link href="/templates" className="block px-4 py-2 text-white hover:bg-[#2d4373]">Templates</Link>
               </li>
               <li>
+                <Link href="/companydetails" className="block px-4 py-2 text-white hover:bg-[#2d4373]">Company Details</Link>
+              </li>
+              <li>
                 <Link href="/settings" className="block px-4 py-2 text-white hover:bg-[#2d4373]">Settings</Link>
               </li>
               <li>

@@ -1,5 +1,4 @@
 "use client";
-import PrivateToolbar from "@/components/PrivateToolbar";
 import Link from "next/link";
 
 export default function Dashboard() {
@@ -23,6 +22,8 @@ export default function Dashboard() {
   // Quick actions
   const quickActions = [
     { label: "+ New NDA", href: "/ndas/new", color: "bg-[#2563eb] hover:bg-[#1e40af]" },
+    { label: "Create NDA (dev)", href: "/createnda", color: "bg-green-600 hover:bg-green-700" },
+    { label: "Fill NDA PDF", href: "/fillnda", color: "bg-yellow-500 hover:bg-yellow-600" },
     { label: "Manage Templates", href: "/templates", color: "bg-[#233366] hover:bg-[#1a2940]" },
     { label: "Invite Teammate", href: "/settings/users", color: "bg-[#3b82f6] hover:bg-[#60a5fa]" },
   ];

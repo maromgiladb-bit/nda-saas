@@ -1,0 +1,71 @@
+{
+  "templateId": "mutual-nda-v2",
+  "version": 2,
+  "description": "Field schema for Mutual NDA v2 where all placeholders are grouped at the top of the document.",
+  "fields": [
+    { "name": "effective_date", "label": "Effective Date", "type": "date", "required": true, "docx": true },
+    { "name": "term_months", "label": "Term (months)", "type": "number", "required": true, "min": 1, "max": 60, "docx": true },
+    { "name": "confidentiality_period_months", "label": "Confidentiality Period (months after termination)", "type": "number", "required": true, "min": 1, "max": 120, "docx": true },
+    { "name": "party_a_name", "label": "Party A – Company Name", "type": "text", "required": true, "docx": true },
+    { "name": "party_a_address", "label": "Party A – Address", "type": "text", "required": true, "docx": true },
+    { "name": "party_a_signatory_name", "label": "Party A – Signatory Name", "type": "text", "required": true, "docx": true },
+    { "name": "party_a_title", "label": "Party A – Signatory Title", "type": "text", "required": true, "docx": true },
+    { "name": "party_b_name", "label": "Party B – Company Name", "type": "text", "required": true, "docx": true },
+    { "name": "party_b_address", "label": "Party B – Address", "type": "text", "required": true, "docx": true },
+    { "name": "party_b_signatory_name", "label": "Party B – Signatory Name", "type": "text", "required": true, "docx": true },
+    { "name": "party_b_title", "label": "Party B – Signatory Title", "type": "text", "required": true, "docx": true },
+    { "name": "party_b_email", "label": "Party B – Email (for sending)", "type": "email", "required": true, "docx": false },
+    { "name": "governing_law", "label": "Governing Law", "type": "select", "required": true, "options": ["IL", "NY", "DE", "UK", "CA"], "docx": true },
+    { "name": "ip_ownership", "label": "IP Ownership", "type": "select", "required": true, "options": ["each_owns_its_ip", "recipient_assigns"], "docx": true },
+    { "name": "non_solicit", "label": "Non-Solicitation (Optional)", "type": "boolean", "required": false, "docx": true },
+    { "name": "exclusivity", "label": "Exclusivity (Optional)", "type": "boolean", "required": false, "docx": true }
+  ],
+  "editableRules": {
+    "counterparty": {
+      "term_months": { "min": 12, "max": 36 },
+      "confidentiality_period_months": { "min": 6, "max": 60 },
+      "governing_law": ["IL", "NY", "DE"],
+      "ip_ownership": ["each_owns_its_ip", "recipient_assigns"],
+      "non_solicit": { "toggle": true },
+      "exclusivity": { "toggle": true }
+    }
+  },
+  "ui": {
+    "sections": [
+      {
+        "title": "Agreement Information",
+        "fields": ["effective_date", "term_months", "confidentiality_period_months"]
+      },
+      {
+        "title": "Party A",
+        "fields": ["party_a_name", "party_a_address", "party_a_signatory_name", "party_a_title"]
+      },
+      {
+        "title": "Party B",
+        "fields": ["party_b_name", "party_b_address", "party_b_signatory_name", "party_b_title", "party_b_email"]
+      },
+      {
+        "title": "Additional Terms",
+        "fields": ["governing_law", "ip_ownership", "non_solicit", "exclusivity"]
+      }
+    ]
+  },
+  "examples": {
+    "effective_date": "2025-01-31",
+    "term_months": 24,
+    "confidentiality_period_months": 36,
+    "party_a_name": "Confido Ltd.",
+    "party_a_address": "12 Herzl St, Tel Aviv, Israel",
+    "party_a_signatory_name": "Dana Cohen",
+    "party_a_title": "CEO",
+    "party_b_name": "Acme Inc.",
+    "party_b_address": "500 Market St, San Francisco, CA",
+    "party_b_signatory_name": "Sam Taylor",
+    "party_b_title": "CFO",
+    "party_b_email": "legal@acme.com",
+    "governing_law": "IL",
+    "ip_ownership": "each_owns_its_ip",
+    "non_solicit": false,
+    "exclusivity": false
+  }
+}
