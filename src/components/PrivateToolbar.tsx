@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Pacifico } from "next/font/google";
 import { SignOutButton } from "@clerk/nextjs";
 
@@ -8,11 +8,32 @@ const pacifico = Pacifico({ weight: "400", subsets: ["latin"], variable: "--font
 
 export default function Toolbar({ }: { showSignOut?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(target)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
+
   return (
     <nav className="flex items-center justify-between px-6 py-4 border-b bg-[#1a2940] text-white">
       {/* Left: Dropdown menu */}
-      <div className="relative flex-1">
+      <div className="relative flex-1" ref={menuRef}>
         <button
+          ref={buttonRef}
           className="px-4 py-2 rounded bg-[#233366] hover:bg-[#2d4373] font-medium text-sm flex items-center gap-2 transition text-white"
           onClick={() => setMenuOpen((open) => !open)}
           aria-haspopup="true"
@@ -34,7 +55,7 @@ export default function Toolbar({ }: { showSignOut?: boolean }) {
                 <Link href="/dashboard" className="block px-4 py-2 text-white hover:bg-[#2d4373]">Dashboard</Link>
               </li>
               <li>
-                <Link href="/ndas" className="block px-4 py-2 text-white hover:bg-[#2d4373]">My NDAs</Link>
+                <Link href="/mynda" className="block px-4 py-2 text-white hover:bg-[#2d4373]">My NDAs</Link>
               </li>
               <li>
                 <Link href="/templates" className="block px-4 py-2 text-white hover:bg-[#2d4373]">Templates</Link>

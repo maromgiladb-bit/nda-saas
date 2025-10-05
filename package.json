@@ -13,6 +13,7 @@
     "docxtemplater": "^3.66.5",
     "next": "15.5.4",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.4.149",
     "pizzip": "^3.2.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
