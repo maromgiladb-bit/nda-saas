@@ -1,74 +1,123 @@
 "use client";
-import Link from "next/link";
+import React from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 export default function Dashboard() {
-  // ...existing code...
-  // Mocked status counts
-  const statusCards = [
-    { label: "Drafts", count: 3, href: "/ndas?status=draft", icon: "📝" },
-    { label: "Sent", count: 7, href: "/ndas?status=sent", icon: "📤" },
-    { label: "Negotiating", count: 2, href: "/ndas?status=negotiating", icon: "🔄" },
-    { label: "Signed", count: 12, href: "/ndas?status=signed", icon: "✅" },
-    { label: "Archived", count: 5, href: "/ndas?status=archived", icon: "📦" },
-  ];
-  // Mocked recent activity
-  const recentActivity = [
-    { text: "NDA with Acme Inc. signed ✅", time: "Yesterday" },
-    { text: "Draft with BetaCorp edited ✏️", time: "2 days ago" },
-    { text: "Counterparty proposed changes to NDA with Gamma Ltd. 🔄", time: "3 days ago" },
-    { text: "NDA with Delta LLC archived 📦", time: "4 days ago" },
-    { text: "New NDA created for Epsilon GmbH 📝", time: "5 days ago" },
-  ];
-  // Quick actions
-  const quickActions = [
-    { label: "+ New NDA", href: "/ndas/new", color: "bg-[#2563eb] hover:bg-[#1e40af]" },
-    { label: "Create NDA (dev)", href: "/createnda", color: "bg-green-600 hover:bg-green-700" },
-    { label: "Fill NDA PDF", href: "/fillnda", color: "bg-yellow-500 hover:bg-yellow-600" },
-    { label: "Manage Templates", href: "/templates", color: "bg-[#233366] hover:bg-[#1a2940]" },
-    { label: "Invite Teammate", href: "/settings/users", color: "bg-[#3b82f6] hover:bg-[#60a5fa]" },
-  ];
+  const router = useRouter();
+  const { user } = useUser();
 
   return (
-    <div className="font-sans min-h-screen bg-white text-[#1a2940]">
-      
-      {/* <PrivateToolbar /> Removed as per patch */}
-      <main className="flex flex-col gap-8 items-center justify-center min-h-[80vh] p-8 bg-white border border-[#e5e7eb] rounded-xl shadow-md mx-4 mt-8">
-        {/* Header */}
-        <header className="mb-6 w-full text-center">
-          <h1 className="text-3xl font-bold text-[#1a2940]">Dashboard</h1>
-          <p className="text-lg text-[#233366] mt-2">Welcome back, here&apos;s what&apos;s happening with your NDAs</p>
-        </header>
-        {/* Status Summary Cards */}
-        <section className="grid grid-cols-2 md:grid-cols-5 gap-6 w-full max-w-5xl mb-8">
-          {statusCards.map((card) => (
-            <Link key={card.label} href={card.href} className="bg-[#f3f6fb] border border-[#e0e7ff] rounded-xl p-6 text-center shadow-sm hover:shadow-md transition flex flex-col items-center group">
-              <span className="text-3xl mb-2">{card.icon}</span>
-              <span className="text-2xl font-bold text-[#1a2940] group-hover:text-[#2563eb]">{card.count}</span>
-              <span className="text-base text-[#233366] mt-1">{card.label}</span>
-            </Link>
-          ))}
-        </section>
-        {/* Recent Activity Feed */}
-        <section className="w-full max-w-3xl mb-8">
-          <h2 className="text-xl font-semibold text-[#1a2940] mb-4">Recent Activity</h2>
-          <ul className="divide-y divide-[#e0e7ff] bg-[#f3f6fb] rounded-xl shadow-sm">
-            {recentActivity.map((event, idx) => (
-              <li key={idx} className="flex justify-between items-center px-6 py-4">
-                <span className="text-base text-[#233366]">{event.text}</span>
-                <span className="text-xs text-[#1a2940]">{event.time}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-        {/* Quick Actions */}
-        <section className="w-full max-w-3xl flex flex-col md:flex-row gap-4 justify-center items-center mt-4">
-          {quickActions.map((action) => (
-            <Link key={action.label} href={action.href} className={`text-white font-semibold text-lg px-6 py-3 rounded-full shadow transition ${action.color}`}>
-              {action.label}
-            </Link>
-          ))}
-        </section>
-      </main>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="bg-white shadow rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">
+            Welcome to your Dashboard
+          </h1>
+          
+          {user && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                Hello, {user.firstName || user.emailAddresses[0]?.emailAddress}!
+              </h2>
+              <p className="text-gray-600">
+                Manage your NDAs and account settings from here.
+              </p>
+            </div>
+          )}
+
+          {/* Quick Stats */}
+          <div className="mb-8 border-b pb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Overview</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {JSON.parse(localStorage.getItem("ndaDrafts") || "[]").length}
+                </div>
+                <div className="text-sm text-gray-600">Total Drafts</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">0</div>
+                <div className="text-sm text-gray-600">Signed NDAs</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">0</div>
+                <div className="text-sm text-gray-600">Pending</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-600">0</div>
+                <div className="text-sm text-gray-600">Templates</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Drafts Card */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-center mb-4">
+                <div className="bg-blue-600 text-white p-3 rounded-lg">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 ml-3">My NDAs</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                View and manage your draft NDAs, continue editing, or create new ones.
+              </p>
+              <button
+                onClick={() => router.push("/mynda")}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                View Drafts
+              </button>
+            </div>
+
+            {/* Create New NDA Card */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-center mb-4">
+                <div className="bg-green-600 text-white p-3 rounded-lg">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 ml-3">Create NDA</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Start a new NDA document with our easy-to-use template.
+              </p>
+              <button
+                onClick={() => router.push("/newnda")}
+                className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                Create New
+              </button>
+            </div>
+
+            {/* Account Settings Card */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-center mb-4">
+                <div className="bg-purple-600 text-white p-3 rounded-lg">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 ml-3">Account</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Manage your account settings, billing, and preferences.
+              </p>
+              <button
+                onClick={() => window.alert("Account settings coming soon!")}
+                className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              >
+                Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

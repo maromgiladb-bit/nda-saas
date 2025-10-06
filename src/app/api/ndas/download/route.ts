@@ -1,27 +1,25 @@
 import { NextRequest } from "next/server";
-import path from "path";
 import fs from "fs/promises";
+import path from "path";
+
+const TMP_DIR = path.join(process.cwd(), "tmp");
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const filename = searchParams.get("f");
-  if (!filename) {
-    return new Response("Missing filename", { status: 400 });
+  const fileName = searchParams.get("f");
+  if (!fileName || !fileName.endsWith(".pdf")) {
+    return new Response("Invalid file", { status: 400 });
   }
-  const filePath = path.join("/tmp", filename);
+  const filePath = path.join(TMP_DIR, fileName);
   try {
     const file = await fs.readFile(filePath);
-    // Convert Buffer to Uint8Array for Response compatibility
-    const fileData = new Uint8Array(file);
-    return new Response(fileData, {
-      status: 200,
+    return new Response(file, {
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "Content-Disposition": `attachment; filename=\"${filename}\"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": 'inline; filename="preview.pdf"',
       },
     });
-  } catch (err) {
-    console.error("Download error:", err);
+  } catch {
     return new Response("File not found", { status: 404 });
   }
 }

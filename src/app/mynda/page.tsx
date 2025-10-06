@@ -39,39 +39,78 @@ export default function MyNDAListPage() {
     setDrafts(localDrafts);
   }, []);
 
+  // Categorize NDAs
+  const signedNDAs = sentNDAs.filter(nda => nda.status === "Signed");
+  const negotiatingNDAs = sentNDAs.filter(nda => nda.status === "Negotiating");
+  const archivedNDAs = sentNDAs.filter(nda => nda.status === "Archived");
+
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">My NDAs</h1>
-        <Link href="/fillnda">
+        <Link href="/newnda">
           <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-semibold">+ New NDA</button>
         </Link>
       </div>
-      {/* Sent NDAs Table */}
-      <table className="w-full border rounded shadow text-left mb-12">
+
+      {/* Negotiating NDAs Table */}
+      <h2 className="text-xl font-bold mb-4">NDAs in Negotiation</h2>
+      <table className="w-full border rounded shadow text-left mb-8">
         <thead className="bg-gray-100">
           <tr>
             <th className="px-4 py-2">Name</th>
             <th className="px-4 py-2">Counterparty</th>
-            <th className="px-4 py-2">Status</th>
             <th className="px-4 py-2">Updated</th>
             <th className="px-4 py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {sentNDAs.map(nda => (
-            <tr key={nda.id} className="border-t">
-              <td className="px-4 py-2">{nda.name}</td>
-              <td className="px-4 py-2">{nda.counterparty}</td>
-              <td className="px-4 py-2">{nda.status}</td>
-              <td className="px-4 py-2">{nda.updated}</td>
-              <td className="px-4 py-2">
-                <Link href={`/ndas/${nda.id}`} className="text-blue-600 hover:underline">View</Link>
-              </td>
-            </tr>
-          ))}
+          {negotiatingNDAs.length === 0 ? (
+            <tr><td colSpan={4} className="text-gray-500 px-4 py-2">No NDAs in negotiation.</td></tr>
+          ) : (
+            negotiatingNDAs.map(nda => (
+              <tr key={nda.id} className="border-t">
+                <td className="px-4 py-2">{nda.name}</td>
+                <td className="px-4 py-2">{nda.counterparty}</td>
+                <td className="px-4 py-2">{nda.updated}</td>
+                <td className="px-4 py-2">
+                  <Link href={`/ndas/${nda.id}`} className="text-blue-600 hover:underline">View</Link>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
+
+      {/* Signed NDAs Table */}
+      <h2 className="text-xl font-bold mb-4">Signed NDAs</h2>
+      <table className="w-full border rounded shadow text-left mb-8">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="px-4 py-2">Name</th>
+            <th className="px-4 py-2">Counterparty</th>
+            <th className="px-4 py-2">Updated</th>
+            <th className="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {signedNDAs.length === 0 ? (
+            <tr><td colSpan={4} className="text-gray-500 px-4 py-2">No signed NDAs.</td></tr>
+          ) : (
+            signedNDAs.map(nda => (
+              <tr key={nda.id} className="border-t">
+                <td className="px-4 py-2">{nda.name}</td>
+                <td className="px-4 py-2">{nda.counterparty}</td>
+                <td className="px-4 py-2">{nda.updated}</td>
+                <td className="px-4 py-2">
+                  <Link href={`/ndas/${nda.id}`} className="text-blue-600 hover:underline">View</Link>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
       {/* Drafts Table */}
       <h2 className="text-xl font-bold mb-4">Drafts</h2>
       {drafts.length === 0 ? (
@@ -106,7 +145,7 @@ export default function MyNDAListPage() {
                     <button
                       className="px-2 py-1 bg-blue-600 text-white rounded mr-2 text-xs"
                       onClick={() => {
-                        window.open(`/fillnda?draftId=${draft.id}`, "_blank");
+                        window.open(`/newnda?draftId=${draft.id}`, "_blank");
                       }}
                     >
                       Open
@@ -116,12 +155,35 @@ export default function MyNDAListPage() {
                     <span
                       className="cursor-pointer inline-flex items-center justify-center"
                       title="Delete draft"
-                      onClick={() => {
+                      onClick={async () => {
                         if (window.confirm("Delete this draft?")) {
-                          const ndaDrafts = JSON.parse(localStorage.getItem("ndaDrafts") || "[]");
-                          const updated = ndaDrafts.filter((d: { id: string }) => d.id !== draft.id);
-                          localStorage.setItem("ndaDrafts", JSON.stringify(updated));
-                          window.location.reload();
+                          try {
+                            // First, delete the preview files from server
+                            const deleteResponse = await fetch('/api/ndas/delete', {
+                              method: 'DELETE',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({ draftId: draft.id }),
+                            });
+
+                            if (!deleteResponse.ok) {
+                              console.warn('Failed to delete server files:', await deleteResponse.text());
+                            }
+
+                            // Then, delete from localStorage
+                            const ndaDrafts = JSON.parse(localStorage.getItem("ndaDrafts") || "[]");
+                            const updated = ndaDrafts.filter((d: { id: string }) => d.id !== draft.id);
+                            localStorage.setItem("ndaDrafts", JSON.stringify(updated));
+                            window.location.reload();
+                          } catch (error) {
+                            console.error('Error deleting draft:', error);
+                            // Still proceed with localStorage deletion even if server deletion fails
+                            const ndaDrafts = JSON.parse(localStorage.getItem("ndaDrafts") || "[]");
+                            const updated = ndaDrafts.filter((d: { id: string }) => d.id !== draft.id);
+                            localStorage.setItem("ndaDrafts", JSON.stringify(updated));
+                            window.location.reload();
+                          }
                         }
                       }}
                     >
@@ -134,6 +196,35 @@ export default function MyNDAListPage() {
           </table>
         </div>
       )}
+
+      {/* Archived NDAs Table */}
+      <h2 className="text-xl font-bold mb-4">Archived NDAs</h2>
+      <table className="w-full border rounded shadow text-left mb-8">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="px-4 py-2">Name</th>
+            <th className="px-4 py-2">Counterparty</th>
+            <th className="px-4 py-2">Updated</th>
+            <th className="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {archivedNDAs.length === 0 ? (
+            <tr><td colSpan={4} className="text-gray-500 px-4 py-2">No archived NDAs.</td></tr>
+          ) : (
+            archivedNDAs.map(nda => (
+              <tr key={nda.id} className="border-t">
+                <td className="px-4 py-2">{nda.name}</td>
+                <td className="px-4 py-2">{nda.counterparty}</td>
+                <td className="px-4 py-2">{nda.updated}</td>
+                <td className="px-4 py-2">
+                  <Link href={`/ndas/${nda.id}`} className="text-blue-600 hover:underline">View</Link>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
