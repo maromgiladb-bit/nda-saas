@@ -1,14 +1,29 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import PublicToolbar from "@/components/PublicToolbar";
 
 export default function Dashboard() {
   const router = useRouter();
   const { user } = useUser();
+  const [draftCount, setDraftCount] = useState(0);
+
+  // Load draft count from localStorage on client side only
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const drafts = JSON.parse(localStorage.getItem("ndaDrafts") || "[]");
+        setDraftCount(drafts.length);
+      } catch {
+        setDraftCount(0);
+      }
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <PublicToolbar />
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="bg-white shadow rounded-lg p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">
@@ -32,7 +47,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
-                  {JSON.parse(localStorage.getItem("ndaDrafts") || "[]").length}
+                  {draftCount}
                 </div>
                 <div className="text-sm text-gray-600">Total Drafts</div>
               </div>

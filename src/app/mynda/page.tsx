@@ -1,6 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
+import { RedirectToSignIn } from "@clerk/nextjs";
+import PublicToolbar from "@/components/PublicToolbar";
 
 // Mock NDA data type
 interface NDA {
@@ -18,7 +21,7 @@ interface Draft {
   status: string;
   updated: string;
   pdfUrl?: string;
-  fieldValues?: Record<string, any>; // Added for field values
+  fieldValues?: Record<string, string | number | boolean>; // Added for field values
 }
 
 // Initial mock NDAs
@@ -29,6 +32,7 @@ const initialNDAs: NDA[] = [
 ];
 
 export default function MyNDAListPage() {
+  const { user, isLoaded } = useUser();
   const [sentNDAs, setSentNDAs] = useState<NDA[]>([]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
 
@@ -44,9 +48,28 @@ export default function MyNDAListPage() {
   const negotiatingNDAs = sentNDAs.filter(nda => nda.status === "Negotiating");
   const archivedNDAs = sentNDAs.filter(nda => nda.status === "Archived");
 
+  // Show loading while Clerk determines authentication state
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to sign-in if not authenticated
+  if (!user) {
+    return <RedirectToSignIn />;
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div>
+      <PublicToolbar />
+      <div className="max-w-4xl mx-auto p-8">
+        <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">My NDAs</h1>
         <Link href="/newnda">
           <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-semibold">+ New NDA</button>
@@ -135,7 +158,7 @@ export default function MyNDAListPage() {
                 status: string;
                 updated: string;
                 pdfUrl?: string;
-                fieldValues?: Record<string, string | boolean>;
+                fieldValues?: Record<string, string | number | boolean>;
               }) => (
                 <tr key={draft.id} className="border-b">
                   <td className="px-3 py-2 font-bold">{draft.name}</td>
@@ -225,6 +248,7 @@ export default function MyNDAListPage() {
           )}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }

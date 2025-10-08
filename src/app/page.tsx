@@ -1,60 +1,142 @@
-"use client";
+import Link from "next/link";
+import PublicToolbar from "@/components/PublicToolbar";
+
 export default function Home() {
   return (
-    <div className="font-sans min-h-screen bg-white text-[#1a2940]">
-      {/* Main content */}
-      <main className="flex flex-col gap-8 items-center justify-center min-h-[80vh] p-8 bg-white border border-[#e5e7eb] rounded-xl shadow-md mx-4 mt-8">
-        <h1 className="text-3xl font-bold text-[#1a2940] text-center mb-2 mt-2">Fast, Secure, and Hassle-Free NDAs.</h1>
-        <p className="text-lg text-[#233366] text-center mb-4">CONFIDO helps companies create, negotiate, and sign NDAs in minutes — not days.</p>
-        <button
-          className="bg-[#2563eb] hover:bg-[#1e40af] text-white font-semibold text-lg px-6 py-3 rounded-full shadow transition mb-6"
-          onClick={() => {
-            window.location.href = "/plans";
-          }}
-        >
-          Start a Free Trial
-        </button>
-        {/* Key Benefits section */}
-        <section className="w-full flex flex-col items-center mt-2 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-            <div className="bg-[#f3f6fb] border border-[#e0e7ff] rounded-xl p-6 text-center shadow-sm">
-              <h3 className="text-xl font-bold text-[#1a2940] mb-2">Save Time</h3>
-              <p className="text-base text-[#233366]">Stop rewriting the same NDA. Use templates and send instantly. Read only the relevant parts.</p>
-            </div>
-            <div className="bg-[#f3f6fb] border border-[#e0e7ff] rounded-xl p-6 text-center shadow-sm">
-              <h3 className="text-xl font-bold text-[#1a2940] mb-2">Negotiate Smarter</h3>
-              <p className="text-base text-[#233366]">Counterparties can propose changes with track-changes, so review is simple.</p>
-            </div>
-            <div className="bg-[#f3f6fb] border border-[#e0e7ff] rounded-xl p-6 text-center shadow-sm">
-              <h3 className="text-xl font-bold text-[#1a2940] mb-2">Stay Secure</h3>
-              <p className="text-base text-[#233366]">Every NDA is encrypted, logged, and safely stored.</p>
+    <div>
+      <PublicToolbar />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        {/* Hero Section */}
+        <section className="pt-16 pb-20 px-4">
+          <div className="max-w-6xl mx-auto text-center">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+              Create NDAs in
+              <span className="text-blue-600"> Minutes</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              Stop wasting time on legal paperwork. Our streamlined platform lets you generate, 
+              customize, and sign NDAs instantly with our trusted template.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/plans">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors shadow-lg">
+                  Choose Your Plan
+                </button>
+              </Link>
+              <Link href="/about">
+                <button className="border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-4 px-8 rounded-lg text-lg transition-colors">
+                  Learn More
+                </button>
+              </Link>
             </div>
           </div>
         </section>
-        {/* How It Works section */}
-        <section className="w-full flex flex-col items-center mb-8">
-          <h2 className="text-2xl font-bold text-[#1a2940] text-center mb-4">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-4xl">
-            <div className="bg-white border border-[#e0e7ff] rounded-xl p-6 text-center shadow-sm">
-              <h3 className="text-lg font-semibold text-[#233366] mb-2">Choose a Template</h3>
-              <p className="text-base text-[#233366]">Start with your standard NDA.</p>
-            </div>
-            <div className="bg-white border border-[#e0e7ff] rounded-xl p-6 text-center shadow-sm">
-              <h3 className="text-lg font-semibold text-[#233366] mb-2">Fill &amp; Send</h3>
-              <p className="text-base text-[#233366]">Add names, dates, and details in seconds.</p>
-            </div>
-            <div className="bg-white border border-[#e0e7ff] rounded-xl p-6 text-center shadow-sm">
-              <h3 className="text-lg font-semibold text-[#233366] mb-2">Negotiate or Sign</h3>
-              <p className="text-base text-[#233366]">Counterparty can suggest edits or sign immediately.</p>
-            </div>
-            <div className="bg-white border border-[#e0e7ff] rounded-xl p-6 text-center shadow-sm">
-              <h3 className="text-lg font-semibold text-[#233366] mb-2">Track Progress</h3>
-              <p className="text-base text-[#233366]">See statuses, reminders, and a full audit trail.</p>
+
+        {/* Features Section */}
+        <section className="py-16 px-4 bg-white">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+              Why Choose Our NDA Platform?
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center p-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">⚡</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Lightning Fast</h3>
+                <p className="text-gray-600">
+                  Generate professional NDAs in minutes, not days. No more back-and-forth with lawyers.
+                </p>
+              </div>
+              <div className="text-center p-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🔒</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Secure & Trusted</h3>
+                <p className="text-gray-600">
+                  Our legally vetted template ensures your confidential information stays protected.
+                </p>
+              </div>
+              <div className="text-center p-6">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">📄</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Professional Quality</h3>
+                <p className="text-gray-600">
+                  Get industry-standard NDAs that work for any business relationship or partnership.
+                </p>
+              </div>
             </div>
           </div>
         </section>
-        {/* ...removed Next.js logo and instructions... */}
-      </main>
+
+        {/* How It Works Section */}
+        <section className="py-16 px-4 bg-gray-50">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+              How It Works
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                  1
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Fill the Details</h3>
+                <p className="text-gray-600">
+                  Enter the key information: your company name, counterparty, and specific terms.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                  2
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Preview & Customize</h3>
+                <p className="text-gray-600">
+                  Review the generated NDA and make any necessary adjustments before finalizing.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                  3
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Send & Sign</h3>
+                <p className="text-gray-600">
+                  Download the final document or send it directly to the other party for signing.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-16 px-4 bg-blue-600">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              Ready to Streamline Your NDAs?
+            </h2>
+            <p className="text-xl text-blue-100 mb-8">
+              Join thousands of businesses who trust our platform for their confidentiality agreements.
+            </p>
+            <Link href="/plans">
+              <button className="bg-white text-blue-600 hover:bg-gray-100 font-semibold py-4 px-8 rounded-lg text-lg transition-colors shadow-lg">
+                Choose Your Plan
+              </button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="bg-gray-900 text-white py-8 px-4">
+          <div className="max-w-6xl mx-auto text-center">
+            <p className="text-gray-400">
+              © 2025 CONFIDO. All rights reserved. | 
+              <Link href="/about" className="hover:text-white ml-2">About</Link> | 
+              <Link href="/contact" className="hover:text-white ml-2">Contact</Link> | 
+              <Link href="/plans" className="hover:text-white ml-2">Plans</Link>
+            </p>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

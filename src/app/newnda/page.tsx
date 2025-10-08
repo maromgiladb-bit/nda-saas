@@ -1,6 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { RedirectToSignIn } from "@clerk/nextjs";
+import PublicToolbar from "@/components/PublicToolbar";
 
 const PDF_PATH = "/pdfs/mutual-nda-v3-fillable.pdf";
 const viewerSrc = `/pdfjs/web/viewer.html?file=${encodeURIComponent(PDF_PATH)}`;
@@ -8,6 +11,7 @@ const viewerSrc = `/pdfjs/web/viewer.html?file=${encodeURIComponent(PDF_PATH)}`;
 export default function NewNDA() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, isLoaded } = useUser();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [draftId, setDraftId] = useState("");
   const [lastSaved, setLastSaved] = useState("");
@@ -171,8 +175,26 @@ export default function NewNDA() {
     }
   }, [docName, counterpartyName, draftId, collectFields]);
 
+  // Show loading while Clerk determines authentication state
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to sign-in if not authenticated
+  if (!user) {
+    return <RedirectToSignIn />;
+  }
+
   return (
     <div className="flex flex-col h-screen">
+      <PublicToolbar />
       <div className="p-4 bg-white shadow-md">
         <h1 className="text-xl font-semibold">Fill NDA</h1>
         <div className="mt-2 text-sm text-gray-500">

@@ -1,54 +1,209 @@
+"use client";
+import React from "react";
+import Link from "next/link";
+import PublicToolbar from "@/components/PublicToolbar";
+
 export default function Plans() {
   return (
-    <div className="font-sans min-h-screen bg-white text-[#1a2940]">
-
-  {/* Main content (plans) */}
-  <main className="flex flex-col gap-8 items-center justify-center min-h-[80vh] p-8 bg-white border border-[#e5e7eb] rounded-xl shadow-md mx-4 mt-8">
-        {/* Headline and sub-headline */}
-        <h1 className="text-3xl font-bold text-[#1a2940] mb-2 text-center">Simple pricing. Scales with your company.</h1>
-        <p className="text-lg text-[#233366] mb-8 text-center">Start free, upgrade as you grow. All plans include secure NDA templates, negotiation, and e-signatures.</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-          {/* Pro Plan */}
-          <div className="bg-white border border-[#2563eb] rounded-xl p-8 shadow-md flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-[#2563eb] mb-2">Pro <span className="text-xs bg-[#2563eb] text-white px-2 py-1 rounded ml-2">Most Popular</span></h2>
-            <ul className="text-[#233366] text-base mb-6 space-y-2 text-left w-full max-w-xs">
-              <li>✅ Up to 10 users</li>
-              <li>✅ Unlimited NDAs</li>
-              <li>✅ Track-changes negotiation</li>
-              <li>✅ Relationship dashboard</li>
-              <li>✅ Email reminders</li>
-              <li>✅ Standard support</li>
-            </ul>
-            <div className="text-3xl font-bold text-[#1a2940] mb-2">$49 <span className="text-base font-normal">/ month per org</span></div>
-            <button className="bg-[#2563eb] hover:bg-[#1e40af] text-white font-semibold text-lg px-6 py-3 rounded-full shadow transition">Buy Pro</button>
+    <div>
+      <PublicToolbar />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        {/* Header Section */}
+        <section className="pt-16 pb-12 px-4">
+          <div className="max-w-6xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Choose Your Plan
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              Select the perfect plan for your NDA needs. Start with our free option or unlock premium features for your business.
+            </p>
           </div>
+        </section>
 
-          {/* Enterprise Plan */}
-          <div className="bg-white border border-[#1a2940] rounded-xl p-8 shadow-md flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-[#1a2940] mb-2">Enterprise</h2>
-            <ul className="text-[#233366] text-base mb-6 space-y-2 text-left w-full max-w-xs">
-              <li>✅ Unlimited users</li>
-              <li>✅ Unlimited NDAs</li>
-              <li>✅ Advanced template rules &amp; API access</li>
-              <li>✅ Audit log exports</li>
-              <li>✅ Dedicated account manager</li>
-              <li>✅ SSO (Single Sign-On) &amp; security policies</li>
-            </ul>
-            <div className="text-xl font-bold text-[#1a2940] mb-2">Custom pricing</div>
-            <button className="bg-[#233366] hover:bg-[#1a2940] text-white font-semibold text-lg px-6 py-3 rounded-full shadow transition">Contact Sales</button>
-          </div>
-        </div>
+        {/* Pricing Cards */}
+        <section className="pb-20 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-8">
+              
+              {/* Free Plan */}
+              <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
+                  <div className="text-4xl font-bold text-gray-900 mb-4">
+                    $0<span className="text-lg font-normal text-gray-600">/month</span>
+                  </div>
+                  <p className="text-gray-600 mb-6">Perfect for individuals and small projects</p>
+                </div>
+                
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Up to 3 NDAs per month
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Basic template
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    PDF download
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Email support
+                  </li>
+                </ul>
+                
+                <Link href="/newnda">
+                  <button className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Get Started Free
+                  </button>
+                </Link>
+              </div>
 
-        {/* Bottom call-to-action */}
-        <div className="w-full flex flex-col items-center mt-12">
-          <p className="text-lg text-[#233366] text-center mb-4">Don’t let NDAs slow you down. Choose a plan and start today.</p>
-          <div className="flex gap-4">
-            <button className="bg-[#2563eb] hover:bg-[#1e40af] text-white font-semibold text-lg px-6 py-3 rounded-full shadow transition">Start Free Trial</button>
-            <button className="bg-[#233366] hover:bg-[#1a2940] text-white font-semibold text-lg px-6 py-3 rounded-full shadow transition">Contact Sales</button>
+              {/* Pro Plan - Most Popular */}
+              <div className="bg-white rounded-xl shadow-xl p-8 border-2 border-blue-500 relative">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    Most Popular
+                  </span>
+                </div>
+                
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro</h3>
+                  <div className="text-4xl font-bold text-blue-600 mb-4">
+                    $29<span className="text-lg font-normal text-gray-600">/month</span>
+                  </div>
+                  <p className="text-gray-600 mb-6">Ideal for small to medium businesses</p>
+                </div>
+                
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Unlimited NDAs
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Advanced templates
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Custom branding
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    E-signature integration
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Priority support
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Analytics dashboard
+                  </li>
+                </ul>
+                
+                <Link href="/newnda">
+                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Start Pro Trial
+                  </button>
+                </Link>
+              </div>
+
+              {/* Enterprise Plan */}
+              <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Enterprise</h3>
+                  <div className="text-4xl font-bold text-gray-900 mb-4">
+                    $99<span className="text-lg font-normal text-gray-600">/month</span>
+                  </div>
+                  <p className="text-gray-600 mb-6">For large organizations and teams</p>
+                </div>
+                
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Everything in Pro
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Team collaboration
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    API access
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    SSO integration
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Dedicated support
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-500 mr-3">✓</span>
+                    Custom integrations
+                  </li>
+                </ul>
+                
+                <Link href="/contact">
+                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Contact Sales
+                  </button>
+                </Link>
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-16 px-4 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+              Frequently Asked Questions
+            </h2>
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Can I upgrade or downgrade my plan anytime?
+                </h3>
+                <p className="text-gray-600">
+                  Yes, you can change your plan at any time. Changes take effect immediately, and we&apos;ll prorate any billing differences.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Is there a free trial for paid plans?
+                </h3>
+                <p className="text-gray-600">
+                  Yes, we offer a 14-day free trial for both Pro and Enterprise plans. No credit card required to start.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Are the NDAs legally binding?
+                </h3>
+                <p className="text-gray-600">
+                  Yes, our templates are created by legal professionals and are legally binding when properly executed by all parties.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="bg-gray-900 text-white py-8 px-4">
+          <div className="max-w-6xl mx-auto text-center">
+            <p className="text-gray-400">
+              © 2025 CONFIDO. All rights reserved. | 
+              <Link href="/about" className="hover:text-white ml-2">About</Link> | 
+              <Link href="/contact" className="hover:text-white ml-2">Contact</Link>
+            </p>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
