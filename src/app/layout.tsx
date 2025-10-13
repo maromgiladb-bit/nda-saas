@@ -1,6 +1,7 @@
-import { type Metadata } from 'next'
+import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
+import ToolbarSwitcher from '@/components/ToolbarSwitcher'
 import './globals.css'
 
 const geistSans = Geist({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'NDA SaaS - Simplified NDA Management',
-  description: 'Create, manage, and share NDAs quickly and securely',
+  title: 'Agreedo - NDA Management Platform',
+  description: 'Create and manage NDAs with ease',
 }
 
 export default function RootLayout({
@@ -27,6 +28,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <ToolbarSwitcher />
           {children}
         </body>
       </html>

@@ -1,142 +1,106 @@
-import Link from "next/link";
-import PublicToolbar from "@/components/PublicToolbar";
+"use client";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.push("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded) {
+    return <div className="min-h-screen">Loading...</div>;
+  }
+
+  if (isSignedIn) {
+    return <div className="min-h-screen">Redirecting to dashboard...</div>;
+  }
+
   return (
-    <div>
-      <PublicToolbar />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gray-50">      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
-        <section className="pt-16 pb-20 px-4">
-          <div className="max-w-6xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Create NDAs in
-              <span className="text-blue-600"> Minutes</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Stop wasting time on legal paperwork. Our streamlined platform lets you generate, 
-              customize, and sign NDAs instantly with our trusted template.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/plans">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors shadow-lg">
-                  Choose Your Plan
-                </button>
-              </Link>
-              <Link href="/about">
-                <button className="border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-4 px-8 rounded-lg text-lg transition-colors">
-                  Learn More
-                </button>
-              </Link>
-            </div>
+        <div className="pt-20 pb-16 text-center lg:pt-32">
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            Create Professional NDAs
+            <span className="text-blue-600"> Effortlessly</span>
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
+            Streamline your confidentiality agreements with our intuitive NDA creation platform. 
+            Generate, customize, and manage NDAs with just a few clicks.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-x-6">
+            <button
+              onClick={() => router.push("/signup")}
+              className="rounded-md bg-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
+              Get Started Free
+            </button>
+            <button
+              onClick={() => router.push("/about")}
+              className="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600"
+            >
+              Learn more <span aria-hidden="true">→</span>
+            </button>
           </div>
-        </section>
+        </div>
 
         {/* Features Section */}
-        <section className="py-16 px-4 bg-white">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
-              Why Choose Our NDA Platform?
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center p-6">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">⚡</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Lightning Fast</h3>
-                <p className="text-gray-600">
-                  Generate professional NDAs in minutes, not days. No more back-and-forth with lawyers.
-                </p>
+        <div className="py-16">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
-              <div className="text-center p-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🔒</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Secure & Trusted</h3>
-                <p className="text-gray-600">
-                  Our legally vetted template ensures your confidential information stays protected.
-                </p>
-              </div>
-              <div className="text-center p-6">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">📄</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Professional Quality</h3>
-                <p className="text-gray-600">
-                  Get industry-standard NDAs that work for any business relationship or partnership.
-                </p>
-              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Easy Creation</h3>
+              <p className="text-gray-600">Create professional NDAs in minutes with our step-by-step wizard and pre-built templates.</p>
             </div>
-          </div>
-        </section>
 
-        {/* How It Works Section */}
-        <section className="py-16 px-4 bg-gray-50">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
-              How It Works
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                  1
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Fill the Details</h3>
-                <p className="text-gray-600">
-                  Enter the key information: your company name, counterparty, and specific terms.
-                </p>
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                  2
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Preview & Customize</h3>
-                <p className="text-gray-600">
-                  Review the generated NDA and make any necessary adjustments before finalizing.
-                </p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Digital Signatures</h3>
+              <p className="text-gray-600">Send NDAs for electronic signatures and track signing status in real-time.</p>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
               </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                  3
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Send & Sign</h3>
-                <p className="text-gray-600">
-                  Download the final document or send it directly to the other party for signing.
-                </p>
-              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure & Compliant</h3>
+              <p className="text-gray-600">Bank-level security and legal compliance to protect your confidential information.</p>
             </div>
           </div>
-        </section>
+        </div>
 
         {/* CTA Section */}
-        <section className="py-16 px-4 bg-blue-600">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              Ready to Streamline Your NDAs?
-            </h2>
-            <p className="text-xl text-blue-100 mb-8">
-              Join thousands of businesses who trust our platform for their confidentiality agreements.
-            </p>
-            <Link href="/plans">
-              <button className="bg-white text-blue-600 hover:bg-gray-100 font-semibold py-4 px-8 rounded-lg text-lg transition-colors shadow-lg">
-                Choose Your Plan
-              </button>
-            </Link>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="bg-gray-900 text-white py-8 px-4">
-          <div className="max-w-6xl mx-auto text-center">
-            <p className="text-gray-400">
-              © 2025 CONFIDO. All rights reserved. | 
-              <Link href="/about" className="hover:text-white ml-2">About</Link> | 
-              <Link href="/contact" className="hover:text-white ml-2">Contact</Link> | 
-              <Link href="/plans" className="hover:text-white ml-2">Plans</Link>
-            </p>
-          </div>
-        </footer>
-      </div>
+        <div className="bg-blue-600 rounded-2xl py-16 px-8 text-center mb-16">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to streamline your NDAs?
+          </h2>
+          <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
+            Join thousands of businesses who trust our platform for their confidentiality agreements.
+          </p>
+          <button
+            onClick={() => router.push("/signup")}
+            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+          >
+            Start Creating NDAs Today
+          </button>
+        </div>
+      </main>
     </div>
   );
 }

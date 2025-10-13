@@ -1,26 +1,28 @@
-"use client";
-import Link from "next/link";
-
 export default function Contact() {
   return (
-    <div className="font-sans min-h-screen bg-white text-[#1a2940]">
-      
-      <main className="flex flex-col gap-8 items-center justify-center min-h-[80vh] p-8 bg-white border border-[#e5e7eb] rounded-xl shadow-md mx-4 mt-8">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold text-[#1a2940] text-center">Contact Us</h1>
-          <p className="text-lg text-[#233366] text-center mt-2">For demo purposes, this contact page is a placeholder.</p>
-        </header>
-        <section className="max-w-2xl w-full mx-auto">
-          <p className="mb-4 text-base text-[#233366] text-center">
-            You can reach us at <span className="font-mono">demo@example.com</span> (not a real address).
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-2xl mx-auto px-4 py-16">
+        <h1 className="text-4xl font-bold text-gray-900 mb-8">Contact Us</h1>
+        <div className="bg-white rounded-lg shadow p-8">
+          <p className="text-gray-600 mb-6">
+            Have questions about our NDA management platform? We&apos;re here to help!
           </p>
-        </section>
-        <footer className="mt-8">
-          <Link href="/" className="text-sm underline">
-            ← Back to home
-          </Link>
-        </footer>
-      </main>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold text-gray-900">Email</h3>
+              <p className="text-gray-600">support@ndasaas.com</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Phone</h3>
+              <p className="text-gray-600">+1 (555) 123-4567</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Business Hours</h3>
+              <p className="text-gray-600">Monday - Friday, 9:00 AM - 6:00 PM EST</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
