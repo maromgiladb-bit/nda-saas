@@ -1,47 +1,76 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth, UserButton } from '@clerk/nextjs'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function PrivateToolbar() {
   const { userId } = useAuth()
   const pathname = usePathname()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-
-  if (!userId) return null
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const moreMenuRef = useRef<HTMLDivElement>(null)
+  const moreMenuRefTablet = useRef<HTMLDivElement>(null)
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
-    { name: 'Create NDA', href: '/fillnda', current: pathname === '/fillnda' },
+    { name: 'Fill NDA', href: '/fillnda', current: pathname === '/fillnda' },
     { name: 'My NDAs', href: '/mynda', current: pathname === '/mynda' },
     { name: 'My Drafts', href: '/mydrafts', current: pathname === '/mydrafts' },
     { name: 'Company Details', href: '/companydetails', current: pathname === '/companydetails' },
     { name: 'Settings', href: '/settings', current: pathname === '/settings' },
   ]
 
+  const additionalLinks = [
+    { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/contact' },
+    { name: 'Plans', href: '/plans' },
+  ]
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node
+      if (
+        moreMenuRef.current && !moreMenuRef.current.contains(target) &&
+        moreMenuRefTablet.current && !moreMenuRefTablet.current.contains(target)
+      ) {
+        setIsMoreMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  if (!userId) return null
+
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/dashboard" className="flex-shrink-0">
               <div className="flex items-center">
-                <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">A</span>
-                </div>
-                <span className="ml-2 text-xl font-semibold text-gray-900">Agreedo</span>
+                <Image 
+                  src="/agreedo-logo.png" 
+                  alt="Agreedo" 
+                  width={200} 
+                  height={50}
+                  className="h-30 w-auto"
+                  priority
+                />
               </div>
             </Link>
             
-            {/* Desktop Navigation */}
-            <div className="hidden lg:ml-8 lg:flex lg:space-x-8">
-              {navigation.slice(0, 4).map((item) => (
+            {/* Desktop Navigation - Show first 3 items */}
+            <div className="hidden xl:ml-8 xl:flex xl:space-x-4">
+              {navigation.slice(0, 3).map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  className={`inline-flex items-center px-3 py-1 border-b-2 text-sm font-medium transition-colors ${
                     item.current
                       ? 'border-blue-500 text-gray-900'
                       : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -51,65 +80,124 @@ export default function PrivateToolbar() {
                 </Link>
               ))}
               
-              {/* More Dropdown */}
-              <div className="relative">
+              {/* More Dropdown for desktop */}
+              <div className="relative" ref={moreMenuRef}>
                 <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+                  className={`inline-flex items-center px-3 py-1 border-b-2 text-sm font-medium transition-colors ${
+                    isMoreMenuOpen ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
                 >
                   More
-                  <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 
-                {isMenuOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                    {navigation.slice(4).map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className={`block px-4 py-2 text-sm ${
-                          item.current
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                    <Link
-                      href="/about"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      About
-                    </Link>
-                    <Link
-                      href="/contact"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Contact
-                    </Link>
-                    <Link
-                      href="/plans"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Plans
-                    </Link>
+                {isMoreMenuOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                    <div className="py-1">
+                      {navigation.slice(3).map((item) => (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
+                            item.current
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                          onClick={() => setIsMoreMenuOpen(false)}
+                        >
+                          {item.name}
+                        </Link>
+                      ))}
+                      <div className="border-t border-gray-200 my-1"></div>
+                      {additionalLinks.map((link) => (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                          onClick={() => setIsMoreMenuOpen(false)}
+                        >
+                          {link.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tablet/Small Desktop - Show first 2 items */}
+            <div className="hidden lg:ml-8 lg:flex lg:space-x-4 xl:hidden">
+              {navigation.slice(0, 2).map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`inline-flex items-center px-3 py-1 border-b-2 text-sm font-medium transition-colors ${
+                    item.current
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              
+              {/* More Dropdown for tablet */}
+              <div className="relative" ref={moreMenuRefTablet}>
+                <button
+                  onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+                  className={`inline-flex items-center px-3 py-1 border-b-2 text-sm font-medium transition-colors ${
+                    isMoreMenuOpen ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
+                >
+                  More
+                  <svg className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isMoreMenuOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                    <div className="py-1">
+                      {navigation.slice(2).map((item) => (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
+                            item.current
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                          onClick={() => setIsMoreMenuOpen(false)}
+                        >
+                          {item.name}
+                        </Link>
+                      ))}
+                      <div className="border-t border-gray-200 my-1"></div>
+                      {additionalLinks.map((link) => (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                          onClick={() => setIsMoreMenuOpen(false)}
+                        >
+                          {link.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          {/* Right side buttons - Desktop */}
+          <div className="hidden lg:flex items-center space-x-4">
             <Link
               href="/fillnda"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm hover:shadow-md"
             >
               <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -118,45 +206,79 @@ export default function PrivateToolbar() {
             </Link>
             <UserButton afterSignOutUrl="/" />
           </div>
+
+          {/* Mobile menu button */}
+          <div className="flex items-center lg:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"
+              aria-expanded="false"
+            >
+              <span className="sr-only">Open main menu</span>
+              {!isMobileMenuOpen ? (
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              ) : (
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      <div className="lg:hidden">
-        <div className="pt-2 pb-3 space-y-1">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                item.current
-                  ? 'bg-blue-50 border-blue-500 text-blue-700'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              {item.name}
-            </Link>
-          ))}
-          <Link
-            href="/about"
-            className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 text-base font-medium"
-          >
-            About
-          </Link>
-          <Link
-            href="/contact"
-            className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 text-base font-medium"
-          >
-            Contact
-          </Link>
-          <Link
-            href="/plans"
-            className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 text-base font-medium"
-          >
-            Plans
-          </Link>
+      {/* Mobile menu dropdown */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden border-t border-gray-200 bg-white shadow-lg">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  item.current
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+            <div className="border-t border-gray-200 my-2"></div>
+            {additionalLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+          <div className="pt-4 pb-3 border-t border-gray-200">
+            <div className="flex items-center px-4 mb-3">
+              <UserButton afterSignOutUrl="/" />
+              <span className="ml-3 text-sm text-gray-500">Your Account</span>
+            </div>
+            <div className="px-2">
+              <Link
+                href="/fillnda"
+                className="w-full flex items-center justify-center px-4 py-2.5 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                New NDA
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   )
 }

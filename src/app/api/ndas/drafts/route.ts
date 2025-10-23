@@ -111,10 +111,28 @@ export async function GET() {
 
     console.log('7. Fetching drafts for user:', dbUser.id)
     const drafts = await prisma.nda_drafts.findMany({
-      where: { created_by_id: dbUser.id, status: 'DRAFT' },
-      orderBy: { updated_at: 'desc' }
+      where: { created_by_id: dbUser.id },
+      orderBy: { updated_at: 'desc' },
+      include: {
+        signers: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            status: true,
+            signed_at: true,
+            created_at: true
+          }
+        }
+      }
     })
     console.log('8. Found drafts:', drafts.length, 'items')
+    console.log('8a. Drafts breakdown by status:')
+    const statusCounts = drafts.reduce((acc, d) => {
+      acc[d.status || 'UNKNOWN'] = (acc[d.status || 'UNKNOWN'] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    console.log(statusCounts)
 
     return NextResponse.json({ drafts })
   } catch (error) {

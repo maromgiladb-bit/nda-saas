@@ -36,22 +36,41 @@ model memberships {
 }
 
 model nda_drafts {
-  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  organization_id String         @db.Uuid
-  template_id     String         @db.Uuid
-  created_by_id   String         @db.Uuid
-  title           String?        @default("Untitled NDA")
-  status          draft_status?  @default(DRAFT)
-  data            Json?          @default("{}")
-  preview_key     String?
-  final_key       String?
-  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime?      @default(now()) @db.Timestamptz(6)
-  audit_events    audit_events[]
-  users           users          @relation(fields: [created_by_id], references: [id], onUpdate: NoAction)
-  organizations   organizations  @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  nda_templates   nda_templates  @relation(fields: [template_id], references: [id], onUpdate: NoAction)
-  signers         signers[]
+  id                              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id                 String          @db.Uuid
+  template_id                     String          @db.Uuid
+  created_by_id                   String          @db.Uuid
+  title                           String?         @default("Untitled NDA")
+  status                          draft_status?   @default(DRAFT)
+  last_actor                      ActorRole?
+  provisional_recipient_signed_at DateTime?       @db.Timestamptz(6)
+  data                            Json?           @default("{}")
+  preview_key                     String?
+  final_key                       String?
+  created_at                      DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?       @default(now()) @db.Timestamptz(6)
+  audit_events                    audit_events[]
+  revisions                       nda_revisions[]
+  users                           users           @relation(fields: [created_by_id], references: [id], onUpdate: NoAction)
+  organizations                   organizations   @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  nda_templates                   nda_templates   @relation(fields: [template_id], references: [id], onUpdate: NoAction)
+  signers                         signers[]
+}
+
+model nda_revisions {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  draft_id   String     @db.Uuid
+  number     Int
+  actor_role ActorRole
+  base_form  Json
+  new_form   Json
+  diff       Json
+  comments   Json?
+  message    String?
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  draft      nda_drafts @relation(fields: [draft_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([draft_id])
 }
 
 model nda_templates {
@@ -77,13 +96,16 @@ model organizations {
 }
 
 model sign_requests {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  signer_id   String    @db.Uuid
-  token       String    @unique
-  expires_at  DateTime  @db.Timestamptz(6)
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  consumed_at DateTime? @db.Timestamptz(6)
-  signers     signers   @relation(fields: [signer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  signer_id       String       @db.Uuid
+  token           String       @unique
+  scope           TokenScope   @default(EDIT)
+  editable_fields Json?
+  payload         Json?
+  expires_at      DateTime     @db.Timestamptz(6)
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  consumed_at     DateTime?    @db.Timestamptz(6)
+  signers         signers      @relation(fields: [signer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model signers {
@@ -116,6 +138,10 @@ enum draft_status {
   SENT
   SIGNED
   VOID
+  PENDING_OWNER_REVIEW
+  NEEDS_RECIPIENT_CHANGES
+  READY_TO_SIGN
+  WAITING_REVIEW
 }
 
 enum role {
@@ -131,4 +157,16 @@ enum signer_status {
   SIGNED
   DECLINED
   EXPIRED
+}
+
+enum ActorRole {
+  OWNER
+  RECIPIENT
+}
+
+enum TokenScope {
+  VIEW
+  EDIT
+  SIGN
+  REVIEW
 }

@@ -30,6 +30,39 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json()
+    console.log('Preview request received with data:', {
+      party_a_ask_receiver_fill: data.party_a_ask_receiver_fill,
+      party_b_ask_receiver_fill: data.party_b_ask_receiver_fill,
+      party_a_name: data.party_a_name,
+      party_b_name: data.party_b_name
+    });
+    
+    // Replace empty fields with "fill here" placeholders when ask_receiver_fill is checked
+    const processedData = { ...data };
+    
+    // Handle Party A fields
+    if (data.party_a_ask_receiver_fill) {
+      processedData.party_a_name = data.party_a_name || "[fill here]";
+      processedData.party_a_address = data.party_a_address || "[fill here]";
+      processedData.party_a_signatory_name = data.party_a_signatory_name || "[fill here]";
+      processedData.party_a_title = data.party_a_title || "[fill here]";
+      console.log('Party A ask receiver to fill - using placeholders');
+    }
+    
+    // Handle Party B fields
+    if (data.party_b_ask_receiver_fill) {
+      processedData.party_b_name = data.party_b_name || "[fill here]";
+      processedData.party_b_address = data.party_b_address || "[fill here]";
+      processedData.party_b_signatory_name = data.party_b_signatory_name || "[fill here]";
+      processedData.party_b_title = data.party_b_title || "[fill here]";
+      processedData.party_b_email = data.party_b_email || "[fill here]";
+      console.log('Party B ask receiver to fill - using placeholders');
+    }
+    
+    console.log('Processed data for template:', {
+      party_a_name: processedData.party_a_name,
+      party_b_name: processedData.party_b_name
+    });
     
     // Read template
     const templatePath = path.join(process.cwd(), 'templates', 'mutual-nda-v3.hbs')
@@ -37,7 +70,8 @@ export async function POST(request: NextRequest) {
     const template = Handlebars.compile(templateContent)
     
     // Generate HTML
-    const html = template(data)
+    const html = template(processedData)
+    console.log('HTML generated, length:', html.length);
     
     // Find Chrome executable
     const chromePath = findChrome()

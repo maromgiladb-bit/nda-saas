@@ -1,0 +1,16 @@
+IMPORTANT: Logo File Needed
+=============================
+
+Please save the Agreedo logo image as:
+  public/agreedo-logo.png
+
+The logo should be:
+- The image you provided (dark blue "agreedo" text with teal checkmark)
+- Saved as PNG format with transparent background
+- Recommended size: 240x64 pixels or similar aspect ratio
+
+The logo is now referenced in:
+- src/components/PrivateToolbar.tsx
+- src/components/PublicToolbar.tsx
+
+Once you place the logo file in public/agreedo-logo.png, it will appear in the navigation.
