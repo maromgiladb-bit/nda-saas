@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One-Way Non-Disclosure Agreement</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2.54cm;
+        }
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            font-size: 18pt;
+            font-weight: bold;
+            margin: 0 0 24pt 0;
+            text-transform: uppercase;
+        }
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 20pt 0 10pt 0;
+        }
+        p {
+            margin: 0 0 12pt 0;
+            text-align: justify;
+        }
+        .party-info {
+            margin: 20pt 0;
+            padding: 10pt;
+            background: #f5f5f5;
+            border-left: 3pt solid #333;
+        }
+        strong {
+            font-weight: bold;
+        }
+        .signature-section {
+            margin-top: 40pt;
+            page-break-inside: avoid;
+        }
+        .signature-line {
+            border-top: 1pt solid #000;
+            margin-top: 40pt;
+            padding-top: 5pt;
+        }
+    </style>
+</head>
+<body>
+    <h1>One-Way Non-Disclosure Agreement</h1>
+
+    <p>This One-Way Non-Disclosure Agreement (the "<strong>Agreement</strong>") is entered into effective as of <strong>{{effective_date}}</strong> (the "<strong>Effective Date</strong>").</p>
+
+    <div class="party-info">
+        <p><strong>Disclosing Party:</strong><br>
+        {{party_a_name}}<br>
+        {{party_a_address}}<br>
+        {{#if party_a_email}}Email: {{party_a_email}}{{/if}}</p>
+    </div>
+
+    <div class="party-info">
+        <p><strong>Receiving Party:</strong><br>
+        {{party_b_name}}<br>
+        {{party_b_address}}<br>
+        Email: {{party_b_email}}</p>
+    </div>
+
+    <h2>Purpose</h2>
+    <p>The Disclosing Party wishes to disclose certain confidential information to the Receiving Party for the purpose of <strong>{{docName}}</strong> (the "<strong>Purpose</strong>").</p>
+
+    <h2>1. Confidential Information</h2>
+    <p>"<strong>Confidential Information</strong>" means all information disclosed by the Disclosing Party to the Receiving Party, whether orally or in writing, that is designated as confidential or that reasonably should be understood to be confidential given the nature of the information and the circumstances of disclosure.</p>
+
+    <h2>2. Obligations of Receiving Party</h2>
+    <p>The Receiving Party agrees to:</p>
+    <p>(a) Hold and maintain the Confidential Information in strict confidence;</p>
+    <p>(b) Not disclose the Confidential Information to any third parties;</p>
+    <p>(c) Not use the Confidential Information for any purpose other than the Purpose;</p>
+    <p>(d) Protect the Confidential Information using reasonable care, but in no event less than the degree of care used to protect its own confidential information.</p>
+
+    <h2>3. Term</h2>
+    <p>This Agreement shall remain in effect for <strong>{{term_months}} months</strong> from the Effective Date.</p>
+
+    <h2>4. Return of Materials</h2>
+    <p>Upon request by the Disclosing Party, the Receiving Party shall promptly return or destroy all materials containing Confidential Information.</p>
+
+    <h2>5. Governing Law</h2>
+    <p>This Agreement shall be governed by the laws of <strong>{{governing_law}}</strong>.</p>
+
+    <div class="signature-section">
+        <p><strong>IN WITNESS WHEREOF</strong>, the parties have executed this Agreement as of the Effective Date.</p>
+        
+        <div class="signature-line">
+            <p><strong>DISCLOSING PARTY</strong></p>
+            <p>Signature: _____________________________</p>
+            <p>Name: <strong>{{party_a_signatory_name}}</strong></p>
+            <p>Title: <strong>{{party_a_title}}</strong></p>
+            <p>Date: _____________________________</p>
+        </div>
+
+        <div class="signature-line">
+            <p><strong>RECEIVING PARTY</strong></p>
+            <p>Signature: _____________________________</p>
+            <p>Name: <strong>{{party_b_signatory_name}}</strong></p>
+            <p>Title: <strong>{{party_b_title}}</strong></p>
+            <p>Date: _____________________________</p>
+        </div>
+    </div>
+</body>
+</html>

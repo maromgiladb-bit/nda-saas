@@ -121,7 +121,21 @@ export async function GET() {
             role: true,
             status: true,
             signed_at: true,
-            created_at: true
+            created_at: true,
+            sign_requests: {
+              select: {
+                token: true,
+                scope: true,
+                consumed_at: true
+              },
+              where: {
+                consumed_at: null
+              },
+              orderBy: {
+                created_at: 'desc'
+              },
+              take: 1
+            }
           }
         }
       }

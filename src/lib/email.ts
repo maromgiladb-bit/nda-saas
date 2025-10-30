@@ -4,14 +4,21 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 const APP_URL = process.env.APP_URL || 'http://localhost:3000'
 const MAIL_FROM = process.env.MAIL_FROM || 'noreply@agreedo.app'
 
+export interface EmailAttachment {
+  filename: string
+  content: string // Base64 string
+  contentType?: string
+}
+
 export interface SendEmailParams {
   to: string
   subject: string
   html: string
+  attachments?: EmailAttachment[]
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<void> {
-  console.log('📧 sendEmail called with:', { to, subject, hasHtml: !!html })
+export async function sendEmail({ to, subject, html, attachments }: SendEmailParams): Promise<void> {
+  console.log('📧 sendEmail called with:', { to, subject, hasHtml: !!html, attachmentCount: attachments?.length || 0 })
   console.log('📧 RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
   console.log('📧 MAIL_FROM:', MAIL_FROM)
   console.log('📧 APP_URL:', APP_URL)
@@ -23,11 +30,20 @@ export async function sendEmail({ to, subject, html }: SendEmailParams): Promise
   
   try {
     console.log('📧 Attempting to send email via Resend...')
+    
+    // Prepare attachments in Resend format
+    const resendAttachments = attachments?.map(att => ({
+      filename: att.filename,
+      content: att.content, // Base64 string
+      contentType: att.contentType || 'application/octet-stream'
+    }))
+    
     const { data, error } = await resend.emails.send({
       from: MAIL_FROM,
       to,
       subject,
-      html
+      html,
+      attachments: resendAttachments
     })
     
     if (error) {

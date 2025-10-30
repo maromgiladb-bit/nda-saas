@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import PublicToolbar from "@/components/PublicToolbar";
+import PDFPreview from "@/components/PDFPreview";
 
 type FormValues = {
 	docName: string;
@@ -67,6 +68,18 @@ export default function FillNDA() {
 	const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
 	const [step, setStep] = useState<number>(0);
 	const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
+	const [templateId, setTemplateId] = useState<string>("mutual-nda-v3"); // Default template
+	
+	// Email suggestions state
+	const [emailSuggestions, setEmailSuggestions] = useState<Array<{
+		email: string;
+		count: number;
+		lastUsed: string;
+		recentNda: string;
+		hasSignedBefore: boolean;
+	}>>([]);
+	const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
+	const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
 	const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
 
@@ -81,14 +94,33 @@ export default function FillNDA() {
 		}
 
 		const urlDraftId = searchParams.get("draftId");
-		if (urlDraftId) loadDraft(urlDraftId);
-		else {
+		const urlTemplateId = searchParams.get("templateId");
+		const isNewNda = searchParams.get("new") === "true";
+		
+		// Set template ID from URL or use default
+		if (urlTemplateId) {
+			console.log("📋 Using template:", urlTemplateId);
+			setTemplateId(urlTemplateId);
+		}
+		
+		if (isNewNda) {
+			// Starting a new NDA - clear everything and use defaults
+			console.log("🆕 Starting new NDA - clearing all data");
+			setValues(DEFAULTS);
+			setDraftId(null);
+			localStorage.removeItem("fillndaDraft");
+		} else if (urlDraftId) {
+			// Loading specific draft from URL
+			loadDraft(urlDraftId);
+		} else {
+			// Try to load from localStorage (auto-save)
 			const d = localStorage.getItem("fillndaDraft");
 			if (d) {
 				try {
 					const parsed = JSON.parse(d);
 					setValues({ ...DEFAULTS, ...(parsed.values || {}) });
 					setDraftId(parsed.draftId || null);
+					console.log("📂 Restored from localStorage");
 				} catch (e) {
 					console.error(e);
 				}
@@ -346,28 +378,99 @@ export default function FillNDA() {
 		setWarning("");
 		try {
 			console.log("Sending preview request with data:", values);
+			console.log("📋 Using template:", templateId);
+			// Use new PDF preview endpoint (supports both draftId and direct data)
 			const res = await fetch("/api/ndas/preview", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ ...values, templatePdf: "/pdfs/nda-for-pagefill.pdf", draftId }),
+				body: JSON.stringify(draftId ? { draftId, templateId } : { ...values, templateId }),
 			});
 			const json = await res.json();
 			console.log("Preview response:", json);
-			if (!res.ok) throw new Error(json.error || "Preview failed");
-			if (!json.fileUrl || !json.fileUrl.startsWith("data:application/pdf;base64,")) throw new Error("Invalid PDF data received");
-			const base64Data = json.fileUrl.split(",")[1];
-			const binaryString = atob(base64Data);
-			const bytes = new Uint8Array(binaryString.length);
-			for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-			const blob = new Blob([bytes], { type: "application/pdf" });
-			const blobUrl = URL.createObjectURL(blob);
-			console.log("Preview blob URL created:", blobUrl);
-			setPreviewUrl(blobUrl);
-			setShowPreview(true);
+			if (!res.ok) {
+				console.error("❌ Preview failed:", json);
+				console.error("❌ Error details:", json.details);
+				throw new Error(json.error || "Preview failed");
+			}
+			
+			// fileUrl contains the data:application/pdf;base64,... string
+			if (!json.fileUrl || !json.fileUrl.startsWith("data:application/pdf;base64,")) {
+				throw new Error("Invalid PDF data received");
+			}
+			
+			// Open PDF in new tab instead of modal
+			const newWindow = window.open();
+			if (newWindow) {
+				newWindow.document.write(`
+					<!DOCTYPE html>
+					<html>
+					<head>
+						<title>NDA Preview</title>
+						<style>
+							body { margin: 0; padding: 0; }
+							iframe { width: 100%; height: 100vh; border: none; }
+						</style>
+					</head>
+					<body>
+						<iframe src="${json.fileUrl}"></iframe>
+					</body>
+					</html>
+				`);
+				newWindow.document.close();
+			} else {
+				// Fallback if popup blocked - use modal
+				setPreviewUrl(json.fileUrl);
+				setShowPreview(true);
+			}
+			
+			console.log("✅ PDF preview opened in new tab");
+			setWarning(""); // Clear any previous warnings
 		} catch (e) {
 			console.error("Preview error:", e);
 			setWarning(e instanceof Error ? e.message : "Preview failed");
 		}
+	};
+
+	// Fetch email suggestions
+	const fetchEmailSuggestions = async (query: string) => {
+		if (!query || query.length < 2) {
+			setEmailSuggestions([]);
+			setShowEmailSuggestions(false);
+			return;
+		}
+
+		try {
+			setLoadingSuggestions(true);
+			const res = await fetch(`/api/ndas/email-suggestions?q=${encodeURIComponent(query)}`);
+			const data = await res.json();
+			
+			if (res.ok && data.suggestions) {
+				setEmailSuggestions(data.suggestions);
+				setShowEmailSuggestions(data.suggestions.length > 0);
+			}
+		} catch (error) {
+			console.error("Failed to fetch email suggestions:", error);
+		} finally {
+			setLoadingSuggestions(false);
+		}
+	};
+
+	// Handle email input change with debounce
+	const handleEmailChange = (email: string) => {
+		setSignersEmail(email);
+		
+		// Debounce the API call
+		const timeoutId = setTimeout(() => {
+			fetchEmailSuggestions(email);
+		}, 300);
+
+		return () => clearTimeout(timeoutId);
+	};
+
+	const selectEmailSuggestion = (email: string) => {
+		setSignersEmail(email);
+		setShowEmailSuggestions(false);
+		setEmailSuggestions([]);
 	};
 
 	const sendForSignature = async () => {
@@ -442,10 +545,24 @@ export default function FillNDA() {
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 								</svg>
 							</div>
-							<div>
-								<h1 className="text-2xl font-bold text-gray-900">Create Your NDA</h1>
-								<p className="text-gray-600 text-sm">Fill out the form below to generate your Non-Disclosure Agreement</p>
+							<div className="flex-1">
+								<h1 className="text-2xl font-bold text-gray-900">
+									{draftId ? "Edit NDA Draft" : "Create New NDA"}
+								</h1>
+								<p className="text-gray-600 text-sm">
+									{draftId 
+										? "Continue editing your Non-Disclosure Agreement" 
+										: "Fill out the form below to generate your Non-Disclosure Agreement"}
+								</p>
 							</div>
+							{draftId && (
+								<div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full">
+									<svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+									</svg>
+									<span className="text-xs font-semibold text-blue-700">Editing Draft</span>
+								</div>
+							)}
 						</div>
 					</div>
 
@@ -921,7 +1038,7 @@ export default function FillNDA() {
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 												</svg>
-												Preview PDF
+												Preview Document
 											</button>
 											{draftId && (
 												<button 
@@ -980,7 +1097,7 @@ export default function FillNDA() {
 									</svg>
 								</div>
 								<div>
-									<h2 className="text-xl font-bold text-gray-800">NDA Preview</h2>
+									<h2 className="text-xl font-bold text-gray-800">PDF Preview</h2>
 									<p className="text-sm text-gray-600">Review your document before sending</p>
 								</div>
 							</div>
@@ -994,26 +1111,37 @@ export default function FillNDA() {
 								</svg>
 							</button>
 						</div>
-						<iframe 
-							src={`/pdfjs/web/viewer.html?file=${encodeURIComponent(previewUrl)}`} 
-							className="flex-1 border-0" 
-							style={{ height: 'calc(90vh - 160px)' }} 
-						/>
+						<div className="flex-1 overflow-hidden">
+							{previewUrl && (
+								<PDFPreview 
+									base64={previewUrl} 
+									showFullViewer={true}
+									className="w-full h-full"
+								/>
+							)}
+						</div>
 						<div className="flex gap-3 justify-end p-6 border-t border-gray-200 bg-gray-50">
 							<button 
-								onClick={() => window.open(previewUrl, '_blank')} 
+								onClick={closePreview}
+								className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200"
+							>
+								Close
+							</button>
+							<button 
+								onClick={() => {
+									const link = document.createElement('a');
+									link.href = previewUrl;
+									link.download = values.docName ? `${values.docName}.pdf` : 'NDA.pdf';
+									document.body.appendChild(link);
+									link.click();
+									document.body.removeChild(link);
+								}}
 								className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
 							>
 								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
 								</svg>
-								Open in New Tab
-							</button>
-							<button 
-								onClick={closePreview} 
-								className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200 hover:shadow-md"
-							>
-								Close
+								Download PDF
 							</button>
 						</div>
 					</div>
@@ -1058,11 +1186,77 @@ export default function FillNDA() {
 									<input 
 										type="email"
 										value={signersEmail} 
-										onChange={(e) => setSignersEmail(e.target.value)} 
+										onChange={(e) => {
+											const value = e.target.value;
+											handleEmailChange(value);
+										}}
+										onFocus={() => {
+											if (signersEmail.length >= 2) {
+												fetchEmailSuggestions(signersEmail);
+											}
+										}}
+										onBlur={() => {
+											// Delay hiding to allow click on suggestion
+											setTimeout(() => setShowEmailSuggestions(false), 200);
+										}}
 										className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" 
 										placeholder="signer@example.com"
 										autoFocus
+										autoComplete="off"
 									/>
+									
+									{/* Email Suggestions Dropdown */}
+									{showEmailSuggestions && emailSuggestions.length > 0 && (
+										<div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+											{emailSuggestions.map((suggestion, index) => (
+												<button
+													key={index}
+													type="button"
+													onClick={() => selectEmailSuggestion(suggestion.email)}
+													className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-start gap-3"
+												>
+													<div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+														{suggestion.email.charAt(0).toUpperCase()}
+													</div>
+													<div className="flex-1 min-w-0">
+														<div className="font-medium text-gray-900 truncate">
+															{suggestion.email}
+														</div>
+														<div className="text-xs text-gray-500 mt-0.5 flex items-center gap-2 flex-wrap">
+															<span className="flex items-center gap-1">
+																<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+																</svg>
+																{suggestion.count} {suggestion.count === 1 ? 'NDA' : 'NDAs'}
+															</span>
+															{suggestion.hasSignedBefore && (
+																<span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+																	<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+																	</svg>
+																	Signed before
+																</span>
+															)}
+														</div>
+														{suggestion.recentNda && (
+															<div className="text-xs text-gray-400 mt-1 truncate">
+																Recent: {suggestion.recentNda}
+															</div>
+														)}
+													</div>
+												</button>
+											))}
+										</div>
+									)}
+									
+									{loadingSuggestions && (
+										<div className="absolute right-3 top-1/2 -translate-y-1/2">
+											<svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+										</div>
+									)}
 								</div>
 								<p className="mt-2 text-xs text-gray-500">The recipient will receive an email with a link to sign the document</p>
 							</div>

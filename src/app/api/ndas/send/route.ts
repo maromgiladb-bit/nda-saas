@@ -3,6 +3,10 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { randomBytes } from 'crypto'
 import { sendEmail, recipientEditEmailHtml, getAppUrl } from '@/lib/email'
+import { renderNdaHtml } from '@/lib/renderNdaHtml'
+import { htmlToPdf } from '@/lib/htmlToPdf'
+
+export const runtime = 'nodejs' // Required for Puppeteer
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -63,6 +67,7 @@ export async function POST(request: NextRequest) {
       data: {
         signer_id: signer.id,
         token: token,
+        scope: 'REVIEW', // Allow Party B to review, edit, and sign
         expires_at: expiresAt
       }
     })
@@ -81,19 +86,37 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Send email notification to signer
-    const signLink = `${getAppUrl()}/sign/${token}`
+    // Send email notification to signer with PDF attachment
+    const signLink = `${getAppUrl()}/review-nda/${token}`
     console.log('📧 Preparing to send email to:', signerEmail)
-    console.log('📧 Sign link:', signLink)
+    console.log('📧 Review link:', signLink)
     console.log('📧 Draft title:', draft.title)
     
     try {
+      // Generate PDF snapshot of current draft
+      console.log('📄 Generating PDF attachment...')
+      const formData = (draft.data as Record<string, unknown>) || {}
+      const html = await renderNdaHtml(formData)
+      const pdfBuffer = await htmlToPdf(html)
+      const pdfBase64 = pdfBuffer.toString('base64')
+      
+      console.log('📄 PDF generated, size:', pdfBuffer.length, 'bytes')
+
       await sendEmail({
         to: signerEmail,
         subject: `Please review & sign your NDA – ${draft.title || 'NDA'}`,
-        html: recipientEditEmailHtml(draft.title || 'Untitled NDA', signLink)
+        html: recipientEditEmailHtml(
+          draft.title || 'Untitled NDA', 
+          signLink,
+          'Please review the attached NDA document. Click the link below to access the agreement, review your information, and sign the document. No account required.'
+        ),
+        attachments: [{
+          filename: `${draft.title || 'NDA'}-${draft.id.substring(0, 8)}.pdf`,
+          content: pdfBase64,
+          contentType: 'application/pdf'
+        }]
       })
-      console.log('✅ Email sent successfully in send route')
+      console.log('✅ Email with PDF attachment sent successfully')
     } catch (emailError) {
       console.error('❌ Failed to send email notification:', emailError)
       console.error('❌ Email error details:', emailError)
@@ -106,7 +129,7 @@ export async function POST(request: NextRequest) {
       signer,
       signRequest: {
         token,
-        link: `/sign/${token}`
+        link: `/review-nda/${token}`
       }
     })
   } catch (error) {

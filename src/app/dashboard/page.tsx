@@ -20,10 +20,16 @@ interface Draft {
     }
     [key: string]: unknown
   }
-  signers?: { id: string; email: string; role: string; status: string }[]
+  signers?: { 
+    id: string
+    email: string
+    role: string
+    status: string
+    sign_requests?: { token: string; scope: string }[]
+  }[]
 }
 
-type FilterStatus = 'ALL' | 'DRAFT' | 'SENT' | 'SIGNED' | 'VOID' | 'WAITING_REVIEW'
+type FilterStatus = 'ALL' | 'DRAFT' | 'SENT' | 'SIGNED' | 'VOID' | 'PENDING_OWNER_REVIEW' | 'WAITING_REVIEW'
 
 export default function Dashboard() {
   const [drafts, setDrafts] = useState<Draft[]>([])
@@ -55,8 +61,21 @@ export default function Dashboard() {
       case 'SENT': return 'bg-blue-100 text-blue-800'
       case 'SIGNED': return 'bg-green-100 text-green-800'
       case 'VOID': return 'bg-red-100 text-red-800'
-      case 'WAITING_REVIEW': return 'bg-yellow-100 text-yellow-800'
+      case 'PENDING_OWNER_REVIEW': return 'bg-yellow-100 text-yellow-800'
+      case 'WAITING_REVIEW': return 'bg-purple-100 text-purple-800'
+      case 'NEEDS_RECIPIENT_CHANGES': return 'bg-orange-100 text-orange-800'
+      case 'READY_TO_SIGN': return 'bg-teal-100 text-teal-800'
       default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'PENDING_OWNER_REVIEW': return 'Waiting for Your Review'
+      case 'NEEDS_RECIPIENT_CHANGES': return 'Needs Changes'
+      case 'READY_TO_SIGN': return 'Ready to Sign'
+      case 'WAITING_REVIEW': return 'Waiting Review'
+      default: return status
     }
   }
 
@@ -137,7 +156,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
           <button
             onClick={() => setFilterStatus('ALL')}
             className={`bg-white p-6 rounded-xl shadow-md border transition-all text-left ${
@@ -185,6 +204,33 @@ export default function Dashboard() {
               }`}>
                 <svg className={`h-6 w-6 ${filterStatus === 'DRAFT' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setFilterStatus('PENDING_OWNER_REVIEW')}
+            className={`bg-white p-6 rounded-xl shadow-md border transition-all text-left ${
+              filterStatus === 'PENDING_OWNER_REVIEW' 
+                ? 'border-yellow-500 ring-2 ring-yellow-200 shadow-lg' 
+                : 'border-gray-100 hover:shadow-lg hover:border-yellow-200'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Action Needed</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {drafts.filter(d => d.status === 'PENDING_OWNER_REVIEW').length}
+                </p>
+              </div>
+              <div className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all ${
+                filterStatus === 'PENDING_OWNER_REVIEW' 
+                  ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md' 
+                  : 'bg-gradient-to-br from-yellow-100 to-yellow-200'
+              }`}>
+                <svg className={`h-6 w-6 ${filterStatus === 'PENDING_OWNER_REVIEW' ? 'text-white' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
             </div>
@@ -370,7 +416,7 @@ export default function Dashboard() {
                 </p>
                 {filterStatus === 'ALL' && !searchQuery && (
                   <Link 
-                    href="/fillnda"
+                    href="/fillnda?new=true"
                     className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
                   >
                     <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -435,7 +481,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center space-x-3">
                       <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(draft.status)}`}>
-                        {draft.status}
+                        {getStatusLabel(draft.status)}
                       </span>
                       <div className="flex space-x-2">
                         <Link 
@@ -459,6 +505,22 @@ export default function Dashboard() {
                             Edit
                           </Link>
                         )}
+                        {draft.status === 'PENDING_OWNER_REVIEW' && draft.signers && draft.signers.length > 0 && (() => {
+                          const ownerReviewSigner = draft.signers.find(s => s.role === 'Owner Review')
+                          const reviewToken = ownerReviewSigner?.sign_requests?.[0]?.token
+                          return reviewToken ? (
+                            <Link 
+                              href={`/review-suggestions/${reviewToken}`}
+                              className="inline-flex items-center px-4 py-2 border border-yellow-300 text-sm font-medium text-yellow-700 bg-yellow-50 rounded-lg hover:bg-yellow-100 hover:border-yellow-400 transition-all animate-pulse"
+                            >
+                              <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              Review Suggestions
+                            </Link>
+                          ) : null
+                        })()}
                       </div>
                     </div>
                   </div>

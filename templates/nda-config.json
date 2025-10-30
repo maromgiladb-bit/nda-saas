@@ -1,0 +1,171 @@
+{
+  "version": "1.0",
+  "templateName": "Mutual NDA v1",
+  "templateFile": "251025-nir-mutual-nda-v1.pdf",
+  "description": "Standard mutual NDA template - text overlay mode",
+  "fillMode": "overlay",
+  "fields": {
+    "docName": {
+      "label": "Document Title",
+      "type": "text",
+      "required": true,
+      "placeholder": "Enter document name",
+      "section": "document",
+      "pdfPosition": { "page": 0, "x": 150, "y": 780 }
+    },
+    "effective_date": {
+      "label": "Effective Date",
+      "type": "date",
+      "required": true,
+      "section": "document",
+      "pdfPosition": { "page": 0, "x": 150, "y": 760 }
+    },
+    "term_months": {
+      "label": "Term (months)",
+      "type": "text",
+      "required": true,
+      "placeholder": "Enter term in months",
+      "section": "document",
+      "pdfPosition": { "page": 0, "x": 150, "y": 740 }
+    },
+    "confidentiality_period_months": {
+      "label": "Confidentiality Period (months)",
+      "type": "text",
+      "required": true,
+      "placeholder": "Enter confidentiality period",
+      "section": "document",
+      "pdfPosition": { "page": 0, "x": 150, "y": 720 }
+    },
+    "party_a_name": {
+      "label": "Party A - Company Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Enter company name",
+      "section": "party_a",
+      "pdfPosition": { "page": 0, "x": 150, "y": 680 }
+    },
+    "party_a_address": {
+      "label": "Party A - Address",
+      "type": "text",
+      "required": true,
+      "placeholder": "Enter full address",
+      "section": "party_a",
+      "pdfPosition": { "page": 0, "x": 150, "y": 660 }
+    },
+    "party_a_signatory_name": {
+      "label": "Party A - Signatory Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Full name of person signing",
+      "section": "party_a",
+      "pdfPosition": { "page": 2, "x": 150, "y": 200 }
+    },
+    "party_a_title": {
+      "label": "Party A - Signatory Title",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., CEO, Director",
+      "section": "party_a",
+      "pdfPosition": { "page": 2, "x": 150, "y": 180 }
+    },
+    "party_b_name": {
+      "label": "Party B - Company Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Enter company name",
+      "section": "party_b",
+      "pdfPosition": { "page": 0, "x": 150, "y": 620 }
+    },
+    "party_b_address": {
+      "label": "Party B - Address",
+      "type": "text",
+      "required": true,
+      "placeholder": "Enter full address",
+      "section": "party_b",
+      "pdfPosition": { "page": 0, "x": 150, "y": 600 }
+    },
+    "party_b_signatory_name": {
+      "label": "Party B - Signatory Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Full name of person signing",
+      "section": "party_b",
+      "pdfPosition": { "page": 2, "x": 150, "y": 100 }
+    },
+    "party_b_title": {
+      "label": "Party B - Signatory Title",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., CEO, Director",
+      "section": "party_b",
+      "pdfPosition": { "page": 2, "x": 150, "y": 80 }
+    },
+    "party_b_email": {
+      "label": "Party B - Email Address",
+      "type": "email",
+      "required": true,
+      "placeholder": "email@example.com",
+      "section": "party_b",
+      "pdfPosition": { "page": 0, "x": 150, "y": 580 }
+    },
+    "governing_law": {
+      "label": "Governing Law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., State of California",
+      "section": "clauses",
+      "pdfPosition": { "page": 1, "x": 150, "y": 500 }
+    },
+    "ip_ownership": {
+      "label": "IP Ownership",
+      "type": "text",
+      "required": true,
+      "placeholder": "Specify IP ownership terms",
+      "section": "clauses",
+      "pdfPosition": { "page": 1, "x": 150, "y": 450 }
+    },
+    "non_solicit": {
+      "label": "Non-Solicitation",
+      "type": "text",
+      "required": true,
+      "placeholder": "Define non-solicitation terms",
+      "section": "clauses",
+      "pdfPosition": { "page": 1, "x": 150, "y": 400 }
+    },
+    "exclusivity": {
+      "label": "Exclusivity",
+      "type": "text",
+      "required": true,
+      "placeholder": "Specify exclusivity arrangements",
+      "section": "clauses",
+      "pdfPosition": { "page": 1, "x": 150, "y": 350 }
+    }
+  },
+  "sections": {
+    "document": {
+      "title": "Document Information",
+      "order": 1
+    },
+    "party_a": {
+      "title": "Party A (Disclosing Party)",
+      "order": 2
+    },
+    "party_b": {
+      "title": "Party B (Receiving Party)",
+      "order": 3
+    },
+    "clauses": {
+      "title": "Additional Clauses",
+      "order": 4
+    }
+  },
+  "notes": [
+    "This template uses text overlay mode (no form fields in PDF)",
+    "Field names match the form field names in fillnda/page.tsx",
+    "To adjust field positions:",
+    "1. Open the filled PDF and note where text appears",
+    "2. Update the pdfPosition values in this config",
+    "3. Coordinates: x (horizontal), y (vertical) from bottom-left",
+    "4. Test and adjust until fields align with highlighted areas"
+  ]
+}

@@ -1,26 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import puppeteer from 'puppeteer-core'
-import Handlebars from 'handlebars'
-import fs from 'fs'
-import path from 'path'
+import { prisma } from '@/lib/prisma'
+import { renderNdaHtml } from '@/lib/renderNdaHtml'
+import { htmlToPdf } from '@/lib/htmlToPdf'
 
-const findChrome = () => {
-  const possiblePaths = [
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/usr/bin/google-chrome',
-    '/usr/bin/chromium-browser',
-  ]
-  
-  for (const chromePath of possiblePaths) {
-    if (fs.existsSync(chromePath)) {
-      return chromePath
-    }
-  }
-  return null
-}
+export const runtime = 'nodejs' // Required for Puppeteer
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,81 +13,94 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const data = await request.json()
-    console.log('Preview request received with data:', {
-      party_a_ask_receiver_fill: data.party_a_ask_receiver_fill,
-      party_b_ask_receiver_fill: data.party_b_ask_receiver_fill,
-      party_a_name: data.party_a_name,
-      party_b_name: data.party_b_name
-    });
-    
-    // Replace empty fields with "fill here" placeholders when ask_receiver_fill is checked
-    const processedData = { ...data };
-    
-    // Handle Party A fields
-    if (data.party_a_ask_receiver_fill) {
-      processedData.party_a_name = data.party_a_name || "[fill here]";
-      processedData.party_a_address = data.party_a_address || "[fill here]";
-      processedData.party_a_signatory_name = data.party_a_signatory_name || "[fill here]";
-      processedData.party_a_title = data.party_a_title || "[fill here]";
-      console.log('Party A ask receiver to fill - using placeholders');
-    }
-    
-    // Handle Party B fields
-    if (data.party_b_ask_receiver_fill) {
-      processedData.party_b_name = data.party_b_name || "[fill here]";
-      processedData.party_b_address = data.party_b_address || "[fill here]";
-      processedData.party_b_signatory_name = data.party_b_signatory_name || "[fill here]";
-      processedData.party_b_title = data.party_b_title || "[fill here]";
-      processedData.party_b_email = data.party_b_email || "[fill here]";
-      console.log('Party B ask receiver to fill - using placeholders');
-    }
-    
-    console.log('Processed data for template:', {
-      party_a_name: processedData.party_a_name,
-      party_b_name: processedData.party_b_name
-    });
-    
-    // Read template
-    const templatePath = path.join(process.cwd(), 'templates', 'mutual-nda-v3.hbs')
-    const templateContent = fs.readFileSync(templatePath, 'utf8')
-    const template = Handlebars.compile(templateContent)
-    
-    // Generate HTML
-    const html = template(processedData)
-    console.log('HTML generated, length:', html.length);
-    
-    // Find Chrome executable
-    const chromePath = findChrome()
-    if (!chromePath) {
-      return NextResponse.json({ error: 'Chrome not found' }, { status: 500 })
+    const body = await request.json()
+    console.log('📄 Preview request received')
+
+    // Support both draftId (for saved drafts) and direct data (for unsaved forms)
+    let formData: Record<string, unknown>
+    let templateId = 'mutual-nda-v3' // Default template
+
+    if (body.draftId) {
+      // Load from database
+      console.log('📄 Loading draft from database:', body.draftId)
+      
+      const user = await prisma.users.findUnique({
+        where: { external_id: userId }
+      })
+
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
+
+      const draft = await prisma.nda_drafts.findUnique({
+        where: {
+          id: body.draftId,
+          created_by_id: user.id
+        }
+      })
+
+      if (!draft) {
+        return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+      }
+
+      formData = (draft.data as Record<string, unknown>) || {}
+      // Use template from draft or fall back to default
+      // Note: template_id in DB is UUID, we'll need to map this later
+      // For now, use the default template
+    } else {
+      // Use provided data directly
+      formData = { ...body }
+      delete formData.draftId // Clean up if present
+      // Allow template override from request
+      if (body.templateId) {
+        templateId = body.templateId
+      }
     }
 
-    // Generate PDF
-    const browser = await puppeteer.launch({
-      executablePath: chromePath,
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    })
+    // Process "ask receiver to fill" placeholders
+    const processedData = { ...formData }
     
-    const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
+    if (formData.party_a_ask_receiver_fill) {
+      processedData.party_a_name = formData.party_a_name || "[To be filled by receiving party]"
+      processedData.party_a_address = formData.party_a_address || "[To be filled by receiving party]"
+      processedData.party_a_signatory_name = formData.party_a_signatory_name || "[To be filled by receiving party]"
+      processedData.party_a_title = formData.party_a_title || "[To be filled by receiving party]"
+      console.log('📄 Party A: ask receiver to fill')
+    }
     
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
-    })
-    
-    await browser.close()
-    
-    // Convert to base64
-    const base64 = Buffer.from(pdfBuffer).toString('base64')
+    if (formData.party_b_ask_receiver_fill) {
+      processedData.party_b_name = formData.party_b_name || "[To be filled by receiving party]"
+      processedData.party_b_address = formData.party_b_address || "[To be filled by receiving party]"
+      processedData.party_b_signatory_name = formData.party_b_signatory_name || "[To be filled by receiving party]"
+      processedData.party_b_title = formData.party_b_title || "[To be filled by receiving party]"
+      processedData.party_b_email = formData.party_b_email || "[To be filled by receiving party]"
+      console.log('📄 Party B: ask receiver to fill')
+    }
+
+    console.log('📄 Rendering HTML from template...')
+    const html = await renderNdaHtml(processedData, templateId)
+
+    console.log('📄 Converting HTML to PDF...')
+    const pdfBuffer = await htmlToPdf(html)
+
+    console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes')
+
+    // Return as base64 data URL for compatibility with existing UI
+    const base64 = pdfBuffer.toString('base64')
     const dataUrl = `data:application/pdf;base64,${base64}`
-    
-    return NextResponse.json({ fileUrl: dataUrl })
+
+    return NextResponse.json({
+      fileUrl: dataUrl,
+      base64,
+      mime: 'application/pdf',
+      filename: `${formData.docName || 'NDA'}.pdf`
+    })
+
   } catch (error) {
-    console.error('Preview error:', error)
-    return NextResponse.json({ error: 'Failed to generate preview' }, { status: 500 })
+    console.error('❌ Error generating preview:', error)
+    return NextResponse.json({
+      error: 'Failed to generate preview',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

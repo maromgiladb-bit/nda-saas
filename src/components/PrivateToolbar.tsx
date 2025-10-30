@@ -16,7 +16,7 @@ export default function PrivateToolbar() {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
-    { name: 'Fill NDA', href: '/fillnda', current: pathname === '/fillnda' },
+    { name: 'Fill NDA', href: '/templates', current: pathname === '/fillnda' || pathname === '/templates' },
     { name: 'My NDAs', href: '/mynda', current: pathname === '/mynda' },
     { name: 'My Drafts', href: '/mydrafts', current: pathname === '/mydrafts' },
     { name: 'Company Details', href: '/companydetails', current: pathname === '/companydetails' },
@@ -196,7 +196,7 @@ export default function PrivateToolbar() {
           {/* Right side buttons - Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
             <Link
-              href="/fillnda"
+              href="/templates"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm hover:shadow-md"
             >
               <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,7 +266,7 @@ export default function PrivateToolbar() {
             </div>
             <div className="px-2">
               <Link
-                href="/fillnda"
+                href="/templates"
                 className="w-full flex items-center justify-center px-4 py-2.5 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

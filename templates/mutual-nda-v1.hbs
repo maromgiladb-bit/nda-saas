@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{docName}} - Mutual Non-Disclosure Agreement</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.54cm;
+    }
+    body {
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #000;
+      margin: 0;
+      padding: 0;
+    }
+    .document {
+      max-width: 21cm;
+      margin: 0 auto;
+      padding: 0;
+    }
+    h1 {
+      text-align: center;
+      font-size: 16pt;
+      font-weight: bold;
+      margin: 0 0 1.5em 0;
+      text-transform: uppercase;
+    }
+    h2 {
+      font-size: 12pt;
+      font-weight: bold;
+      margin: 1.5em 0 0.5em 0;
+    }
+    p {
+      margin: 0.5em 0;
+      text-align: justify;
+    }
+    .recitals {
+      margin: 1em 0;
+    }
+    .parties-info {
+      margin: 1.5em 0;
+      line-height: 1.6;
+    }
+    .section {
+      margin: 1em 0;
+    }
+    .signatures {
+      margin-top: 3em;
+      page-break-inside: avoid;
+    }
+    .signature-block {
+      margin-top: 2em;
+      display: inline-block;
+      width: 45%;
+      vertical-align: top;
+    }
+    .signature-line {
+      border-top: 1px solid #000;
+      margin-top: 2em;
+      padding-top: 0.3em;
+    }
+    .notice-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+    }
+    .notice-table td {
+      padding: 0.5em;
+      vertical-align: top;
+      border: 1px solid #000;
+    }
+    .notice-table td:first-child {
+      font-weight: bold;
+      width: 30%;
+    }
+  </style>
+</head>
+<body>
+  <div class="document">
+    <h1>Mutual Non-Disclosure Agreement</h1>
+
+    <div class="parties-info">
+      <p><strong>This Mutual Non-Disclosure Agreement</strong> (the "Agreement") is entered into as of <strong>{{effective_date}}</strong> (the "Effective Date"), by and between:</p>
+      
+      <p style="margin-top: 1em;">
+        <strong>Party A:</strong> {{party_a_name}}<br>
+        {{#if party_a_title}}{{party_a_title}}<br>{{/if}}
+        {{party_a_address}}<br>
+        {{#if party_a_email}}Email: {{party_a_email}}<br>{{/if}}
+        {{#if party_a_phone}}Phone: {{party_a_phone}}{{/if}}
+      </p>
+
+      <p style="margin-top: 1em;">
+        <strong>Party B:</strong> {{party_b_name}}<br>
+        {{#if party_b_title}}{{party_b_title}}<br>{{/if}}
+        {{party_b_address}}<br>
+        Email: {{party_b_email}}<br>
+        {{#if party_b_phone}}Phone: {{party_b_phone}}{{/if}}
+      </p>
+
+      <p style="margin-top: 1em;">Party A and Party B are collectively referred to as the "Parties" and individually as a "Party."</p>
+    </div>
+
+    <div class="recitals">
+      <p><strong>WHEREAS</strong>, the Parties wish to explore a business opportunity of mutual interest and benefit related to <strong>{{docName}}</strong> (the "Purpose"); and</p>
+      
+      <p><strong>WHEREAS</strong>, in connection with such discussions, each Party may disclose to the other certain confidential and proprietary information; and</p>
+      
+      <p><strong>WHEREAS</strong>, the Parties desire to protect the confidentiality of such information.</p>
+      
+      <p><strong>NOW, THEREFORE</strong>, in consideration of the mutual covenants and agreements contained herein, and for other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the Parties agree as follows:</p>
+    </div>
+
+    <div class="section">
+      <h2>1. Definition of Confidential Information</h2>
+      <p>"Confidential Information" means any information, technical data, or know-how, including, but not limited to, that which relates to research, product plans, products, services, customers, customer lists, markets, software, developments, inventions, processes, formulas, technology, designs, drawings, engineering, hardware configuration information, marketing, finances, or other business information disclosed by one Party (the "Disclosing Party") to the other Party (the "Receiving Party"), either directly or indirectly, in writing, orally, or by drawings or inspection of parts or equipment.</p>
+    </div>
+
+    <div class="section">
+      <h2>2. Exclusions from Confidential Information</h2>
+      <p>Confidential Information shall not include information that:</p>
+      <p style="margin-left: 2em;">(a) was publicly known and made generally available in the public domain prior to the time of disclosure by the Disclosing Party;</p>
+      <p style="margin-left: 2em;">(b) becomes publicly known and made generally available after disclosure by the Disclosing Party to the Receiving Party through no action or inaction of the Receiving Party;</p>
+      <p style="margin-left: 2em;">(c) is already in the possession of the Receiving Party at the time of disclosure by the Disclosing Party as shown by the Receiving Party's files and records immediately prior to the time of disclosure;</p>
+      <p style="margin-left: 2em;">(d) is obtained by the Receiving Party from a third party without a breach of such third party's obligations of confidentiality; or</p>
+      <p style="margin-left: 2em;">(e) is independently developed by the Receiving Party without use of or reference to the Disclosing Party's Confidential Information.</p>
+    </div>
+
+    <div class="section">
+      <h2>3. Obligations of Receiving Party</h2>
+      <p>The Receiving Party agrees to:</p>
+      <p style="margin-left: 2em;">(a) hold and maintain the Confidential Information in strictest confidence;</p>
+      <p style="margin-left: 2em;">(b) not disclose the Confidential Information to any third parties except as approved in writing by the Disclosing Party;</p>
+      <p style="margin-left: 2em;">(c) not use the Confidential Information for any purpose other than the Purpose without the prior written consent of the Disclosing Party;</p>
+      <p style="margin-left: 2em;">(d) protect the Confidential Information with the same degree of care it uses to protect its own confidential information, but in no event with less than reasonable care; and</p>
+      <p style="margin-left: 2em;">(e) limit disclosure of the Confidential Information to its employees, consultants, or advisors who have a legitimate need to know and who have been advised of the confidential nature of such information.</p>
+    </div>
+
+    <div class="section">
+      <h2>4. Return of Materials</h2>
+      <p>Upon the written request of the Disclosing Party, the Receiving Party shall promptly return all documents, materials, and other tangible items containing or representing Confidential Information and all copies thereof, or certify in writing that all such materials have been destroyed.</p>
+    </div>
+
+    <div class="section">
+      <h2>5. No Obligation</h2>
+      <p>Nothing in this Agreement shall obligate either Party to proceed with any transaction between them, and each Party reserves the right, in its sole discretion, to terminate the discussions contemplated by this Agreement.</p>
+    </div>
+
+    <div class="section">
+      <h2>6. No Warranty</h2>
+      <p>All Confidential Information is provided "AS IS." The Disclosing Party makes no warranties, express or implied, as to the accuracy or completeness of the Confidential Information.</p>
+    </div>
+
+    <div class="section">
+      <h2>7. Ownership</h2>
+      <p>All Confidential Information remains the property of the Disclosing Party. Nothing in this Agreement grants any rights to the Receiving Party in or to the Confidential Information other than the limited right to review such Confidential Information solely for the Purpose.</p>
+    </div>
+
+    <div class="section">
+      <h2>8. Term and Termination</h2>
+      <p>This Agreement shall commence on the Effective Date and continue for a period of <strong>{{term_months}} months</strong>, unless earlier terminated by either Party upon thirty (30) days' written notice to the other Party. The obligations of confidentiality shall survive termination of this Agreement and continue for a period of three (3) years from the date of termination.</p>
+    </div>
+
+    <div class="section">
+      <h2>9. Remedies</h2>
+      <p>The Parties acknowledge that monetary damages may not be a sufficient remedy for unauthorized disclosure of Confidential Information and that the Disclosing Party shall be entitled, without waiving any other rights or remedies, to seek equitable relief, including injunction and specific performance, in the event of any breach or threatened breach of this Agreement.</p>
+    </div>
+
+    <div class="section">
+      <h2>10. Governing Law</h2>
+      <p>This Agreement shall be governed by and construed in accordance with the laws of the State of <strong>{{governing_law}}</strong>, without regard to its conflict of law principles.</p>
+    </div>
+
+    <div class="section">
+      <h2>11. Entire Agreement</h2>
+      <p>This Agreement constitutes the entire agreement between the Parties concerning the subject matter hereof and supersedes all prior or contemporaneous oral or written agreements concerning such subject matter.</p>
+    </div>
+
+    <div class="section">
+      <h2>12. Amendment</h2>
+      <p>This Agreement may be amended only by a written instrument signed by both Parties.</p>
+    </div>
+
+    <div class="section">
+      <h2>13. Notices</h2>
+      <p>All notices required or permitted under this Agreement shall be in writing and shall be sent to the addresses specified below:</p>
+      
+      <table class="notice-table">
+        <tr>
+          <td><strong>Party A:</strong></td>
+          <td>
+            {{party_a_name}}<br>
+            {{party_a_address}}<br>
+            {{#if party_a_email}}Email: {{party_a_email}}{{/if}}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Party B:</strong></td>
+          <td>
+            {{party_b_name}}<br>
+            {{party_b_address}}<br>
+            Email: {{party_b_email}}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>14. Severability</h2>
+      <p>If any provision of this Agreement is held to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.</p>
+    </div>
+
+    <div class="section">
+      <h2>15. Counterparts</h2>
+      <p>This Agreement may be executed in counterparts, each of which shall be deemed an original and all of which together shall constitute one and the same instrument.</p>
+    </div>
+
+    <div class="signatures">
+      <p><strong>IN WITNESS WHEREOF</strong>, the Parties have executed this Mutual Non-Disclosure Agreement as of the date first written above.</p>
+
+      <div class="signature-block" style="margin-right: 5%;">
+        <p><strong>PARTY A:</strong></p>
+        <p>{{party_a_name}}</p>
+        <div class="signature-line">
+          <p>By: {{#if party_a_signatory_name}}{{party_a_signatory_name}}{{else}}_______________________{{/if}}</p>
+          {{#if party_a_title}}<p>Title: {{party_a_title}}</p>{{/if}}
+          <p>Date: _______________________</p>
+        </div>
+      </div>
+
+      <div class="signature-block">
+        <p><strong>PARTY B:</strong></p>
+        <p>{{party_b_name}}</p>
+        <div class="signature-line">
+          <p>By: {{#if party_b_signatory_name}}{{party_b_signatory_name}}{{else}}_______________________{{/if}}</p>
+          {{#if party_b_title}}<p>Title: {{party_b_title}}</p>{{/if}}
+          <p>Date: _______________________</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
