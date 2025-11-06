@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@/generated/prisma";
+import { sendEmail, getAppUrl } from "@/lib/email";
+import { renderNdaHtml } from "@/lib/renderNdaHtml";
+import { htmlToPdf } from "@/lib/htmlToPdf";
 
 const prisma = new PrismaClient();
 
@@ -64,13 +67,14 @@ export async function POST(
 			party_b_signed_at: signature_date,
 		};
 
+		// Update draft status to SIGNED since Party B has signed
 		await prisma.nda_drafts.update({
 			where: { id: draft.id },
 			data: {
 				data: updatedData,
 				updated_at: new Date(),
 				last_actor: "RECIPIENT",
-				status: "READY_TO_SIGN", // Update status to indicate Party B has signed
+				status: "SIGNED", // Mark as fully signed
 				provisional_recipient_signed_at: new Date(),
 			},
 		});
@@ -105,7 +109,48 @@ export async function POST(
 			},
 		});
 
-		// TODO: Send notification email to Party A (owner)
+		// Send notification email to Party A (owner) with signed PDF
+		try {
+			// Get the owner's email
+			const owner = await prisma.users.findUnique({
+				where: { id: draft.created_by_id },
+			});
+
+			if (owner?.email) {
+				console.log("📧 Preparing to send signed document to Party A:", owner.email);
+
+				// Generate PDF with all signatures
+				const html = await renderNdaHtml(updatedData, draft.template_id);
+				const pdfBuffer = await htmlToPdf(html);
+				const pdfBase64 = pdfBuffer.toString("base64");
+
+				console.log("📄 Signed PDF generated, size:", pdfBuffer.length, "bytes");
+
+				// Send email with signed PDF
+				await sendEmail({
+					to: owner.email,
+					subject: `✅ NDA Signed – ${draft.title || "NDA"}`,
+					html: partyASignedNotificationHtml(
+						draft.title || "Untitled NDA",
+						party_b_signatory_name,
+						signRequest.signers.email,
+						`${getAppUrl()}/dashboard`
+					),
+					attachments: [
+						{
+							filename: `${draft.title || "NDA"}-SIGNED-${draft.id.substring(0, 8)}.pdf`,
+							content: pdfBase64,
+							contentType: "application/pdf",
+						},
+					],
+				});
+
+				console.log("✅ Signed document notification sent to Party A");
+			}
+		} catch (emailError) {
+			console.error("❌ Failed to send signed document notification:", emailError);
+			// Don't fail the request if email fails
+		}
 
 		return NextResponse.json({
 			success: true,
@@ -118,6 +163,77 @@ export async function POST(
 			{ status: 500 }
 		);
 	}
+}
+
+// Email template for Party A notification
+function partyASignedNotificationHtml(
+	draftTitle: string,
+	signatoryName: string,
+	signerEmail: string,
+	dashboardLink: string
+): string {
+	return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
+          .content { background: #f9fafb; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+          .success { color: #16a34a; font-size: 48px; margin-bottom: 20px; }
+          .info-box { background: white; padding: 20px; border-radius: 6px; margin: 20px 0; text-align: left; }
+          .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+          .info-row:last-child { border-bottom: none; }
+          .info-label { font-weight: 600; color: #6b7280; }
+          .info-value { color: #111827; }
+          .button { display: inline-block; background: linear-gradient(135deg, #2563eb, #9333ea); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+          .attachment-notice { background: #dbeafe; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; text-align: left; }
+          .footer { text-align: center; color: #6b7280; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">agreedo</div>
+          </div>
+          <div class="content">
+            <div class="success">✓</div>
+            <h2>NDA Successfully Signed!</h2>
+            <p><strong>${draftTitle}</strong></p>
+            <p>Your NDA has been signed by the recipient. The fully executed document is attached to this email.</p>
+            
+            <div class="info-box">
+              <div class="info-row">
+                <span class="info-label">Signed by:</span>
+                <span class="info-value">${signatoryName}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">${signerEmail}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Date:</span>
+                <span class="info-value">${new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            <div class="attachment-notice">
+              <strong>📎 Signed PDF Attached</strong><br>
+              The fully executed NDA with all signatures is attached to this email. Please save it for your records.
+            </div>
+
+            <a href="${dashboardLink}" class="button">View in Dashboard</a>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} agreedo. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
 }
 
 async function getNextRevisionNumber(draftId: string): Promise<number> {

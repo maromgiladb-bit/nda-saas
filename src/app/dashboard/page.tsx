@@ -29,7 +29,7 @@ interface Draft {
   }[]
 }
 
-type FilterStatus = 'ALL' | 'DRAFT' | 'SENT' | 'SIGNED' | 'VOID' | 'PENDING_OWNER_REVIEW' | 'WAITING_REVIEW'
+type FilterStatus = 'ALL' | 'DRAFT' | 'SENT' | 'SIGNED' | 'VOID' | 'PENDING_REVIEW' | 'WAITING_SIGNATURE'
 
 export default function Dashboard() {
   const [drafts, setDrafts] = useState<Draft[]>([])
@@ -84,7 +84,21 @@ export default function Dashboard() {
     
     // Filter by status
     if (filterStatus !== 'ALL') {
-      filtered = filtered.filter(d => d.status.toUpperCase() === filterStatus)
+      if (filterStatus === 'PENDING_REVIEW') {
+        // Combine PENDING_OWNER_REVIEW and WAITING_REVIEW
+        filtered = filtered.filter(d => 
+          d.status.toUpperCase() === 'PENDING_OWNER_REVIEW' || 
+          d.status.toUpperCase() === 'WAITING_REVIEW'
+        )
+      } else if (filterStatus === 'WAITING_SIGNATURE') {
+        // NDAs sent and waiting to be signed (SENT or READY_TO_SIGN)
+        filtered = filtered.filter(d => 
+          d.status.toUpperCase() === 'SENT' || 
+          d.status.toUpperCase() === 'READY_TO_SIGN'
+        )
+      } else {
+        filtered = filtered.filter(d => d.status.toUpperCase() === filterStatus)
+      }
     }
     
     // Filter by search query
@@ -210,55 +224,55 @@ export default function Dashboard() {
           </button>
 
           <button
-            onClick={() => setFilterStatus('PENDING_OWNER_REVIEW')}
+            onClick={() => setFilterStatus('PENDING_REVIEW')}
             className={`bg-white p-6 rounded-xl shadow-md border transition-all text-left ${
-              filterStatus === 'PENDING_OWNER_REVIEW' 
+              filterStatus === 'PENDING_REVIEW' 
                 ? 'border-yellow-500 ring-2 ring-yellow-200 shadow-lg' 
                 : 'border-gray-100 hover:shadow-lg hover:border-yellow-200'
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Action Needed</p>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Pending Review</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {drafts.filter(d => d.status === 'PENDING_OWNER_REVIEW').length}
+                  {drafts.filter(d => d.status === 'PENDING_OWNER_REVIEW' || d.status === 'WAITING_REVIEW').length}
                 </p>
               </div>
               <div className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all ${
-                filterStatus === 'PENDING_OWNER_REVIEW' 
+                filterStatus === 'PENDING_REVIEW' 
                   ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md' 
                   : 'bg-gradient-to-br from-yellow-100 to-yellow-200'
               }`}>
-                <svg className={`h-6 w-6 ${filterStatus === 'PENDING_OWNER_REVIEW' ? 'text-white' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg className={`h-6 w-6 ${filterStatus === 'PENDING_REVIEW' ? 'text-white' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
             </div>
           </button>
 
           <button
-            onClick={() => setFilterStatus('WAITING_REVIEW')}
+            onClick={() => setFilterStatus('WAITING_SIGNATURE')}
             className={`bg-white p-6 rounded-xl shadow-md border transition-all text-left ${
-              filterStatus === 'WAITING_REVIEW' 
-                ? 'border-yellow-500 ring-2 ring-yellow-200 shadow-lg' 
-                : 'border-gray-100 hover:shadow-lg hover:border-yellow-200'
+              filterStatus === 'WAITING_SIGNATURE' 
+                ? 'border-purple-500 ring-2 ring-purple-200 shadow-lg' 
+                : 'border-gray-100 hover:shadow-lg hover:border-purple-200'
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Waiting Review</p>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Waiting Signature</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {drafts.filter(d => d.status === 'WAITING_REVIEW').length}
+                  {drafts.filter(d => d.status === 'SENT' || d.status === 'READY_TO_SIGN').length}
                 </p>
               </div>
               <div className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all ${
-                filterStatus === 'WAITING_REVIEW' 
-                  ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md' 
-                  : 'bg-gradient-to-br from-yellow-100 to-yellow-200'
+                filterStatus === 'WAITING_SIGNATURE' 
+                  ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-md' 
+                  : 'bg-gradient-to-br from-purple-100 to-purple-200'
               }`}>
-                <svg className={`h-6 w-6 ${filterStatus === 'WAITING_REVIEW' ? 'text-white' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <svg className={`h-6 w-6 ${filterStatus === 'WAITING_SIGNATURE' ? 'text-white' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </div>
             </div>
@@ -268,8 +282,8 @@ export default function Dashboard() {
             onClick={() => setFilterStatus('SENT')}
             className={`bg-white p-6 rounded-xl shadow-md border transition-all text-left ${
               filterStatus === 'SENT' 
-                ? 'border-purple-500 ring-2 ring-purple-200 shadow-lg' 
-                : 'border-gray-100 hover:shadow-lg hover:border-purple-200'
+                ? 'border-blue-500 ring-2 ring-blue-200 shadow-lg' 
+                : 'border-gray-100 hover:shadow-lg hover:border-blue-200'
             }`}
           >
             <div className="flex items-center justify-between">
@@ -281,10 +295,10 @@ export default function Dashboard() {
               </div>
               <div className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all ${
                 filterStatus === 'SENT' 
-                  ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-md' 
-                  : 'bg-gradient-to-br from-purple-100 to-purple-200'
+                  ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-md' 
+                  : 'bg-gradient-to-br from-blue-100 to-blue-200'
               }`}>
-                <svg className={`h-6 w-6 ${filterStatus === 'SENT' ? 'text-white' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`h-6 w-6 ${filterStatus === 'SENT' ? 'text-white' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
               </div>
@@ -521,7 +535,133 @@ export default function Dashboard() {
                             </Link>
                           ) : null
                         })()}
+                        {(draft.status === 'SENT' || draft.status === 'READY_TO_SIGN') && draft.signers && draft.signers.length > 0 && (() => {
+                          const recipientSigner = draft.signers.find(s => s.role === 'Party B' || s.role === 'Recipient')
+                          const signToken = recipientSigner?.sign_requests?.[0]?.token
+                          return signToken ? (
+                            <Link 
+                              href={`/review-nda/${signToken}`}
+                              className="inline-flex items-center px-4 py-2 border border-purple-300 text-sm font-medium text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100 hover:border-purple-400 transition-all animate-pulse"
+                            >
+                              <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                              Review & Sign
+                            </Link>
+                          ) : null
+                        })()}
                       </div>
+
+                      {/* Developer Controls - Show all available tokens */}
+                      {draft.signers && draft.signers.length > 0 && draft.signers.some(s => s.sign_requests && s.sign_requests.length > 0) && (
+                        <details className="mt-3 border-t border-gray-200 pt-3">
+                          <summary className="cursor-pointer text-xs font-medium text-gray-500 uppercase tracking-wide hover:text-gray-700">
+                            🔧 Dev Controls
+                          </summary>
+                          <div className="mt-3 space-y-2">
+                            {draft.signers.map((signer) => {
+                              const token = signer.sign_requests?.[0]?.token
+                              const scope = signer.sign_requests?.[0]?.scope
+                              if (!token) return null
+                              
+                              return (
+                                <div key={signer.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-semibold text-gray-700 truncate">{signer.role}</p>
+                                      <p className="text-xs text-gray-500 truncate">{signer.email}</p>
+                                      <p className="text-xs text-gray-400 mt-0.5">
+                                        Scope: <span className="font-mono">{scope}</span>
+                                      </p>
+                                    </div>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                      signer.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                      signer.status === 'SIGNED' ? 'bg-green-100 text-green-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {signer.status}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {scope === 'review-suggestions' && (
+                                      <>
+                                        <Link
+                                          href={`/review-suggestions/${token}`}
+                                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors"
+                                          target="_blank"
+                                        >
+                                          <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                          </svg>
+                                          Review Suggestions
+                                        </Link>
+                                        <Link
+                                          href={`/review/${token}`}
+                                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded hover:bg-purple-100 transition-colors"
+                                          target="_blank"
+                                        >
+                                          <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                          </svg>
+                                          Review (Approve)
+                                        </Link>
+                                      </>
+                                    )}
+                                    {scope === 'review-and-sign' && (
+                                      <>
+                                        <Link
+                                          href={`/review-nda/${token}`}
+                                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded hover:bg-green-100 transition-colors"
+                                          target="_blank"
+                                        >
+                                          <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                          </svg>
+                                          Review & Sign
+                                        </Link>
+                                        <Link
+                                          href={`/sign/${token}`}
+                                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors"
+                                          target="_blank"
+                                        >
+                                          <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                          </svg>
+                                          Sign Page
+                                        </Link>
+                                      </>
+                                    )}
+                                    {scope === 'fill-missing-fields' && (
+                                      <Link
+                                        href={`/fillnda/${token}`}
+                                        className="inline-flex items-center px-2 py-1 text-xs font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded hover:bg-orange-100 transition-colors"
+                                        target="_blank"
+                                      >
+                                        <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Fill Missing Fields
+                                      </Link>
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(token)
+                                        alert('Token copied to clipboard!')
+                                      }}
+                                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                                    >
+                                      <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      </svg>
+                                      Copy Token
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </details>
+                      )}
                     </div>
                   </div>
                 ))}

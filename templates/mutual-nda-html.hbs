@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{docName}}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #1a1a1a;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .document-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+        }
+        .document-title {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .document-subtitle {
+            font-size: 11pt;
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+        .section {
+            margin: 25px 0;
+        }
+        .section-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 4px;
+        }
+        .section-number {
+            display: inline-block;
+            min-width: 30px;
+        }
+        .content-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .parties-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 8px;
+        }
+        .party-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .party-label {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 13pt;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+        .field-row {
+            margin: 8px 0;
+        }
+        .field-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 10pt;
+        }
+        .field-value {
+            color: #2c3e50;
+            font-size: 11pt;
+        }
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .definition {
+            font-style: italic;
+            color: #555;
+        }
+        .list-item {
+            margin: 12px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .list-item:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 14pt;
+        }
+        .signature-section {
+            margin-top: 50px;
+            page-break-inside: avoid;
+        }
+        .signature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        .signature-block {
+            border: 2px solid #2c3e50;
+            padding: 20px;
+            border-radius: 8px;
+            background: white;
+        }
+        .signature-line {
+            border-bottom: 2px solid #2c3e50;
+            margin: 15px 0 5px 0;
+            min-height: 50px;
+        }
+        .signature-label {
+            font-size: 10pt;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .terms-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .term-item {
+            background: white;
+            border: 1px solid #bdc3c7;
+            padding: 12px;
+            border-radius: 4px;
+        }
+        .term-label {
+            font-size: 10pt;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+        }
+        .term-value {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        @media print {
+            body {
+                padding: 0;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="document-header">
+        <div class="document-title">{{docName}}</div>
+        <div class="document-subtitle">Mutual Non-Disclosure Agreement</div>
+        <div class="document-subtitle">Effective Date: <strong>{{effective_date}}</strong></div>
+    </div>
+
+    <!-- Introduction -->
+    <div class="section">
+        <p>This <strong>Mutual Non-Disclosure Agreement</strong> (the "Agreement") is entered into as of <span class="highlight">{{effective_date}}</span>, by and between:</p>
+    </div>
+
+    <!-- Parties Information -->
+    <div class="parties-info">
+        <div class="party-card">
+            <div class="party-label">Party A</div>
+            <div class="field-row">
+                <div class="field-label">Name:</div>
+                <div class="field-value">{{party_a_name}}</div>
+            </div>
+            <div class="field-row">
+                <div class="field-label">Address:</div>
+                <div class="field-value">{{party_a_address}}</div>
+            </div>
+            {{#if party_a_email}}
+            <div class="field-row">
+                <div class="field-label">Email:</div>
+                <div class="field-value">{{party_a_email}}</div>
+            </div>
+            {{/if}}
+        </div>
+        <div class="party-card">
+            <div class="party-label">Party B</div>
+            <div class="field-row">
+                <div class="field-label">Name:</div>
+                <div class="field-value">{{party_b_name}}</div>
+            </div>
+            <div class="field-row">
+                <div class="field-label">Address:</div>
+                <div class="field-value">{{party_b_address}}</div>
+            </div>
+            <div class="field-row">
+                <div class="field-label">Email:</div>
+                <div class="field-value">{{party_b_email}}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <p>Hereinafter individually referred to as a <span class="definition">"Party"</span> and collectively as the <span class="definition">"Parties"</span>.</p>
+    </div>
+
+    <!-- Agreement Terms Summary -->
+    <div class="content-box">
+        <strong>Agreement Terms at a Glance:</strong>
+        <div class="terms-grid">
+            <div class="term-item">
+                <div class="term-label">Term Duration</div>
+                <div class="term-value">{{term_months}} months</div>
+            </div>
+            <div class="term-item">
+                <div class="term-label">Confidentiality Period</div>
+                <div class="term-value">{{confidentiality_period_months}} months</div>
+            </div>
+            <div class="term-item">
+                <div class="term-label">Governing Law</div>
+                <div class="term-value">{{governing_law}}</div>
+            </div>
+            <div class="term-item">
+                <div class="term-label">IP Ownership</div>
+                <div class="term-value">{{ip_ownership}}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Purpose -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">1.</span> Purpose</div>
+        <p>The Parties wish to explore a business opportunity of mutual interest and in connection with this opportunity, each Party may disclose to the other certain confidential technical and business information that the disclosing Party desires the receiving Party to treat as confidential.</p>
+    </div>
+
+    <!-- Section 2: Definition of Confidential Information -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">2.</span> Confidential Information</div>
+        <p><strong>"Confidential Information"</strong> means all information disclosed by one Party (the <span class="definition">"Disclosing Party"</span>) to the other Party (the <span class="definition">"Receiving Party"</span>), whether orally, in writing, or in any other form, that is designated as confidential or that reasonably should be understood to be confidential given the nature of the information and the circumstances of disclosure.</p>
+        
+        <div class="content-box">
+            <p><strong>Confidential Information includes, but is not limited to:</strong></p>
+            <div class="list-item">Trade secrets, inventions, ideas, processes, formulas, and techniques</div>
+            <div class="list-item">Technical data, designs, specifications, and documentation</div>
+            <div class="list-item">Business strategies, marketing plans, and financial information</div>
+            <div class="list-item">Customer and supplier lists, pricing information, and sales data</div>
+            <div class="list-item">Software, source code, and proprietary technology</div>
+            <div class="list-item">Research and development information</div>
+            <div class="list-item">Any information marked as "Confidential" or similar designation</div>
+        </div>
+    </div>
+
+    <!-- Section 3: Exclusions -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">3.</span> Exclusions from Confidential Information</div>
+        <p>Confidential Information does not include information that:</p>
+        <div class="list-item">Was publicly known and made generally available prior to disclosure by the Disclosing Party</div>
+        <div class="list-item">Becomes publicly known and made generally available after disclosure through no action or inaction of the Receiving Party</div>
+        <div class="list-item">Was in the Receiving Party's possession prior to disclosure by the Disclosing Party, as evidenced by written records</div>
+        <div class="list-item">Is obtained by the Receiving Party from a third party without breach of such third party's obligations of confidentiality</div>
+        <div class="list-item">Is independently developed by the Receiving Party without use of or reference to the Confidential Information</div>
+        <div class="list-item">Is required to be disclosed by law, court order, or government regulation (provided notice is given to the Disclosing Party)</div>
+    </div>
+
+    <!-- Section 4: Obligations -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">4.</span> Obligations of Receiving Party</div>
+        <p>The Receiving Party agrees to:</p>
+        <div class="list-item">Hold and maintain the Confidential Information in strict confidence</div>
+        <div class="list-item">Use the Confidential Information solely for the purpose of evaluating or pursuing the business opportunity between the Parties</div>
+        <div class="list-item">Not disclose the Confidential Information to any third parties without prior written consent</div>
+        <div class="list-item">Restrict disclosure to employees, consultants, and advisors who have a legitimate need to know and who are bound by confidentiality obligations</div>
+        <div class="list-item">Protect the Confidential Information with the same degree of care used to protect its own confidential information, but in no case less than reasonable care</div>
+        <div class="list-item">Immediately notify the Disclosing Party of any unauthorized use or disclosure</div>
+    </div>
+
+    <!-- Section 5: Intellectual Property -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">5.</span> Intellectual Property Rights</div>
+        <p><strong>Ownership:</strong> {{ip_ownership}}</p>
+        <p>All Confidential Information remains the sole property of the Disclosing Party. No license or right under any patent, copyright, trademark, or other intellectual property right is granted or implied by this Agreement.</p>
+    </div>
+
+    <!-- Section 6: Non-Solicitation -->
+    {{#if non_solicit}}
+    <div class="section">
+        <div class="section-title"><span class="section-number">6.</span> Non-Solicitation</div>
+        <p><strong>Non-Solicitation Terms:</strong> {{non_solicit}}</p>
+        <p>During the term of this Agreement and for a period thereafter, the Parties agree not to solicit or attempt to hire each other's employees or contractors without prior written consent.</p>
+    </div>
+    {{/if}}
+
+    <!-- Section 7: Exclusivity -->
+    {{#if exclusivity}}
+    <div class="section">
+        <div class="section-title"><span class="section-number">7.</span> Exclusivity</div>
+        <p><strong>Exclusivity Terms:</strong> {{exclusivity}}</p>
+    </div>
+    {{/if}}
+
+    <!-- Section 8: Return of Materials -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">8.</span> Return or Destruction of Materials</div>
+        <p>Upon request by the Disclosing Party, or upon termination of this Agreement, the Receiving Party shall promptly return all Confidential Information, including all copies, notes, and derivatives thereof, or certify in writing that all such materials have been destroyed.</p>
+    </div>
+
+    <!-- Section 9: Term and Termination -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">9.</span> Term and Termination</div>
+        <p>This Agreement shall commence on the Effective Date and continue for a period of <span class="highlight">{{term_months}} months</span>.</p>
+        <p>The confidentiality obligations set forth in this Agreement shall survive for a period of <span class="highlight">{{confidentiality_period_months}} months</span> from the date of disclosure of the Confidential Information, or until the Confidential Information no longer qualifies as confidential under the terms of this Agreement, whichever occurs first.</p>
+    </div>
+
+    <!-- Section 10: No Warranty -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">10.</span> No Warranty</div>
+        <p>All Confidential Information is provided "AS IS" without any warranty, express or implied. The Disclosing Party makes no representation as to the accuracy or completeness of the Confidential Information.</p>
+    </div>
+
+    <!-- Section 11: Remedies -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">11.</span> Remedies</div>
+        <p>The Parties acknowledge that monetary damages may not be a sufficient remedy for unauthorized disclosure of Confidential Information and that the Disclosing Party shall be entitled to seek equitable relief, including injunction and specific performance, in addition to all other remedies available at law or in equity.</p>
+    </div>
+
+    <!-- Section 12: Governing Law -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">12.</span> Governing Law and Jurisdiction</div>
+        <p>This Agreement shall be governed by and construed in accordance with the laws of <span class="highlight">{{governing_law}}</span>, without regard to its conflict of law principles. Any disputes arising under or in connection with this Agreement shall be subject to the exclusive jurisdiction of the courts located in {{governing_law}}.</p>
+    </div>
+
+    <!-- Section 13: Miscellaneous -->
+    <div class="section">
+        <div class="section-title"><span class="section-number">13.</span> Miscellaneous</div>
+        <p><strong>Entire Agreement:</strong> This Agreement constitutes the entire agreement between the Parties concerning the subject matter hereof and supersedes all prior agreements and understandings, whether written or oral.</p>
+        <p><strong>Amendment:</strong> This Agreement may only be amended or modified by a written instrument signed by both Parties.</p>
+        <p><strong>Waiver:</strong> No waiver of any provision of this Agreement shall be deemed or shall constitute a waiver of any other provision.</p>
+        <p><strong>Severability:</strong> If any provision of this Agreement is held to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.</p>
+        <p><strong>Assignment:</strong> Neither Party may assign this Agreement without the prior written consent of the other Party.</p>
+    </div>
+
+    <!-- Signature Section -->
+    <div class="signature-section">
+        <p style="text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 30px;">IN WITNESS WHEREOF, the Parties have executed this Agreement as of the date first written above.</p>
+        
+        <div class="signature-grid">
+            <div class="signature-block">
+                <div class="party-label">Party A</div>
+                <div class="field-value" style="margin: 10px 0; font-weight: bold;">{{party_a_name}}</div>
+                <div class="signature-line"></div>
+                <div class="signature-label">Signature</div>
+                <div class="field-row" style="margin-top: 15px;">
+                    <div class="field-label">Name:</div>
+                    <div class="field-value">{{party_a_signatory_name}}</div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">Title:</div>
+                    <div class="field-value">{{party_a_title}}</div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">Date:</div>
+                    <div class="field-value">_____________________</div>
+                </div>
+            </div>
+
+            <div class="signature-block">
+                <div class="party-label">Party B</div>
+                <div class="field-value" style="margin: 10px 0; font-weight: bold;">{{party_b_name}}</div>
+                <div class="signature-line"></div>
+                <div class="signature-label">Signature</div>
+                <div class="field-row" style="margin-top: 15px;">
+                    <div class="field-label">Name:</div>
+                    <div class="field-value">{{party_b_signatory_name}}</div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">Title:</div>
+                    <div class="field-value">{{party_b_title}}</div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">Date:</div>
+                    <div class="field-value">_____________________</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #bdc3c7; text-align: center; color: #7f8c8d; font-size: 9pt;">
+        <p>This is a legally binding agreement. Both parties should review this document carefully before signing.</p>
+        <p>Document ID: {{#if draftId}}{{draftId}}{{else}}DRAFT{{/if}} | Generated: {{effective_date}}</p>
+    </div>
+</body>
+</html>

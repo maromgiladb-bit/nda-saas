@@ -83,6 +83,52 @@
       "updatedAt": "2025-10-30"
     },
     {
+      "id": "mutual-nda-html",
+      "name": "Mutual NDA (Modern HTML)",
+      "version": "1.0",
+      "category": "mutual",
+      "description": "Beautiful modern HTML-styled mutual NDA with gradient design, cards, and contemporary layout perfect for tech companies",
+      "templateFile": "mutual-nda-html.hbs",
+      "isActive": true,
+      "requiredFields": [
+        "effective_date",
+        "party_a_name",
+        "party_a_address",
+        "party_a_signatory_name",
+        "party_a_title",
+        "party_b_name",
+        "party_b_address",
+        "party_b_email",
+        "party_b_signatory_name",
+        "party_b_title",
+        "docName",
+        "term_months",
+        "confidentiality_period_months",
+        "governing_law",
+        "ip_ownership",
+        "non_solicit",
+        "exclusivity"
+      ],
+      "optionalFields": [
+        "party_a_email",
+        "party_b_phone"
+      ],
+      "defaultValues": {
+        "term_months": "12",
+        "confidentiality_period_months": "24",
+        "governing_law": "Delaware",
+        "ip_ownership": "All intellectual property remains with the disclosing party",
+        "non_solicit": "No solicitation of employees during term and 12 months after",
+        "exclusivity": "Non-exclusive agreement"
+      },
+      "previewImage": "/templates/previews/mutual-nda-html.png",
+      "tags": ["mutual", "modern", "html", "design", "tech", "startup"],
+      "changelog": "templates/CHANGELOG.md#mutual-nda-html-version-10---2025-11-03",
+      "deprecated": false,
+      "createdAt": "2025-11-03",
+      "updatedAt": "2025-11-03"
+    },
+    {
       "id": "one-way-nda-v1",
       "name": "One-Way NDA (Simple)",
       "version": "1.0",

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, finalSignedEmailHtml, recipientSignRequestEmailHtml, getAppUrl } from '@/lib/email'
+import { renderNdaHtml } from '@/lib/renderNdaHtml'
+import { htmlToPdf } from '@/lib/htmlToPdf'
 import { randomBytes } from 'crypto'
 
 export async function POST(
@@ -158,12 +160,24 @@ export async function POST(
           }
         })
 
-        // Send sign request email
+        // Send sign request email with PDF attachment
         const signLink = `${getAppUrl()}/sign/${signToken}`
+        
+        // Generate PDF for Party B to review before signing
+        const formData = draft.data as Record<string, unknown>
+        const html = await renderNdaHtml(formData, draft.template_id)
+        const pdfBuffer = await htmlToPdf(html)
+        const pdfBase64 = pdfBuffer.toString('base64')
+        
         await sendEmail({
           to: recipientSigner.email,
           subject: `Please review & sign your NDA – ${draft.title}`,
-          html: recipientSignRequestEmailHtml(draft.title || 'Untitled NDA', signLink)
+          html: recipientSignRequestEmailHtml(draft.title || 'Untitled NDA', signLink),
+          attachments: [{
+            filename: `${draft.title || 'NDA'}-${draft.id.substring(0, 8)}.pdf`,
+            content: pdfBase64,
+            contentType: 'application/pdf'
+          }]
         })
       }
 

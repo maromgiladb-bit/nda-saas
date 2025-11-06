@@ -1,12 +1,13 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import PublicToolbar from "@/components/PublicToolbar";
 
 type FormValues = Record<string, string>;
 type Suggestions = Record<string, string>;
 
-export default function ReviewSuggestions({ params }: { params: { token: string } }) {
+export default function ReviewSuggestions({ params }: { params: Promise<{ token: string }> }) {
+	const { token } = use(params);
 	const router = useRouter();
 	const [currentData, setCurrentData] = useState<FormValues>({});
 	const [suggestions, setSuggestions] = useState<Suggestions>({});
@@ -20,7 +21,7 @@ export default function ReviewSuggestions({ params }: { params: { token: string 
 	const loadSuggestions = useCallback(async () => {
 		try {
 			setLoading(true);
-			const res = await fetch(`/api/ndas/review-suggestions/${params.token}`);
+			const res = await fetch(`/api/ndas/review-suggestions/${token}`);
 			const data = await res.json();
 
 			if (!res.ok) {
@@ -38,7 +39,7 @@ export default function ReviewSuggestions({ params }: { params: { token: string 
 		} finally {
 			setLoading(false);
 		}
-	}, [params.token]);
+	}, [token]);
 
 	useEffect(() => {
 		loadSuggestions();
@@ -69,7 +70,7 @@ export default function ReviewSuggestions({ params }: { params: { token: string 
 			});
 
 			// Save changes
-			const res = await fetch(`/api/ndas/review-suggestions/${params.token}/apply`, {
+			const res = await fetch(`/api/ndas/review-suggestions/${token}/apply`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({

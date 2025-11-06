@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { diffForms, listChanges, formatFieldPath } from '@/lib/diff'
 import { sendEmail, ownerReviewEmailHtml, getAppUrl } from '@/lib/email'
+import { renderNdaHtml } from '@/lib/renderNdaHtml'
+import { htmlToPdf } from '@/lib/htmlToPdf'
 import { randomBytes } from 'crypto'
 
 interface Comment {
@@ -186,10 +188,20 @@ export async function PATCH(
       after: String(c.after || '')
     }))
 
+    // Generate PDF with updated data
+    const html = await renderNdaHtml(newForm, draft.template_id)
+    const pdfBuffer = await htmlToPdf(html)
+    const pdfBase64 = pdfBuffer.toString('base64')
+
     await sendEmail({
       to: draft.users.email,
       subject: `Review requested: changes to ${draft.title} (R${revNum})`,
-      html: ownerReviewEmailHtml(draft.title || 'Untitled NDA', revNum, reviewLink, changesSummary)
+      html: ownerReviewEmailHtml(draft.title || 'Untitled NDA', revNum, reviewLink, changesSummary),
+      attachments: [{
+        filename: `${draft.title || 'NDA'}-R${revNum}-${draft.id.substring(0, 8)}.pdf`,
+        content: pdfBase64,
+        contentType: 'application/pdf'
+      }]
     })
 
     return NextResponse.json({

@@ -10,9 +10,12 @@ export default function PrivateToolbar() {
   const { userId } = useAuth()
   const pathname = usePathname()
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
+  const [isDevMenuOpen, setIsDevMenuOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const moreMenuRef = useRef<HTMLDivElement>(null)
+  const devMenuRef = useRef<HTMLDivElement>(null)
   const moreMenuRefTablet = useRef<HTMLDivElement>(null)
+  const devMenuRefTablet = useRef<HTMLDivElement>(null)
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
@@ -24,10 +27,22 @@ export default function PrivateToolbar() {
   ]
 
   const additionalLinks = [
+    { name: 'Fill HTML NDA', href: '/fillndahtml' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
     { name: 'Plans', href: '/plans' },
   ]
+
+  const devLinks = [
+    { name: '🔧 Fill NDA (Classic)', href: '/fillnda' },
+    { name: '🎨 Fill NDA (HTML)', href: '/fillndahtml' },
+    { name: '📝 Review & Sign', href: '/review' },
+    { name: '✍️ Sign Page', href: '/sign' },
+    { name: '💡 Review Suggestions', href: '/review-suggestions' },
+    { name: '📋 Templates', href: '/templates' },
+  ]
+
+  const isDev = process.env.NODE_ENV === 'development'
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -38,6 +53,12 @@ export default function PrivateToolbar() {
         moreMenuRefTablet.current && !moreMenuRefTablet.current.contains(target)
       ) {
         setIsMoreMenuOpen(false)
+      }
+      if (
+        devMenuRef.current && !devMenuRef.current.contains(target) &&
+        devMenuRefTablet.current && !devMenuRefTablet.current.contains(target)
+      ) {
+        setIsDevMenuOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -126,6 +147,45 @@ export default function PrivateToolbar() {
                   </div>
                 )}
               </div>
+
+              {/* Dev Dropdown for desktop */}
+              {isDev && (
+                <div className="relative" ref={devMenuRef}>
+                  <button
+                    onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
+                    className={`inline-flex items-center px-3 py-1 border-b-2 text-sm font-medium transition-colors ${
+                      isDevMenuOpen ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:border-purple-300 hover:text-purple-700'
+                    }`}
+                  >
+                    🔧 Dev
+                    <svg className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {isDevMenuOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-purple-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                      <div className="py-1 bg-purple-50">
+                        <div className="px-4 py-2 text-xs font-semibold text-purple-600 uppercase tracking-wide">
+                          Development Tools
+                        </div>
+                      </div>
+                      <div className="py-1">
+                        {devLinks.map((link) => (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            className="block px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 transition-colors"
+                            onClick={() => setIsDevMenuOpen(false)}
+                          >
+                            {link.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Tablet/Small Desktop - Show first 2 items */}
@@ -190,6 +250,45 @@ export default function PrivateToolbar() {
                   </div>
                 )}
               </div>
+
+              {/* Dev Dropdown for tablet */}
+              {isDev && (
+                <div className="relative" ref={devMenuRefTablet}>
+                  <button
+                    onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
+                    className={`inline-flex items-center px-3 py-1 border-b-2 text-sm font-medium transition-colors ${
+                      isDevMenuOpen ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:border-purple-300 hover:text-purple-700'
+                    }`}
+                  >
+                    🔧 Dev
+                    <svg className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {isDevMenuOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-purple-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                      <div className="py-1 bg-purple-50">
+                        <div className="px-4 py-2 text-xs font-semibold text-purple-600 uppercase tracking-wide">
+                          Development Tools
+                        </div>
+                      </div>
+                      <div className="py-1">
+                        {devLinks.map((link) => (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            className="block px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 transition-colors"
+                            onClick={() => setIsDevMenuOpen(false)}
+                          >
+                            {link.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
@@ -258,6 +357,24 @@ export default function PrivateToolbar() {
                 {link.name}
               </Link>
             ))}
+            {isDev && (
+              <>
+                <div className="border-t border-gray-200 my-2"></div>
+                <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50 rounded-md">
+                  🔧 Dev Tools
+                </div>
+                {devLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-purple-700 hover:text-purple-900 hover:bg-purple-50 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </>
+            )}
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
             <div className="flex items-center px-4 mb-3">

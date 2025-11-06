@@ -34,7 +34,30 @@ export async function GET(
         created_by_id: dbUser.id 
       },
       include: {
-        signers: true
+        signers: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            status: true,
+            signed_at: true,
+            created_at: true,
+            sign_requests: {
+              select: {
+                token: true,
+                scope: true,
+                consumed_at: true
+              },
+              where: {
+                consumed_at: null
+              },
+              orderBy: {
+                created_at: 'desc'
+              },
+              take: 1
+            }
+          }
+        }
       }
     })
     console.log('Draft found:', draft ? 'Yes' : 'No')

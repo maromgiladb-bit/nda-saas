@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@/generated/prisma";
 import { sendEmail, getAppUrl } from "@/lib/email";
+import { renderNdaHtml } from "@/lib/renderNdaHtml";
+import { htmlToPdf } from "@/lib/htmlToPdf";
 import { randomBytes } from "crypto";
 
 const prisma = new PrismaClient();
@@ -113,8 +115,13 @@ export async function POST(
 			data: { consumed_at: new Date() },
 		});
 
-		// Send email to Party B
+		// Send email to Party B with PDF attachment
 		const reviewLink = `${getAppUrl()}/review-nda/${newToken}`;
+
+		// Generate PDF with updated data for Party B to review
+		const html = await renderNdaHtml(updatedData, draft.template_id);
+		const pdfBuffer = await htmlToPdf(html);
+		const pdfBase64 = pdfBuffer.toString("base64");
 
 		await sendEmail({
 			to: party_b_email,
@@ -125,6 +132,13 @@ export async function POST(
 				acceptedFields as string[],
 				reviewLink
 			),
+			attachments: [
+				{
+					filename: `${draft.title || "NDA"}-Updated-${draft.id.substring(0, 8)}.pdf`,
+					content: pdfBase64,
+					contentType: "application/pdf",
+				},
+			],
 		});
 
 		console.log("✅ Updated NDA sent back to Party B");

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import PublicToolbar from "@/components/PublicToolbar";
 
@@ -23,7 +23,8 @@ type FormValues = {
 	exclusivity: string;
 };
 
-export default function ReviewNDA({ params }: { params: { token: string } }) {
+export default function ReviewNDA({ params }: { params: Promise<{ token: string }> }) {
+	const { token } = use(params);
 	const router = useRouter();
 	const [values, setValues] = useState<FormValues | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -44,7 +45,7 @@ export default function ReviewNDA({ params }: { params: { token: string } }) {
 	const loadDraftFromToken = useCallback(async () => {
 		try {
 			setLoading(true);
-			const res = await fetch(`/api/ndas/review/${params.token}`);
+			const res = await fetch(`/api/ndas/review/${token}`);
 			const data = await res.json();
 
 			if (!res.ok) {
@@ -70,7 +71,7 @@ export default function ReviewNDA({ params }: { params: { token: string } }) {
 		} finally {
 			setLoading(false);
 		}
-	}, [params.token]);
+	}, [token]);
 
 	useEffect(() => {
 		loadDraftFromToken();
@@ -86,7 +87,7 @@ export default function ReviewNDA({ params }: { params: { token: string } }) {
 
 		try {
 			setSaving(true);
-			const res = await fetch(`/api/ndas/review/${params.token}`, {
+			const res = await fetch(`/api/ndas/review/${token}`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ formData: values }),
@@ -161,7 +162,7 @@ export default function ReviewNDA({ params }: { params: { token: string } }) {
 
 		try {
 			setSendingBack(true);
-			const res = await fetch(`/api/ndas/review/${params.token}/suggest`, {
+			const res = await fetch(`/api/ndas/review/${token}/suggest`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ 
@@ -196,7 +197,7 @@ export default function ReviewNDA({ params }: { params: { token: string } }) {
 
 		try {
 			setSigning(true);
-			const res = await fetch(`/api/ndas/review/${params.token}/sign`, {
+			const res = await fetch(`/api/ndas/review/${token}/sign`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(signatureData),
