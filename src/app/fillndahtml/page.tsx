@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import PublicToolbar from "@/components/PublicToolbar";
 import PDFPreview from "@/components/PDFPreview";
+import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 
 type FormValues = {
 	docName: string;
@@ -60,9 +61,8 @@ export default function FillNDAHTML() {
 	const [previewUrl, setPreviewUrl] = useState("");
 	const [previewHtml, setPreviewHtml] = useState("");
 	const [previewMode, setPreviewMode] = useState<"html" | "pdf">("html");
+	const [showLivePreview, setShowLivePreview] = useState(false);
 	const [livePreviewHtml, setLivePreviewHtml] = useState("");
-	const [showLivePreview, setShowLivePreview] = useState(true);
-	const [loadingLivePreview, setLoadingLivePreview] = useState(false);
 	const [draftId, setDraftId] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [showSendModal, setShowSendModal] = useState(false);
@@ -88,42 +88,32 @@ export default function FillNDAHTML() {
 
 	const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
 
-	// Initial load of live preview
+	// B) Use debounced preview hook - prevents stale/racing responses
+	const { data: liveData } = useDebouncedPreview(
+		"/api/ndas/preview-html",
+		{ ...values, templateId },
+		400
+	);
+
+	// Update live preview HTML when data arrives and preview is shown
 	useEffect(() => {
-		if (showLivePreview && !livePreviewHtml) {
-			updateLivePreview();
+		if (showLivePreview && liveData?.html) {
+			setLivePreviewHtml(liveData.html);
 		}
-	}, [showLivePreview]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [showLivePreview, liveData]);
 
-	// Update live preview with debounce
+	// C) Fix email suggestions debounce - clean timeout on unmount
 	useEffect(() => {
-		if (!showLivePreview) return;
-		
-		const timeoutId = setTimeout(() => {
-			updateLivePreview();
-		}, 1000); // Debounce 1 second after user stops typing
-
-		return () => clearTimeout(timeoutId);
-	}, [values, showLivePreview]); // eslint-disable-line react-hooks/exhaustive-deps
-
-	const updateLivePreview = async () => {
-		try {
-			setLoadingLivePreview(true);
-			const res = await fetch("/api/ndas/preview-html", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ ...values, templateId }),
-			});
-			const json = await res.json();
-			if (res.ok && json.html) {
-				setLivePreviewHtml(json.html);
-			}
-		} catch (e) {
-			console.error("Live preview update failed:", e);
-		} finally {
-			setLoadingLivePreview(false);
+		if (signersEmail.length < 2) {
+			setEmailSuggestions([]);
+			setShowEmailSuggestions(false);
+			return;
 		}
-	};
+		const id = setTimeout(() => {
+			fetchEmailSuggestions(signersEmail);
+		}, 300);
+		return () => clearTimeout(id);
+	}, [signersEmail]);
 
 	useEffect(() => {
 		// Sync user to database (best-effort)
@@ -174,6 +164,7 @@ export default function FillNDAHTML() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user]);
 
+	// D) Fix loadDraft - single setValues call to avoid double-set race
 	const loadDraft = async (id: string) => {
 		console.log('=== Loading draft ===')
 		console.log('Draft ID:', id)
@@ -189,12 +180,11 @@ export default function FillNDAHTML() {
 			
 			if (json.draft?.data) {
 				console.log('Setting form values from draft data:', json.draft.data)
-				setValues({ ...DEFAULTS, ...json.draft.data });
+				// Compute next values in one pass, then set once
+				const next = { ...DEFAULTS, ...json.draft.data };
+				if (json.draft.title) next.docName = json.draft.title;
+				setValues(next);
 				setDraftId(json.draft.id);
-				// Update document name if it exists in the draft
-				if (json.draft.title) {
-					setValues(prev => ({ ...prev, docName: json.draft.title }));
-				}
 			} else {
 				console.log('No draft data found, using defaults')
 				setValues(DEFAULTS);
@@ -325,26 +315,28 @@ export default function FillNDAHTML() {
 		return true;
 	};
 
+	// D) Fix computeCompletionPercent - respect "ask receiver to fill" like validate() does
 	const computeCompletionPercent = () => {
 		const requiredFields = [
 			"docName",
 			"effective_date",
 			"term_months",
 			"confidentiality_period_months",
-			"party_a_name",
-			"party_a_address",
-			"party_a_signatory_name",
-			"party_a_title",
-			"party_b_name",
-			"party_b_address",
-			"party_b_signatory_name",
-			"party_b_title",
-			"party_b_email",
 			"governing_law",
 			"ip_ownership",
 			"non_solicit",
 			"exclusivity",
 		];
+
+		// Add Party A fields only if not asking receiver to fill
+		if (!values.party_a_ask_receiver_fill) {
+			requiredFields.push("party_a_name", "party_a_address", "party_a_signatory_name", "party_a_title");
+		}
+
+		// Add Party B fields only if not asking receiver to fill
+		if (!values.party_b_ask_receiver_fill) {
+			requiredFields.push("party_b_name", "party_b_address", "party_b_signatory_name", "party_b_title", "party_b_email");
+		}
 
 		const total = requiredFields.length;
 		let filled = 0;
@@ -411,6 +403,7 @@ export default function FillNDAHTML() {
 		}
 	};
 
+	// H) Minor polish - clear errors correctly
 	const previewHtmlVersion = async () => {
 		const validation = validate();
 		if (!validation.isValid) {
@@ -419,8 +412,10 @@ export default function FillNDAHTML() {
 			console.error("Validation errors:", Array.from(validation.errors));
 			return;
 		}
+		// Clear errors once validated
 		setValidationErrors(new Set());
 		setWarning("");
+		
 		try {
 			console.log("Fetching HTML preview...");
 			const res = await fetch("/api/ndas/preview-html", {
@@ -443,6 +438,7 @@ export default function FillNDAHTML() {
 		}
 	};
 
+	// E) PDF preview with base64 extraction
 	const preview = async () => {
 		const validation = validate();
 		if (!validation.isValid) {
@@ -451,6 +447,7 @@ export default function FillNDAHTML() {
 			console.error("Validation errors:", Array.from(validation.errors));
 			return;
 		}
+		// Clear errors once validated
 		setValidationErrors(new Set());
 		setWarning("");
 		try {
@@ -470,12 +467,12 @@ export default function FillNDAHTML() {
 				throw new Error(json.error || "Preview failed");
 			}
 			
-			// fileUrl contains the data:application/pdf;base64,... string
+			// E) fileUrl contains the data:application/pdf;base64,... string
 			if (!json.fileUrl || !json.fileUrl.startsWith("data:application/pdf;base64,")) {
 				throw new Error("Invalid PDF data received");
 			}
 			
-			// Open PDF in new tab instead of modal
+			// H) Open PDF in new tab (keep as-is per requirements)
 			const newWindow = window.open();
 			if (newWindow) {
 				newWindow.document.write(`
@@ -495,13 +492,15 @@ export default function FillNDAHTML() {
 				`);
 				newWindow.document.close();
 			} else {
-				// Fallback if popup blocked - use modal
-				setPreviewUrl(json.fileUrl);
+				// E) Fallback if popup blocked - extract base64 for PDFPreview component
+				const dataUrl = json.fileUrl;
+				const base64Only = dataUrl.replace("data:application/pdf;base64,", "");
+				setPreviewUrl(base64Only); // Store base64 only for PDFPreview
 				setPreviewMode("pdf");
 				setShowPreview(true);
 			}
 			
-			console.log("✅ PDF preview opened in new tab");
+			console.log("✅ PDF preview opened");
 			setWarning(""); // Clear any previous warnings
 		} catch (e) {
 			console.error("Preview error:", e);
@@ -534,15 +533,10 @@ export default function FillNDAHTML() {
 	};
 
 	// Handle email input change with debounce
+	// C) Clean email change handler - debounce moved to useEffect
 	const handleEmailChange = (email: string) => {
 		setSignersEmail(email);
-		
-		// Debounce the API call
-		const timeoutId = setTimeout(() => {
-			fetchEmailSuggestions(email);
-		}, 300);
-
-		return () => clearTimeout(timeoutId);
+		// Debounce logic now in useEffect above - prevents leaked timers
 	};
 
 	const selectEmailSuggestion = (email: string) => {
@@ -614,10 +608,10 @@ export default function FillNDAHTML() {
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
 			<PublicToolbar />
-			<div className={`transition-all duration-300 ${showLivePreview ? 'max-w-[1800px]' : 'max-w-5xl'} mx-auto py-8 px-4`}>
-				<div className={`flex gap-6 ${showLivePreview ? '' : 'justify-center'}`}>
+			<div className="py-8 px-4 lg:px-6">
+				<div className={`flex flex-row flex-nowrap gap-6 items-start ${showLivePreview ? 'w-full justify-start' : 'max-w-5xl mx-auto justify-center'}`}>
 					{/* Left Side - Form */}
-					<div className={`transition-all duration-300 ${showLivePreview ? 'w-1/2' : 'w-full'}`}>
+					<div className={`transition-all duration-300 min-w-0 ${showLivePreview ? 'w-[30%] flex-shrink-0' : 'w-full max-w-3xl'}`}>
 						<div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
 							{/* Header */}
 							<div className="bg-white border-b border-gray-200 px-8 py-6">
@@ -1180,72 +1174,45 @@ export default function FillNDAHTML() {
 							</div>
 						</div>
 					</div>
-				</div>
-			</div>
-
-			{/* Right Side - Live HTML Preview */}
-			{showLivePreview && (
-				<div className="w-1/2 transition-all duration-300">
-					<div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 sticky top-8" style={{ maxHeight: 'calc(100vh - 6rem)' }}>
-						<div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-									<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-									</svg>
-								</div>
-								<div>
-									<h2 className="text-lg font-bold text-gray-900">Live HTML Preview</h2>
-									<p className="text-xs text-gray-600">Updates as you type</p>
-								</div>
-							</div>
-							{loadingLivePreview && (
-								<div className="flex items-center gap-2 text-sm text-blue-600">
-									<svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-									</svg>
-									<span className="text-xs">Updating...</span>
-								</div>
-							)}
-						</div>
-						<div className="overflow-auto bg-gray-50 p-4" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
-							{livePreviewHtml ? (
-								<div className="bg-white shadow-md rounded-lg overflow-hidden">
-									<style>{`
-										.preview-content {
-											transform-origin: top left;
-											width: 100%;
-										}
-										.preview-content * {
-											max-width: 100%;
-										}
-										.preview-content img {
-											max-width: 100%;
-											height: auto;
-										}
-									`}</style>
-									<div 
-										dangerouslySetInnerHTML={{ __html: livePreviewHtml }} 
-										className="preview-content"
-									/>
-								</div>
-							) : (
-								<div className="h-full flex items-center justify-center text-gray-400 min-h-[400px]">
-									<div className="text-center">
-										<svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-										</svg>
-										<p className="text-sm">Fill out the form to see live preview</p>
+					{/* Right Side - Live HTML Preview */}
+					{/* F) Sticky layout fix: no overflow on sticky wrapper, only on inner content */}
+					{showLivePreview && (
+						<div className="w-[70%] flex-shrink-0 transition-all duration-300 min-w-0">
+							<div className="bg-white shadow-xl rounded-2xl border border-gray-100 sticky top-8">
+								<div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200 px-6 py-4">
+									<div className="flex items-center gap-3">
+										<div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+											<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+											</svg>
+										</div>
+										<div>
+											<h2 className="text-lg font-bold text-gray-900">Live HTML Preview</h2>
+											<p className="text-xs text-gray-600">Updates as you type</p>
+										</div>
 									</div>
 								</div>
-							)}
+								<div className="overflow-auto bg-gray-50 p-4 rounded-b-2xl" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
+									{livePreviewHtml ? (
+										<div className="bg-white shadow-md rounded-lg overflow-hidden">
+											<div dangerouslySetInnerHTML={{ __html: livePreviewHtml }} />
+										</div>
+									) : (
+										<div className="h-full flex items-center justify-center text-gray-400 min-h-[400px]">
+											<div className="text-center">
+												<svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+												</svg>
+												<p className="text-sm">Fill out the form to see live preview</p>
+											</div>
+										</div>
+									)}
+								</div>
+							</div>
 						</div>
-					</div>
-				</div>
-			)}
+					)}
+			</div>
 		</div>
-	</div>
 
 			{/* Preview Modal */}
 			{showPreview && (
@@ -1781,6 +1748,8 @@ export default function FillNDAHTML() {
 					</div>
 				</div>
 			)}
+			</div>
+			</div>
 		</div>
 	);
 }

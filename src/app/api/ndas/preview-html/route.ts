@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
+import createDOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,12 +77,21 @@ export async function POST(request: NextRequest) {
     console.log('🌐 Rendering HTML from template:', templateId)
     const html = await renderNdaHtml(processedData, templateId)
 
-    console.log('✅ HTML generated successfully, size:', html.length, 'chars')
+    // G) Server-side HTML sanitization to prevent XSS
+    const { window } = new JSDOM('')
+    const DOMPurify = createDOMPurify(window)
+    const sanitizedHtml = DOMPurify.sanitize(html, {
+      USE_PROFILES: { html: true },
+      ALLOWED_TAGS: ['div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'br', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'section', 'article', 'header', 'footer', 'style'],
+      ALLOWED_ATTR: ['class', 'style', 'id'],
+    })
+
+    console.log('✅ HTML generated and sanitized, size:', sanitizedHtml.length, 'chars')
 
     return NextResponse.json({
-      html,
+      html: sanitizedHtml,
       templateId,
-      size: html.length
+      size: sanitizedHtml.length
     })
 
   } catch (error) {
