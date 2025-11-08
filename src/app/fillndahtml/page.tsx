@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import PublicToolbar from "@/components/PublicToolbar";
-import PDFPreview from "@/components/PDFPreview";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 
 type FormValues = {
@@ -57,11 +56,7 @@ export default function FillNDAHTML() {
 	const [values, setValues] = useState<FormValues>(DEFAULTS);
 	const [warning, setWarning] = useState("");
 	const [saving, setSaving] = useState(false);
-	const [showPreview, setShowPreview] = useState(false);
-	const [previewUrl, setPreviewUrl] = useState("");
-	const [previewHtml, setPreviewHtml] = useState("");
-	const [previewMode, setPreviewMode] = useState<"html" | "pdf">("html");
-	const [showLivePreview, setShowLivePreview] = useState(false);
+	const [showLivePreview, setShowLivePreview] = useState(true);
 	const [livePreviewHtml, setLivePreviewHtml] = useState("");
 	const [draftId, setDraftId] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -95,12 +90,12 @@ export default function FillNDAHTML() {
 		400
 	);
 
-	// Update live preview HTML when data arrives and preview is shown
+	// Update live preview HTML when data arrives
 	useEffect(() => {
-		if (showLivePreview && liveData?.html) {
+		if (liveData?.html) {
 			setLivePreviewHtml(liveData.html);
 		}
-	}, [showLivePreview, liveData]);
+	}, [liveData]);
 
 	// C) Fix email suggestions debounce - clean timeout on unmount
 	useEffect(() => {
@@ -403,111 +398,6 @@ export default function FillNDAHTML() {
 		}
 	};
 
-	// H) Minor polish - clear errors correctly
-	const previewHtmlVersion = async () => {
-		const validation = validate();
-		if (!validation.isValid) {
-			setValidationErrors(validation.errors);
-			setWarning(validation.message || "Please fill in all required fields");
-			console.error("Validation errors:", Array.from(validation.errors));
-			return;
-		}
-		// Clear errors once validated
-		setValidationErrors(new Set());
-		setWarning("");
-		
-		try {
-			console.log("Fetching HTML preview...");
-			const res = await fetch("/api/ndas/preview-html", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(draftId ? { draftId, templateId } : { ...values, templateId }),
-			});
-			const json = await res.json();
-			if (!res.ok) {
-				throw new Error(json.error || "Preview failed");
-			}
-			
-			setPreviewHtml(json.html);
-			setPreviewMode("html");
-			setShowPreview(true);
-			console.log("✅ HTML preview loaded");
-		} catch (e) {
-			console.error("HTML preview error:", e);
-			setWarning(e instanceof Error ? e.message : "HTML preview failed");
-		}
-	};
-
-	// E) PDF preview with base64 extraction
-	const preview = async () => {
-		const validation = validate();
-		if (!validation.isValid) {
-			setValidationErrors(validation.errors);
-			setWarning(validation.message || "Please fill in all required fields");
-			console.error("Validation errors:", Array.from(validation.errors));
-			return;
-		}
-		// Clear errors once validated
-		setValidationErrors(new Set());
-		setWarning("");
-		try {
-			console.log("Sending preview request with data:", values);
-			console.log("📋 Using template:", templateId);
-			// Use new PDF preview endpoint (supports both draftId and direct data)
-			const res = await fetch("/api/ndas/preview", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(draftId ? { draftId, templateId } : { ...values, templateId }),
-			});
-			const json = await res.json();
-			console.log("Preview response:", json);
-			if (!res.ok) {
-				console.error("❌ Preview failed:", json);
-				console.error("❌ Error details:", json.details);
-				throw new Error(json.error || "Preview failed");
-			}
-			
-			// E) fileUrl contains the data:application/pdf;base64,... string
-			if (!json.fileUrl || !json.fileUrl.startsWith("data:application/pdf;base64,")) {
-				throw new Error("Invalid PDF data received");
-			}
-			
-			// H) Open PDF in new tab (keep as-is per requirements)
-			const newWindow = window.open();
-			if (newWindow) {
-				newWindow.document.write(`
-					<!DOCTYPE html>
-					<html>
-					<head>
-						<title>NDA Preview</title>
-						<style>
-							body { margin: 0; padding: 0; }
-							iframe { width: 100%; height: 100vh; border: none; }
-						</style>
-					</head>
-					<body>
-						<iframe src="${json.fileUrl}"></iframe>
-					</body>
-					</html>
-				`);
-				newWindow.document.close();
-			} else {
-				// E) Fallback if popup blocked - extract base64 for PDFPreview component
-				const dataUrl = json.fileUrl;
-				const base64Only = dataUrl.replace("data:application/pdf;base64,", "");
-				setPreviewUrl(base64Only); // Store base64 only for PDFPreview
-				setPreviewMode("pdf");
-				setShowPreview(true);
-			}
-			
-			console.log("✅ PDF preview opened");
-			setWarning(""); // Clear any previous warnings
-		} catch (e) {
-			console.error("Preview error:", e);
-			setWarning(e instanceof Error ? e.message : "Preview failed");
-		}
-	};
-
 	// Fetch email suggestions
 	const fetchEmailSuggestions = async (query: string) => {
 		if (!query || query.length < 2) {
@@ -595,73 +485,73 @@ export default function FillNDAHTML() {
 		}
 	};
 
-	const closePreview = () => {
-		if (previewUrl && previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
-		setPreviewUrl("");
-		setPreviewHtml("");
-		setShowPreview(false);
-	};
-
 	if (!isLoaded) return <div className="min-h-screen">Loading...</div>;
 	if (!user) return <RedirectToSignIn />;
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
 			<PublicToolbar />
-			<div className="py-8 px-4 lg:px-6">
-				<div className={`flex flex-row flex-nowrap gap-6 items-start ${showLivePreview ? 'w-full justify-start' : 'max-w-5xl mx-auto justify-center'}`}>
-					{/* Left Side - Form */}
-					<div className={`transition-all duration-300 min-w-0 ${showLivePreview ? 'w-[30%] flex-shrink-0' : 'w-full max-w-3xl'}`}>
-						<div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
-							{/* Header */}
-							<div className="bg-white border-b border-gray-200 px-8 py-6">
-								<div className="flex items-center gap-3">
-									<div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-md">
-										<svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-										</svg>
-									</div>
-									<div className="flex-1">
-										<h1 className="text-2xl font-bold text-gray-900">
-											{draftId ? "Edit NDA Draft" : "Create New NDA"}
-										</h1>
-										<p className="text-gray-600 text-sm">
-											{draftId 
-												? "Continue editing your Non-Disclosure Agreement" 
-												: "Fill out the form below to generate your Non-Disclosure Agreement"}
-										</p>
-									</div>
-									<div className="flex items-center gap-2">
-										{draftId && (
-											<div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full">
-												<svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-												</svg>
-												<span className="text-xs font-semibold text-blue-700">Editing Draft</span>
-											</div>
-										)}
-										<button
-											onClick={() => setShowLivePreview(!showLivePreview)}
-											className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-											title={showLivePreview ? "Hide Live Preview" : "Show Live Preview"}
-										>
-											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												{showLivePreview ? (
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-												) : (
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-												)}
+			
+			{/* Main Container with Fixed Layout */}
+			<div className="flex h-[calc(100vh-64px)]">
+				{/* LEFT SIDE: Form Content (Scrollable) */}
+				<div className={`transition-all duration-300 ${showLivePreview ? "w-[45%]" : "w-full"} overflow-y-auto`}>
+					<div className="max-w-4xl mx-auto p-6">
+						{/* Header Card */}
+						<div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6 overflow-hidden">
+							<div className="bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-4">
+								<div className="flex items-center justify-between">
+									<div className="flex items-center gap-3">
+										<div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+											<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 											</svg>
-											{showLivePreview ? "Hide" : "Show"} Preview
-										</button>
+										</div>
+										<div>
+											<h1 className="text-xl font-bold text-white">
+												{draftId ? "Edit NDA Draft" : "Create New NDA"}
+											</h1>
+											<p className="text-blue-100 text-sm">
+												{draftId ? "Continue editing your agreement" : "Fill out the form to generate your agreement"}
+											</p>
+										</div>
 									</div>
+									<button
+										onClick={() => setShowLivePreview(!showLivePreview)}
+										className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 border border-white/30"
+										title={showLivePreview ? "Hide Preview" : "Show Preview"}
+									>
+										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											{showLivePreview ? (
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+											) : (
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+											)}
+										</svg>
+										{showLivePreview ? "Hide" : "Show"}
+									</button>
 								</div>
 							</div>
 
-					<div className="p-8">
+							{/* Progress Bar */}
+							<div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+								<div className="flex justify-between items-center mb-2">
+									<span className="text-sm font-medium text-gray-700">Completion Progress</span>
+									<span className="text-sm font-bold text-blue-600">{computeCompletionPercent()}%</span>
+								</div>
+								<div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+									<div 
+										className="h-2.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out rounded-full" 
+										style={{ width: `${computeCompletionPercent()}%` }} 
+									/>
+								</div>
+							</div>
+						</div>
+
+						{/* Alerts */}
 						{loading && (
-							<div className="flex items-center gap-2 text-sm text-blue-600 mb-4 bg-blue-50 px-4 py-3 rounded-lg">
-								<svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<div className="flex items-center gap-3 text-sm text-blue-700 mb-4 bg-blue-50 px-4 py-3 rounded-xl border border-blue-200">
+								<svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 									<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
 									<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 								</svg>
@@ -670,14 +560,14 @@ export default function FillNDAHTML() {
 						)}
 						{warning && (
 							warning === "Draft saved successfully." ? (
-								<div className="flex items-center gap-2 text-sm text-green-700 mb-4 bg-green-50 px-4 py-3 rounded-lg border border-green-200">
+								<div className="flex items-center gap-3 text-sm text-green-700 mb-4 bg-green-50 px-4 py-3 rounded-xl border border-green-200">
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
 									{warning}
 								</div>
 							) : (
-								<div className="flex items-center gap-2 text-sm text-red-700 mb-4 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
+								<div className="flex items-center gap-3 text-sm text-red-700 mb-4 bg-red-50 px-4 py-3 rounded-xl border border-red-200">
 									<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
 										<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
 									</svg>
@@ -686,22 +576,9 @@ export default function FillNDAHTML() {
 							)
 						)}
 
-						<div>
-							{/* Progress Section */}
-							<div className="mb-8">
-								<div className="mb-6">
-									<div className="flex justify-between items-center mb-2">
-										<span className="text-sm font-medium text-gray-700">Progress</span>
-										<span className="text-sm font-semibold text-blue-600">{computeCompletionPercent()}%</span>
-									</div>
-									<div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-										<div 
-											className="h-3 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out rounded-full" 
-											style={{ width: `${computeCompletionPercent()}%` }} 
-										/>
-									</div>
-								</div>
-
+						{/* Form Card */}
+						<div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+							<div className="p-6">
 								{/* Step Navigation */}
 								<div className="flex items-center justify-between gap-2">
 									{steps.map((s, i) => (
@@ -1122,16 +999,6 @@ export default function FillNDAHTML() {
 									)}
 									{step === steps.length - 1 && (
 										<>
-											<button 
-												onClick={previewHtmlVersion} 
-												className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-											>
-												<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-												</svg>
-												Preview HTML
-											</button>
 											{draftId && (
 												<button 
 													onClick={() => setShowSendModal(true)} 
@@ -1174,170 +1041,30 @@ export default function FillNDAHTML() {
 							</div>
 						</div>
 					</div>
-					{/* Right Side - Live HTML Preview */}
-					{/* F) Sticky layout fix: no overflow on sticky wrapper, only on inner content */}
-					{showLivePreview && (
-						<div className="w-[70%] flex-shrink-0 transition-all duration-300 min-w-0">
-							<div className="bg-white shadow-xl rounded-2xl border border-gray-100 sticky top-8">
-								<div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200 px-6 py-4">
-									<div className="flex items-center gap-3">
-										<div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-											<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-											</svg>
-										</div>
-										<div>
-											<h2 className="text-lg font-bold text-gray-900">Live HTML Preview</h2>
-											<p className="text-xs text-gray-600">Updates as you type</p>
-										</div>
-									</div>
-								</div>
-								<div className="overflow-auto bg-gray-50 p-4 rounded-b-2xl" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
-									{livePreviewHtml ? (
-										<div className="bg-white shadow-md rounded-lg overflow-hidden">
-											<div dangerouslySetInnerHTML={{ __html: livePreviewHtml }} />
-										</div>
-									) : (
-										<div className="h-full flex items-center justify-center text-gray-400 min-h-[400px]">
-											<div className="text-center">
-												<svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-												</svg>
-												<p className="text-sm">Fill out the form to see live preview</p>
-											</div>
-										</div>
-									)}
-								</div>
-							</div>
-						</div>
-					)}
-			</div>
-		</div>
+				</div>
 
-			{/* Preview Modal */}
-			{showPreview && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
-					<div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full relative flex flex-col overflow-hidden" style={{ height: '90vh' }}>
-						<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-									<svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				{/* RIGHT SIDE: Live Preview (Fixed) */}
+				{showLivePreview && (
+					<div className="w-[55%] bg-white border-l border-gray-200 overflow-y-auto">
+						<div className="sticky top-0 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200 px-6 py-4 z-10">
+							<h3 className="font-semibold text-gray-900">Live Preview</h3>
+							<p className="text-xs text-gray-600">Updates as you type</p>
+						</div>
+						<div className="p-6">
+							{livePreviewHtml ? (
+								<div dangerouslySetInnerHTML={{ __html: livePreviewHtml }} />
+							) : (
+								<div className="text-center py-20 text-gray-400">
+									<svg className="w-20 h-20 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 									</svg>
+									<p className="text-sm">Start filling the fields to see the preview</p>
 								</div>
-								<div>
-									<h2 className="text-xl font-bold text-gray-800">{previewMode === "html" ? "HTML" : "PDF"} Preview</h2>
-									<p className="text-sm text-gray-600">Review your document before sending</p>
-								</div>
-							</div>
-							<div className="flex items-center gap-3">
-								{/* Toggle between HTML and PDF */}
-								<div className="flex bg-gray-100 rounded-lg p-1 gap-1">
-									<button
-										onClick={() => {
-											if (previewMode === "pdf") {
-												previewHtmlVersion();
-											}
-										}}
-										className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-											previewMode === "html"
-												? "bg-white text-blue-600 shadow-sm"
-												: "text-gray-600 hover:text-gray-800"
-										}`}
-									>
-										HTML
-									</button>
-									<button
-										onClick={() => {
-											if (previewMode === "html") {
-												preview();
-											}
-										}}
-										className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-											previewMode === "pdf"
-												? "bg-white text-blue-600 shadow-sm"
-												: "text-gray-600 hover:text-gray-800"
-										}`}
-									>
-										PDF
-									</button>
-								</div>
-								<button 
-									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg" 
-									onClick={closePreview} 
-									aria-label="Close preview"
-								>
-									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-									</svg>
-								</button>
-							</div>
-						</div>
-						<div className="flex-1 overflow-auto bg-gray-50">
-							{previewMode === "html" && previewHtml && (
-								<div className="max-w-4xl mx-auto p-8 bg-white shadow-lg my-8">
-									<div dangerouslySetInnerHTML={{ __html: previewHtml }} />
-								</div>
-							)}
-							{previewMode === "pdf" && previewUrl && (
-								<PDFPreview 
-									base64={previewUrl} 
-									showFullViewer={true}
-									className="w-full h-full"
-								/>
-							)}
-						</div>
-						<div className="flex gap-3 justify-end p-6 border-t border-gray-200 bg-gray-50">
-							<button 
-								onClick={closePreview}
-								className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200"
-							>
-								Close
-							</button>
-							{previewMode === "html" && (
-								<button 
-									onClick={() => {
-										// Download HTML file
-										const blob = new Blob([previewHtml], { type: 'text/html' });
-										const url = URL.createObjectURL(blob);
-										const link = document.createElement('a');
-										link.href = url;
-										link.download = values.docName ? `${values.docName}.html` : 'NDA.html';
-										document.body.appendChild(link);
-										link.click();
-										document.body.removeChild(link);
-										URL.revokeObjectURL(url);
-									}}
-									className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-								>
-									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-									</svg>
-									Download HTML
-								</button>
-							)}
-							{previewMode === "pdf" && previewUrl && (
-								<button 
-									onClick={() => {
-										const link = document.createElement('a');
-										link.href = previewUrl;
-										link.download = values.docName ? `${values.docName}.pdf` : 'NDA.pdf';
-										document.body.appendChild(link);
-										link.click();
-										document.body.removeChild(link);
-									}}
-									className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-								>
-									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-									</svg>
-									Download PDF
-								</button>
 							)}
 						</div>
 					</div>
-				</div>
-			)}
+				)}
+			</div>
 
 			{/* Send for Signature Modal */}
 			{showSendModal && (
@@ -1748,8 +1475,6 @@ export default function FillNDAHTML() {
 					</div>
 				</div>
 			)}
-			</div>
-			</div>
 		</div>
 	);
 }

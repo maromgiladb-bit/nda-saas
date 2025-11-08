@@ -36,6 +36,7 @@ export default function PrivateToolbar() {
   const devLinks = [
     { name: '🔧 Fill NDA (Classic)', href: '/fillnda' },
     { name: '🎨 Fill NDA (HTML)', href: '/fillndahtml' },
+    { name: '🎨 Fill NDA (HTML v2)', href: '/fillndahtml?templateId=mutual-nda-html-v2' },
     { name: '📝 Review & Sign', href: '/review' },
     { name: '✍️ Sign Page', href: '/sign' },
     { name: '💡 Review Suggestions', href: '/review-suggestions' },

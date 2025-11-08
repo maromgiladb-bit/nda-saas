@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{docName}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* --- Page + print styling --- */
+    :root{--ink:#111;--muted:#555;--accent:#0b72ff;--line:#ddd;}
+    html,body{margin:0;padding:0;color:var(--ink);font:14px/1.55 "Times New Roman", Times, serif;background:#f7f7fb;}
+    .sheet{width:210mm; min-height:297mm; margin:12mm auto; background:#fff; box-shadow:0 6px 24px rgba(0,0,0,.08);}
+    .page{padding:20mm 18mm 24mm;}
+    h1{margin:0 0 8mm; text-align:center; font-size:20px; letter-spacing:.4px; text-transform:uppercase;}
+    h2{font-size:14px; margin:6mm 0 2mm;}
+    p{margin:2.5mm 0;}
+    .muted{color:var(--muted);} 
+    .small{font-size:12px;}
+    .section{margin:5mm 0 0;}
+    .num{font-weight:700;}
+    .lead{margin:0 0 6mm;}
+    .brackets{white-space:nowrap;}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:6mm;}
+    .table{width:100%; border-collapse:collapse;}
+    .table th,.table td{vertical-align:top; text-align:left; padding:3mm 3.5mm; border:1px solid var(--line);} 
+    .signature-blocks{display:grid; grid-template-columns:1fr 1fr; gap:14mm; margin-top:10mm;}
+    .sig{margin-top:8mm;}
+    .sig .line{border-bottom:1px solid var(--ink); height:0; margin:10mm 0 2mm;}
+    .meta{display:flex; justify-content:space-between; gap:10mm; margin:0 0 6mm;}
+    .meta div{flex:1;}
+    .caps{letter-spacing:.3px; text-transform:uppercase;}
+    .page-footer{margin-top:10mm; text-align:center; color:var(--muted);} 
+
+    /* Page breaks for print */
+    .page + .page{page-break-before:always;}
+    @media print{
+      body{background:#fff;}
+      .sheet{box-shadow:none; margin:0;}
+      a[href]::after{content:"";}
+    }
+  </style>
+</head>
+<body>
+  <!-- PAGE 1 -->
+  <div class="sheet">
+    <div class="page">
+      <h1>Mutual Confidentiality and Non‑Disclosure Agreement</h1>
+
+      <p class="lead">
+        This Confidentiality and Non‑Disclosure Agreement (this "Agreement") is made effective as of 
+        <span class="brackets">{{effective_date_parts.month_name}}</span> 
+        <span class="brackets">{{effective_date_parts.day}},</span> 
+        <span class="brackets">{{effective_date_parts.year}}</span> (the "Effective Date"), by and between 
+        <span class="brackets">{{party_a_name}}, {{party_a_address}}</span> 
+        and 
+        <span class="brackets">{{party_b_name}}, {{party_b_address}}</span>
+        (each, a "Party" and collectively, the "Parties"), to assure the protection and preservation of Confidential Information 
+        disclosed in connection with a possible business relationship between the Parties.
+      </p>
+
+      <p>
+        A Party (and/or any of its Permitted Entities) receiving Confidential Information from the other Party shall be 
+        referred to as the "Receiving Party"; a Party (and/or anyone on its behalf) disclosing Confidential Information, as the 
+        "Disclosing Party".
+      </p>
+
+      <p>In reliance upon and in consideration of the following undertakings, the Parties agree as follows:</p>
+
+      <div class="section">
+        <p><span class="num">1. Confidential Information.</span> 
+          <span class="brackets">{{confidential_scope}}</span> 
+          <span class="muted">(or "all information regarding the topic of</span> {{confidential_topic}}<span class="muted">")</span> 
+          disclosed to the Receiving Party, whether or not designated as confidential, shall be "Confidential Information". Confidential Information includes, without limitation, know‑how, research, development, methods, trade secrets, business operations, pricing, financial information, marketing strategies, names of suppliers, personnel, customers and potential customers, negotiations, bids and contracts, internal reporting methods, technical and business data, documentation, drawings, software, manufacturing processes, inventions, and information received from or belonging to third parties.
+        </p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">2. Exclusions.</span> "Confidential Information" shall not include information that the Receiving Party demonstrates: (i) is in the public domain through no act or omission of the Receiving Party; (ii) is authorized in writing by the Disclosing Party for disclosure; (iii) was in the Receiving Party's possession before receipt from the Disclosing Party; (iv) was received from a third party not bound, to the Receiving Party's knowledge, by a confidentiality obligation to the Disclosing Party; (v) was independently developed by the Receiving Party without use of the Disclosing Party's Confidential Information; or (vi) is required to be disclosed by law, regulation, court order or stock‑exchange rule.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">3. Use of Confidential Information.</span> The Receiving Party shall use the Confidential Information solely for 
+          <span class="brackets">{{purpose}}</span> (the "Purpose"). The Receiving Party shall hold all Confidential Information in trust and confidence, not disclose it to any third party without the Disclosing Party's written consent, and protect it with at least the same degree of care it uses to protect its own confidential information (but no less than reasonable care). The Receiving Party shall not use, duplicate or copy Confidential Information except as necessary for the Purpose. Disclosure is permitted only to employees, officers, advisors, agents and Affiliated Companies of the Receiving Party with a need to know for the Purpose and who are bound by confidentiality obligations (collectively, "Permitted Entities"). The Receiving Party shall promptly notify the Disclosing Party of any unauthorized use or disclosure and assist in remedying the same.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">4. Ownership of Rights.</span> All Confidential Information (including copies) remains the sole and exclusive property of the Disclosing Party and shall be returned or destroyed upon the Disclosing Party's written request. Notwithstanding the foregoing, the Receiving Party may retain copies as required for legal, compliance, professional‑recordkeeping or automated‑backup purposes, subject to continued protection in accordance with this Agreement.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">5. No Representations; No Rights Granted.</span> Confidential Information is provided "AS IS," without warranty. No representation or warranty, express or implied, is made as to its truth, accuracy, completeness or reasonableness, and no liability shall arise from its use. No license or other right is granted except the limited right to use the Confidential Information as set forth herein and solely for the Purpose. The Receiving Party acts on its own behalf and not as agent of any other party with respect to the Purpose.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">6. Limited Relationship.</span> Neither this Agreement nor receipt of Confidential Information obligates either Party (i) to disclose information, (ii) to enter into any agreement, (iii) to form a partnership, joint venture or other relationship, or (iv) to imply any principal/agent, employment or ownership relationship.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">7. Governing Law and Jurisdiction.</span> (a) This Agreement shall be governed by the laws of 
+          <span class="brackets">{{governing_law_state}}</span>, without regard to conflicts‑of‑law principles. (b) Any dispute shall be submitted to the exclusive jurisdiction of the competent courts in 
+          <span class="brackets">{{jurisdiction}}</span>, and the Parties waive any objection based on forum non conveniens or similar doctrine.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">8. Successors.</span> This Agreement binds and benefits the Parties and their respective successors, heirs, executors, administrators and permitted assigns. Neither Party may assign or delegate its obligations without the other Party's prior written consent.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">9. Severability.</span> If any provision of this Agreement is held invalid, illegal or unenforceable, such provision shall be modified or deleted to the minimum extent necessary so that the remainder is enforceable to the fullest extent permitted by law.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">10. Entire Agreement.</span> This Agreement constitutes the final, complete and exclusive agreement of the Parties with respect to the subject matter hereof and supersedes all prior and contemporaneous understandings. It may be amended only by a writing signed by both Parties.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">11. Notices.</span> (a) All notices required or permitted under this Agreement shall be in writing and delivered by hand, reputable international courier, fax or email to the addresses below.</p>
+        <table class="table small" style="margin:3mm 0 0;">
+          <tr>
+            <th class="caps">{{party_a_name}}</th>
+            <th class="caps">{{party_b_name}}</th>
+          </tr>
+          <tr>
+            <td>
+              Address: {{party_a_address}}<br/>
+              Phone: {{party_a_phone}}<br/>
+              E‑mail(s): {{party_a_email}}
+            </td>
+            <td>
+              Address: {{party_b_address}}<br/>
+              Phone: {{party_b_phone}}<br/>
+              E‑mail(s): {{party_b_email}}
+            </td>
+          </tr>
+        </table>
+        <p class="small">(b) Personal delivery is deemed received when delivered; registered mail, three (3) days after mailing; email, the day after dispatch upon telephone confirmation of receipt; hand delivery upon receipt. (c) Routine business communications not relating to breach, termination, compelled disclosure or other consequential matters may be sent by ordinary electronic means without confirmation of receipt.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">12. Liability.</span> The Receiving Party acknowledges that the Disclosing Party may be irreparably harmed by any breach or threatened breach of this Agreement.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">13. Counterparts.</span> This Agreement may be executed in counterparts (including by facsimile or digital copy), each of which is an original and all of which together form one and the same instrument.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">14. Term.</span> This Agreement shall expire 
+          <span class="brackets">{{term_years_number}} ({{term_years_words}})</span> years from the Effective Date.</p>
+      </div>
+
+      <div class="section">
+        <p><span class="num">15. Non‑Third Party's Right.</span> This Agreement is for the sole benefit of the Parties and does not confer any rights on any third party.</p>
+      </div>
+
+      <p style="margin-top:8mm;">IN WITNESS WHEREOF, the Parties have caused this Agreement to be executed as of the Effective Date.</p>
+
+      <div class="signature-blocks">
+        <div>
+          <p class="caps"><strong>{{party_a_name}}</strong></p>
+          <div class="sig">
+            <div class="line"></div>
+            <div class="small">By: {{party_a_signatory_name}}</div>
+          </div>
+          <div class="sig">
+            <div class="line"></div>
+            <div class="small">Title: {{party_a_title}}</div>
+          </div>
+        </div>
+        <div>
+          <p class="caps"><strong>{{party_b_name}}</strong></p>
+          <div class="sig">
+            <div class="line"></div>
+            <div class="small">By: {{party_b_signatory_name}}</div>
+          </div>
+          <div class="sig">
+            <div class="line"></div>
+            <div class="small">Title: {{party_b_title}}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-footer small">Page 1 of 1</div>
+    </div>
+  </div>
+</body>
+</html>
