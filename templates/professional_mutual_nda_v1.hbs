@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{doc_title}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --ink:#0a0e1a;
+      --muted:#4b566b;
+      --rule:#dde1e8;
+      --rule-strong:#bfc5d1;
+      --bg:#f4f6fa;
+      --page-bg:#ffffff;
+      --page-shadow:0 12px 48px rgba(8,15,35,.1);
+      --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Arial, "Helvetica Neue", sans-serif;
+      --serif: "Georgia Pro", Georgia, "Times New Roman", Times, serif;
+      --highlight:#fff8d1;
+      --accent:#2563eb;
+      --accent-dark:#1e40af;
+      --soft-bg:#fafbfc;
+    }
+
+    /* Page */
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);}
+    .page{
+      box-sizing:border-box;
+      margin:32px auto;
+      background:var(--page-bg);
+      box-shadow:var(--page-shadow);
+      border:1px solid var(--rule);
+      border-radius:16px;
+      max-width:900px;
+      padding:32mm 26mm;
+      font-family: var(--serif);
+      font-size:12.5pt;
+      line-height:1.75;
+    }
+
+    /* Typography */
+    h1{
+      font-family: var(--sans);
+      font-size:22pt;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      text-align:center;
+      margin:0 0 16mm;
+      padding-bottom:8mm;
+      border-bottom:3px solid var(--accent);
+      color:var(--accent-dark);
+      position:relative;
+    }
+    h1:after{
+      content:"";
+      position:absolute;
+      bottom:-3px;
+      left:50%;
+      transform:translateX(-50%);
+      width:120px;
+      height:3px;
+      background:var(--accent);
+      box-shadow:0 0 20px rgba(37,99,235,.3);
+    }
+
+    .lead{
+      font-size:12.5pt;
+      margin:0 0 9mm;
+      color:var(--ink);
+      text-align:justify;
+      line-height:1.85;
+      hyphens:auto;
+    }
+    .smallcaps{ 
+      font-variant:small-caps; 
+      letter-spacing:.05em;
+      font-weight:600;
+      color:var(--accent-dark);
+    }
+    .def{ 
+      font-style:italic;
+      font-weight:500;
+      color:#1a1f2e;
+    }
+
+    .section{
+      margin:12mm 0;
+      padding-top:3mm;
+      page-break-inside:avoid;
+    }
+    .section h2{
+      font-family: var(--sans);
+      font-size:14pt;
+      margin:0 0 5mm;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      letter-spacing:.02em;
+      color:var(--accent-dark);
+      text-decoration:underline;
+      text-decoration-color:var(--accent);
+      text-decoration-thickness:2.5px;
+      text-underline-offset:4px;
+      padding-bottom:2mm;
+      border-bottom:1px solid var(--rule);
+    }
+    .num{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:32px;
+      height:32px;
+      padding:0 10px;
+      border:2px solid var(--accent);
+      border-radius:50%;
+      font-family: var(--sans);
+      font-size:12pt;
+      font-weight:700;
+      background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      color:var(--accent-dark);
+      line-height:1;
+      box-shadow:0 2px 8px rgba(37,99,235,.15);
+      text-decoration:none;
+    }
+
+    .clause{
+      margin:5mm 0;
+      text-align:justify;
+      line-height:1.85;
+      hyphens:auto;
+    }
+    .indent{
+      margin:5mm 0;
+      line-height:1.85;
+      text-align:justify;
+      padding-left:10mm;
+      border-left:3px solid var(--accent);
+      background:linear-gradient(90deg, rgba(37,99,235,.04) 0%, transparent 100%);
+      padding-top:3mm;
+      padding-bottom:3mm;
+      padding-right:4mm;
+    }
+
+    /* Tables */
+    .table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      margin:10mm 0;
+      border:2px solid var(--rule-strong);
+      border-radius:12px;
+      overflow:hidden;
+      box-shadow:0 4px 16px rgba(0,0,0,.06);
+    }
+    .table th, .table td{
+      padding:12px 16px;
+      vertical-align:top;
+      border-bottom:1px solid var(--rule);
+      border-right:1px solid var(--rule);
+    }
+    .table th:last-child, .table td:last-child{ border-right:none; }
+    .table tr:last-child td{ border-bottom:none; }
+    .table th{
+      background:linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+      font-family: var(--sans);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      font-weight:700;
+      font-size:11.5pt;
+      color:var(--accent-dark);
+      border-bottom:2px solid var(--accent);
+    }
+    .table tbody tr{
+      transition:background .2s ease;
+    }
+    .table tbody tr:hover{
+      background:#fafbfc;
+    }
+    .table tbody tr:nth-child(even) td{
+      background:var(--soft-bg);
+    }
+    .table strong{
+      color:var(--accent-dark);
+      font-weight:600;
+    }
+
+    hr{
+      border:none;
+      height:3px;
+      background:linear-gradient(90deg, transparent, var(--accent), transparent);
+      margin:14mm 0 10mm;
+    }
+
+    /* Signature block */
+    .sign{
+      margin-top:14mm;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:28mm;
+    }
+    .sign > div{
+      border:2px solid var(--rule-strong);
+      border-radius:10px;
+      padding:16px;
+      background:var(--soft-bg);
+      box-shadow:0 2px 8px rgba(0,0,0,.04);
+    }
+    .line{
+      border-bottom:2px solid var(--accent-dark);
+      height:0;
+      margin:10mm 0 4mm;
+    }
+    .muted{ 
+      color:var(--muted); 
+      font-size:11.5pt;
+      font-family:var(--sans);
+    }
+    .center{ text-align:center; }
+    .nowrap{ white-space:nowrap; }
+
+    /* Fillable fields */
+    .field{
+      background:var(--highlight);
+      padding:2px 6px;
+      border-radius:4px;
+      box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
+      font-weight:600;
+      border:1px solid rgba(245,158,11,.2);
+      color:#854d0e;
+    }
+    /* Placeholder look when value is missing */
+    .field.placeholder{
+      color:#6b7280;        /* muted gray */
+      font-style:italic;    /* optional */
+    }
+
+    /* Print refinements */
+    @media print{
+      body{ background:#fff; }
+      .page{
+        box-shadow:none;
+        margin:0;
+        border:none;
+        border-radius:0;
+        padding:24mm 20mm;
+      }
+      .field{
+        background:transparent;
+        box-shadow:none;
+        border:0;
+        border-bottom:1px solid #999;
+        color:inherit;
+      }
+      h1{
+        border-bottom-color:#000;
+        color:#000;
+      }
+      h1:after{ display:none; }
+      h2{
+        color:#000;
+        text-decoration-color:#000;
+        border-bottom-color:#ccc;
+      }
+      .num{
+        border-color:#000;
+        background:#fff !important;
+        box-shadow:none;
+        color:#000;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+      .indent{
+        border-left-color:#000;
+        background:transparent;
+      }
+      .table{
+        border-color:#999;
+        box-shadow:none;
+      }
+      .table th{
+        background:#eee !important;
+        border-bottom-color:#000;
+        color:#000;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+      .table th, .table td{ border-color:#999; }
+      .table tbody tr:nth-child(even) td{ background:#f9f9f9 !important; }
+      .table tbody tr:hover{ background:transparent; }
+      .sign > div{
+        border-color:#999;
+        background:transparent;
+        box-shadow:none;
+      }
+      .line{ border-bottom-color:#000; }
+      hr{ background:#000; }
+      .section, .clause, .lead{ orphans:3; widows:3; }
+      h2{ page-break-after:avoid; }
+    }
+    /* ===== Design polish pack: non-breaking, CSS-only ===== */
+
+/* Tighter measure + improved rhythm */
+.page{
+  max-width: 880px;              /* slightly narrower for easier reading */
+  padding: 30mm 24mm;            /* balanced margins */
+  letter-spacing: 0.001em;       /* micro tracking for long text blocks */
+}
+
+/* Title: reduce glow, add subtle top rule echo */
+h1{
+  font-weight: 900;
+  text-shadow: none;
+  padding-bottom: 7mm;
+}
+h1:after{
+  width: 96px;                   /* more discreet center accent */
+  height: 2px;
+  box-shadow: none;
+}
+
+/* Body copy refinements */
+.lead, .clause{
+  font-size: 12.25pt;            /* hair smaller for dense pages */
+  line-height: 1.82;
+  hanging-punctuation: first;    /* nicer opening quotes if supported */
+  text-underline-offset: 3px;
+}
+.smallcaps{
+  font-variant-caps: small-caps; /* stronger small caps hint */
+}
+
+/* Section headings: calmer underline, better spacing */
+.section{ margin: 11mm 0; }
+.section h2{
+  text-decoration-thickness: 2px;
+  border-bottom-color: var(--rule-strong);
+  padding-bottom: 6px;
+}
+
+/* Number badge: lighter, more typographic */
+.num{
+  min-width: 28px;
+  height: 28px;
+  font-size: 11pt;
+  border-radius: 999px;
+  border-width: 1.5px;
+  background: #f5f8ff;
+  color: var(--accent-dark);
+  box-shadow: 0 1px 4px rgba(37,99,235,.08);
+}
+
+/* Indented lists: crisper lane with softer bg */
+.indent{
+  border-left-width: 2px;
+  border-left-color: var(--rule-strong);
+  background: linear-gradient(90deg, rgba(8,15,35,.025) 0%, transparent 100%);
+  padding-left: 9mm;
+  padding-top: 2mm;
+  padding-bottom: 2mm;
+}
+
+/* Field chips: less saturation, better contrast + inline baseline */
+.field{
+  background: #fff7c2;
+  color: #6b4e12;
+  border-color: rgba(0,0,0,.08);
+  padding: 1px 4px;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.07);
+  border-radius: 3px;
+  vertical-align: baseline;
+}
+
+/* Tables: calmer zebra, subtle inner shadows, compact cells */
+.table{
+  border-width: 1px;
+  border-color: var(--rule-strong);
+  box-shadow: 0 2px 12px rgba(0,0,0,.05);
+}
+.table th, .table td{ padding: 10px 14px; }
+.table tbody tr:nth-child(even) td{ background: #f7f9fc; }
+.table tbody tr:hover{ background: #f3f6fb; }
+
+/* Signature cards: align baselines, add label styling */
+.sign{
+  gap: 22mm;
+}
+.sign > div{
+  border: 1px solid var(--rule-strong);
+  background: #fbfcfe;
+}
+.sign .clause{ margin: 0; }
+.sign .muted{
+  font-size: 11pt;
+  color: #5b667b;
+}
+.line{
+  border-bottom-width:1.5px;
+  margin: 8mm 0 3mm;
+}
+
+/* Horizontal rule: subtler gradient */
+hr{
+  height: 2px;
+  margin: 12mm 0 9mm;
+  background: linear-gradient(90deg, transparent, var(--rule-strong), transparent);
+}
+
+/* Print: tighten color usage for better legibility on B&W */
+@media print{
+  .page{ padding: 24mm 18mm; }
+  .lead, .clause{ line-height: 1.75; }
+  .table tbody tr:nth-child(even) td{ background: #f2f2f2 !important; }
+  .table tbody tr:hover{ background: transparent; }
+}
+
+/* Optional: compact page variant (add class="page page--compact" if needed) */
+.page.page--compact{
+  max-width: 820px;
+  padding: 26mm 22mm;
+  font-size: 12pt;
+  line-height: 1.78;
+}
+
+/* Optional: dark mode (respects system preference, screen only) */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b1220;
+    --page-bg:#0f172a;
+    --ink:#e5e7eb;
+    --muted:#9aa3b2;
+    --rule:#1f2a44;
+    --rule-strong:#2a3552;
+    --accent:#60a5fa;
+    --accent-dark:#93c5fd;
+    --soft-bg:#0b1326;
+  }
+  body{ background: var(--bg); }
+  .page{
+    background: var(--page-bg);
+    border-color: var(--rule);
+    box-shadow: 0 12px 48px rgba(0,0,0,.45);
+  }
+  h1, .section h2{ color: var(--accent-dark); }
+  .num{ background:#0b1a33; color:#dbeafe; border-color:#27406b; }
+  .indent{ background: linear-gradient(90deg, rgba(96,165,250,.08) 0%, transparent 100%); }
+  .table th{ background:#0e1a33; color:#e5e7eb; border-bottom-color:#2a3552; }
+  .table, .table th, .table td{ border-color:#2a3552; }
+  .table tbody tr:nth-child(even) td{ background:#0c162b; }
+  .sign > div{ background:#0b1326; border-color:#2a3552; }
+}
+
+/* Optional: watermark when rendering a draft (no content changes) */
+/* Add {{#if is_draft}} body has class "is-draft" {{/if}} if you like */
+body.is-draft .page::before{
+  content: "DRAFT";
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%,-50%) rotate(-18deg);
+  font-family: var(--sans);
+  font-size: 120px;
+  letter-spacing: .2em;
+  color: rgba(30,41,59,.08);
+  pointer-events: none;
+  z-index: 0;
+}
+.page{ position: relative; z-index: 1; }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Mutual Confidentiality and Non-Disclosure Agreement</h1>
+
+    <p class="lead">
+      THIS CONFIDENTIALITY AND NON-DISCLOSURE AGREEMENT (this "<span class="smallcaps">Agreement</span>")
+      is made effective as of <span class="field {{#unless effective_date_long}}placeholder{{/unless}}">{{ph effective_date_long "Effective Date"}}</span> (the "<span class="smallcaps">Effective Date</span>"),
+      by and between <span class="field {{#unless party_1_name}}placeholder{{/unless}}">{{ph party_1_name "Party A Name"}}</span>, of <span class="field {{#unless party_1_address}}placeholder{{/unless}}">{{ph party_1_address "Party A Address"}}</span>,
+      and <span class="field {{#unless party_2_name}}placeholder{{/unless}}">{{ph party_2_name "Party B Name"}}</span>, of <span class="field {{#unless party_2_address}}placeholder{{/unless}}">{{ph party_2_address "Party B Address"}}</span>
+      to assure the protection and preservation of any confidential or proprietary information to be
+      disclosed or made available by one party to the other (individually a "<span class="smallcaps">Party</span>"
+      and collectively the "<span class="smallcaps">Parties</span>") in connection with a possible business
+      relationship between the Parties hereto.
+    </p>
+
+    <p class="lead">
+      A Party, and/or any of its Permitted Entities (as defined below) receiving Confidential Information (as defined below) from the other Party hereof and/or anyone on its behalf, shall be referred to hereinafter as the
+      "<span class="smallcaps">Receiving Party</span>" (<span class="field {{#unless effective_date_long}}placeholder{{/unless}}">{{ph effective_date_long "Effective Date"}}</span>); (with regard to the Confidential Information disclosed to it by the other Party and/or anyone on its behalf)
+       and a Party hereof and/or anyone on its behalf disclosing Confidential Information to the other Party, and/or any of its Permitted Entities (as defined below), shall be referred to hereinafter as the
+      "<span class="smallcaps">Disclosing Party</span>" (<span class="field {{#unless party_1_name}}placeholder{{/unless}}">{{ph party_1_name "Party A Name"}}</span>).
+    </p>
+
+    <!-- 1 -->
+    <div class="section">
+      <h2><span class="num">1) </span><strong>Confidential Information</strong></h2>
+      <div class="clause">
+        <span class="field {{#unless information_scope_text}}placeholder{{/unless}}">{{ph information_scope_text "Information Scope"}}</span> disclosed to the Receiving Party, whether or not designated by the Disclosing Party
+        as confidential, shall be "<span class="def">Confidential Information</span>" of the Disclosing Party. In particular, Confidential Information shall include, but not be limited to,
+        the Disclosing Party's know-how, research, development, development methodology, trade secrets, general business operations, methods of doing business, pricing, 
+        prices paid for materials, charges for services and products; financial information, including costs, profits and sales; marketing strategies; names of suppliers, personnel, 
+        customers, clients and potential clients; negotiations or other business contacts with suppliers personnel, customers, clients and potential clients; form and content of bids, 
+        proposals and contracts; the Disclosing Party's internal reporting methods; technical and business data documentation and drawings; software programs, however, embodied, 
+        manufacturing processes, inventions, and information obtained by or given to the Disclosing Party about or belonging to third parties.
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="section">
+      <h2><span class="num">2) </span><strong>Exclusions</strong></h2>
+      <div class="clause">
+        "<span class="smallcaps">Confidential Information</span>" shall not include information the Receiving Party demonstrates:
+      </div>
+      <div class="indent">
+        <strong>(i)</strong> is now, through no act or failure to act on the part of the Receiving Party, in the public domain; or<br><br>
+        <strong>(ii)</strong> is authorized by the Disclosing Party, in writing, for disclosure; or<br><br>
+        <strong>(iii)</strong> was in the possession of the Receiving Party prior to receipt thereof from the Disclosing Party; or<br><br>
+        <strong>(iv)</strong> was received by the Receiving Party, from a third party which, to the best of the Receiving Party's knowledge, was not bound at the time of its disclosure to the Receiving Party by a confidentiality undertaking towards the Disclosing Party; or<br><br>
+        <strong>(v)</strong> was developed independently by the Receiving Party, without using the Confidential Information which it received from the Disclosing Party; or<br><br>
+        <strong>(vi)</strong> is required to be disclosed by the Receiving Party or any of its affiliates by a court of
+        competent jurisdiction or under any applicable law or by the order, decree, regulation or rule of a government authority or under any rule of any securities regulatory authority
+        or any recognized stock exchange (by deposition, interrogatory, request for documents, subpoena, civil investigative demand or similar process).
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="section">
+      <h2><span class="num">3) </span><strong>Use of the Confidential Information</strong></h2>
+      <div class="clause">
+        Receiving Party may use the Confidential Information only to the extent required in connection with and furtherance of
+        <span class="field {{#unless purpose}}placeholder{{/unless}}">{{ph purpose "Purpose"}}</span> (the "<span class="smallcaps">Purpose</span>") and for no other purpose whatsoever (the "<span class="smallcaps">Purpose</span>").
+      </div>
+      <div class="clause">
+        The Receiving Party shall maintain all Confidential Information in trust and confidence and shall not use, 
+        publish, disseminate or otherwise disclose any Confidential Information to any third party without 
+        the written consent of the Disclosing Party. Without derogating from the foregoing, the Receiving Party 
+        agrees and undertakes that it shall protect the Confidential Information against disclosure, at least in 
+        the same manner and with the same degree of care which the Receiving Party protects confidential information 
+        of its own, but not less than a reasonable degree of care. Receiving Party shall not use, duplicate, copy, 
+        or imitate any Confidential Information of the Disclosing Party without the prior written consent of the Disclosing Party, 
+        except as necessary for the Purpose (as defined above).
+      </div>
+      <div class="clause">
+        The Receiving Party may only disclose Confidential Information to those employees, officers, advisors, 
+        agents or Affiliated Companies of the Receiving Party <span class="smallcaps">("Permitted Entities")</span> with a need to know in 
+        connection with the Purpose, as defined above, and only after such Permitted Entities have been advised 
+        of the confidential nature of such information and are legally bound by an obligation of confidentiality to the Receiving Party.
+      </div>
+      <div class="clause">
+        In this Agreement, the term <span class="smallcaps">"Affiliated Companies"</span> means an entity which either controls or is controlled by a Party
+        or is under common control with a Party, where "control" means the power to direct or cause the direction of an entity's management 
+        and policies through ownership or control of at least 50% of its voting securities or ownership interest.
+      </div>
+      <div class="clause">
+        The Receiving Party shall immediately, after it becomes aware, give notice to the Disclosing Party of any unauthorized use or disclosure of the 
+        Disclosing Party's Confidential Information. The Receiving Party agrees to assist the Disclosing Party in remedying any such unauthorized use 
+        or disclosure of Disclosing Party's Confidential Information. 
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="section">
+      <h2><span class="num">4) </span><strong>Ownership of Rights</strong></h2>
+      <div class="clause">
+        All Confidential Information (including all copies thereof) is and shall at all times remain the sole 
+        and exclusive property of the Disclosing Party and shall be destroyed or returned to the Disclosing 
+        Party upon the Disclosing Party's first written request.
+      </div>
+      <div class="clause">
+        Notwithstanding the foregoing, the Receiving Party may retain copies of the Confidential Information, 
+        and such copies of any notes, analyses and memoranda containing Confidential Information, as may be 
+        required by it for: (i) legal purposes, including for the purpose of defending any claim related to 
+        this Agreement or any transaction related hereto; and/or (ii) the maintenance of proper professional 
+        records or as may be required in accordance with its respective regulatory, 
+        compliance and/or automated backup archiving requirements and/or practices, 
+        provided that it will protect such Confidential Information in accordance with the provisions of this Agreement.
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="section">
+      <h2><span class="num">5) </span><strong>No Representations; No Rights Granted</strong></h2>
+      <div class="clause">
+        The Receiving Party agrees, undertakes and acknowledges that (i) the Confidential Information is
+        provided on an "AS-IS" basis only, without any warranty, representation and/or liability on the part
+        of the Disclosing Party, (ii) no representation or warranty, express or implied, is made by the 
+        Disclosing Party as to the truth, accuracy, completeness or reasonableness of any Confidential 
+        Information and neither the Disclosing Party nor any of its directors, officers, employees, 
+        accountants, advisers, attorneys, shareholders, representatives or other agents, shall have any liability 
+        to the Receiving Party nor to any third party nor to any of the directors, officers, employees, 
+        accountants, advisers, attorneys, shareholders, representatives or other agents of the Receiving Party or any third party, 
+        resulting from the use of Confidential Information; (iii) no right or license, of any kind, is granted to the Receiving 
+        Party in relation to Confidential Information other than the right to use Confidential Information strictly in accordance 
+        with the terms of this Agreement and for the Purpose (iv) the Receiving Party is acting as principal on its own account and 
+        not on behalf of any other party in respect of the Purpose. 
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="section">
+      <h2><span class="num">6) </span><strong>Limited Relationship</strong></h2>
+      <div class="clause">
+        Neither this Agreement nor receipt of Confidential Information shall be deemed as obligating each Party 
+        (i) to disclose information to the other Party, or (ii) to enter into an agreement with the other Party or 
+        any third party regarding the Purpose, or otherwise, or (iii) to establish a partnership or a joint venture or 
+        any other commercial relationship, with the other Party or any third party, or (iv) to imply any principal/agent, 
+        employee/employer and/or ownership relationship and/or promise.
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="section">
+      <h2><span class="num">7) </span><strong>Governing Law and Jurisdiction</strong></h2>
+      <div class="clause">
+        <strong>(a)</strong> This Agreement shall be governed by and construed in accordance with the laws of the State of <span class="field {{#unless governing_law_full}}placeholder{{/unless}}">{{ph governing_law_full "Governing Law"}}</span>,
+        without giving effect to principles of conflicts of law, and all claims relating to or arising out of this Agreement, or the breach thereof,
+         whether sounding in contract, tort or otherwise, shall likewise be governed by and construed in accordance with the laws of the State of <span class="field {{#unless governing_law_full}}placeholder{{/unless}}">{{ph governing_law_full "Governing Law"}}</span>,
+         without giving effect to principles of conflicts of law.
+      </div>
+      <div class="clause">
+        <strong>(b)</strong> Any dispute arising out of, relating to, or in connection with this Agreement, including any question regarding its existence, 
+        validity, or termination, is hereby submitted to the sole and exclusive jurisdiction of the competent courts in <span class="field {{#unless governing_law_full}}placeholder{{/unless}}">{{ph governing_law_full "Governing Law"}}</span>, 
+        and the Parties waive the right to raise forum non convenient or any similar objection.
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="section">
+      <h2><span class="num">8) </span><strong>Successors</strong></h2>
+      <div class="clause">
+        The Parties' rights and obligations under this Agreement will bind and inure to the benefit of their respective successors, 
+        heirs, executors and administrators and permitted assigns. Neither Party shall assign or delegate its obligations under this 
+        Agreement either in whole or in part without the prior written consent of the other Party.
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <div class="section">
+      <h2><span class="num">9) </span><strong>Severability</strong></h2>
+      <div class="clause">
+        In the event that any covenant, condition, term, restriction or other provision contained in this Agreement, or any portion thereof, 
+        shall be held by a court of competent jurisdiction to be invalid, illegal or unenforceable for any reason whatsoever, 
+        such provision or portion thereof shall be modified or deleted in such a manner so as to make this Agreement, as modified, 
+        legal and enforceable to the fullest extent permitted under applicable laws.
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="section">
+      <h2><span class="num">10) </span><strong>Entire Agreement</strong></h2>
+      <div class="clause">
+        This Agreement contains the final, complete and exclusive agreement of the Parties relative to the subject matter hereof and 
+        supersedes all prior and contemporaneous understandings and agreements relating to its subject matter. 
+        This Agreement may not be changed, modified, amended or supplemented except by a written instrument signed by the Parties.
+      </div>
+    </div>
+
+    <!-- 11 -->
+    <div class="section">
+      <h2><span class="num">11) </span><strong>Notices</strong></h2>
+      <div class="clause">
+        <strong>a)</strong> All notices authorized or required between the Parties by any of the provisions of this 
+        Agreement shall be in writing and shall be delivered to the other Party by hand, commercially 
+        reputable international carrier, fax or e-mail, at such address set forth below:
+      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{party_1_name}}</th>
+            <th>{{party_2_name}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Address:</strong> {{party_1_address}}</td>
+            <td><strong>Address:</strong> {{party_2_address}}</td>
+          </tr>
+          <tr>
+            <td><strong>Phone:</strong> {{party_1_phone}}</td>
+            <td><strong>Phone:</strong> {{party_2_phone}}</td>
+          </tr>
+          <tr>
+            <td><strong>E-mail(s):</strong> {{party_1_emails_joined}}</td>
+            <td><strong>E-mail(s):</strong> {{party_2_emails_joined}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="clause muted">
+        <strong>b)</strong> Notices delivered personally shall be deemed received when so delivered; Notices delivered by registered mail shall
+        be deemed received three (3) days after the date of mailing; Notices sent by e-mail shall be deemed received the day
+        following their dispatch upon telephone confirmation that the e-mail has been received; Notices sent by hand delivery
+        shall be deemed received upon their receipt.
+      </div>
+      <div class="clause muted">
+        <strong>c)</strong> Notwithstanding the aforementioned, notices and correspondents which are given within the ordinary course of business 
+        (e.g., notices and correspondents which are not: (a) related to a breach and/or termination of this this Agreement, to a requirement to 
+        disclose Confidential Information under applicable law by the Receiving Party or any of its Affiliated Companies, and/or to any 
+        dispute arising out of, relating to, or in connection with this Agreement; and/or (b) any other notice that may be substantial 
+        in consequences to a Party to whom the notice is directed and/or that the Party who sent the notice intends to relay on the fact that such 
+        notice received by the other Party) – could be delivered by the Parties by digital/electronic communication (e.g., e-mails) without the
+        requirement to confirm the reception of such notices and correspondents by the other Party.
+      </div>
+    </div>
+
+    <!-- 12 -->
+    <div class="section">
+      <h2><span class="num">12) </span><strong>Liability</strong></h2>
+      <div class="clause">
+        The Receiving Party was informed that the Disclosing Party may be irreparably harmed if the Receiving Party 
+        violates or threatens to violate any of its obligations, undertakings and/or representations under this Agreement. 
+      </div>
+    </div>
+
+    <!-- 13 -->
+    <div class="section">
+      <h2><span class="num">13) </span><strong>Counterparts</strong></h2>
+      <div class="clause">
+        This Agreement may be executed in counterparts, each of which shall be an original, 
+        and all of which shall constitute together but one and the same document. For purposes hereof, a facsimile or digital copy of this 
+        Agreement shall be deemed to be an original.
+      </div>
+    </div>
+
+    <!-- 14 -->
+    <div class="section">
+      <h2><span class="num">14) </span><strong>Term</strong></h2>
+      <div class="clause">
+        This Agreement shall expire <span class="field {{#unless term_years_number}}placeholder{{/unless}}">{{ph term_years_number "Term Years Number"}}</span> (<span class="field {{#unless term_years_words}}placeholder{{/unless}}">{{ph term_years_words "Term Years Words"}}</span>) years
+        from the Effective Date.
+      </div>
+    </div>
+
+    <!-- 15 -->
+    <div class="section">
+      <h2><span class="num">15) </span><strong>No Third-Party Rights</strong></h2>
+      <div class="clause">
+        This Agreement is for the sole benefit of the Parties and shall not be construed as conferring any 
+        rights on any third party.
+      </div>
+    </div>
+
+    <hr />
+
+    <p class="center"><strong>IN WITNESS WHEREOF</strong>, the Parties have caused this Agreement to be executed as of the Effective Date.</p>
+
+    <div class="sign">
+      <div>
+        <div class="clause"><strong>{{party_1_name}}</strong></div>
+        <div class="line"></div>
+        <div class="muted">By: {{party_1_signatory_name}}</div>
+        <div class="muted">Title: {{party_1_signatory_title}}</div>
+      </div>
+      <div>
+        <div class="clause"><strong>{{party_2_name}}</strong></div>
+        <div class="line"></div>
+        <div class="muted">By: {{party_2_signatory_name}}</div>
+        <div class="muted">Title: {{party_2_signatory_title}}</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -68,7 +68,7 @@ export default function FillNDAHTML() {
 	const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
 	const [step, setStep] = useState<number>(0);
 	const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
-	const [templateId, setTemplateId] = useState<string>("mutual-nda-html"); // HTML template by default
+	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
 	
 	// Email suggestions state
 	const [emailSuggestions, setEmailSuggestions] = useState<Array<{
@@ -84,18 +84,58 @@ export default function FillNDAHTML() {
 	const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
 
 	// B) Use debounced preview hook - prevents stale/racing responses
-	const { data: liveData } = useDebouncedPreview(
+	// Transform field names from party_a/party_b to party_1/party_2 for template compatibility
+	const templateData = {
+		...values,
+		templateId,
+		// Map party_a fields to party_1
+		party_1_name: values.party_a_name,
+		party_1_address: values.party_a_address,
+		party_1_signatory_name: values.party_a_signatory_name,
+		party_1_signatory_title: values.party_a_title,
+		party_1_phone: '', // Not in form
+		party_1_emails_joined: '', // Not in form
+		// Map party_b fields to party_2
+		party_2_name: values.party_b_name,
+		party_2_address: values.party_b_address,
+		party_2_signatory_name: values.party_b_signatory_name,
+		party_2_signatory_title: values.party_b_title,
+		party_2_phone: '', // Not in form
+		party_2_emails_joined: values.party_b_email || '',
+		// Map other fields
+		effective_date_long: values.effective_date ? new Date(values.effective_date).toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric'
+		}) : '',
+		governing_law_full: values.governing_law || '',
+		term_years_number: values.term_months ? Math.floor(parseInt(values.term_months) / 12) : '',
+		term_years_words: values.term_months ? (Math.floor(parseInt(values.term_months) / 12) === 1 ? 'one' : 'two') : '',
+		purpose: 'evaluating a potential business relationship',
+		information_scope_text: 'All information and materials',
+	};
+	
+	const { data: liveData, loading: previewLoading, error: previewError } = useDebouncedPreview(
 		"/api/ndas/preview-html",
-		{ ...values, templateId },
+		templateData,
 		400
 	);
 
 	// Update live preview HTML when data arrives
 	useEffect(() => {
+		console.log('🎨 Live data received:', {
+			hasData: !!liveData,
+			hasHtml: !!liveData?.html,
+			htmlLength: liveData?.html?.length || 0,
+			htmlPreview: liveData?.html?.substring(0, 100),
+			templateId: liveData?.templateId,
+			values: values
+		});
 		if (liveData?.html) {
+			console.log('🎨 Setting live preview HTML, length:', liveData.html.length);
 			setLivePreviewHtml(liveData.html);
 		}
-	}, [liveData]);
+	}, [liveData, values]);
 
 	// C) Fix email suggestions debounce - clean timeout on unmount
 	useEffect(() => {
@@ -129,8 +169,8 @@ export default function FillNDAHTML() {
 			console.log("📋 Using template:", urlTemplateId);
 			setTemplateId(urlTemplateId);
 		} else {
-			console.log("📋 Using default HTML template: mutual-nda-html");
-			setTemplateId("mutual-nda-html");
+			console.log("📋 Using default HTML template: mutual_nda_v1");
+			setTemplateId("mutual_nda_v1");
 		}
 		
 		if (isNewNda) {
@@ -697,15 +737,6 @@ export default function FillNDAHTML() {
 												<h2 className="text-xl font-bold text-gray-800">Party A Information</h2>
 												<p className="text-sm text-gray-600">Details of the first party</p>
 											</div>
-											<label className="flex items-center gap-2 text-sm bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-												<input 
-													type="checkbox" 
-													checked={values.party_a_ask_receiver_fill} 
-													onChange={(e) => setField("party_a_ask_receiver_fill", e.target.checked)} 
-													className="form-checkbox h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
-												/>
-												<span className="font-medium text-blue-700">Ask receiver to fill</span>
-											</label>
 										</div>
 
 										<div className="space-y-4">
@@ -1047,20 +1078,66 @@ export default function FillNDAHTML() {
 				{showLivePreview && (
 					<div className="w-[55%] bg-white border-l border-gray-200 overflow-y-auto">
 						<div className="sticky top-0 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200 px-6 py-4 z-10">
-							<h3 className="font-semibold text-gray-900">Live Preview</h3>
-							<p className="text-xs text-gray-600">Updates as you type</p>
+							<div className="flex items-center justify-between">
+								<div>
+									<h3 className="font-semibold text-gray-900">Live Preview</h3>
+									<p className="text-xs text-gray-600">Updates as you type</p>
+								</div>
+								{livePreviewHtml && (
+									<button
+										onClick={() => {
+											const newWindow = window.open('', '_blank');
+											if (newWindow) {
+												newWindow.document.write(livePreviewHtml);
+												newWindow.document.close();
+											}
+										}}
+										className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+										title="Open preview in new tab"
+									>
+										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+										</svg>
+										Open in New Tab
+									</button>
+								)}
+							</div>
 						</div>
 						<div className="p-6">
-							{livePreviewHtml ? (
-								<div dangerouslySetInnerHTML={{ __html: livePreviewHtml }} />
-							) : (
+							{previewLoading && !livePreviewHtml && (
+								<div className="text-center py-20">
+									<svg className="animate-spin h-12 w-12 mx-auto mb-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+									</svg>
+									<p className="text-sm text-gray-600">Loading preview...</p>
+								</div>
+							)}
+							{previewError && (
+								<div className="text-center py-20 text-red-500">
+									<svg className="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+									<p className="text-sm font-semibold">Preview Error</p>
+									<p className="text-xs mt-2">{previewError}</p>
+								</div>
+							)}
+							{livePreviewHtml && !previewError ? (
+								<iframe
+									srcDoc={livePreviewHtml}
+									className="w-full border-0"
+									style={{ minHeight: '1200px', height: 'auto' }}
+									title="NDA Preview"
+									sandbox="allow-same-origin"
+								/>
+							) : !previewLoading && !previewError ? (
 								<div className="text-center py-20 text-gray-400">
 									<svg className="w-20 h-20 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 									</svg>
 									<p className="text-sm">Start filling the fields to see the preview</p>
 								</div>
-							)}
+							) : null}
 						</div>
 					</div>
 				)}
@@ -1098,7 +1175,7 @@ export default function FillNDAHTML() {
 								<div className="relative">
 									<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 										<svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 018 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
 										</svg>
 									</div>
 									<input 
@@ -1442,7 +1519,7 @@ export default function FillNDAHTML() {
 								<div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
 									<div className="flex gap-3">
 										<svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 										</svg>
 										<div className="text-sm text-blue-800">
 											<p className="font-semibold mb-1">What the recipient can do:</p>

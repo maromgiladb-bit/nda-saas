@@ -1,271 +1,224 @@
 {
   "templates": [
     {
-      "id": "mutual-nda-v1",
-      "name": "Mutual NDA (Original Format)",
+      "id": "mutual_nda_v1",
+      "name": "Mutual NDA v1",
       "version": "1.0",
       "category": "mutual",
-      "description": "Classic mutual non-disclosure agreement - Original format from DOCX template with clean structure and essential clauses",
-      "templateFile": "mutual-nda-v1.hbs",
+      "description": "Professional mutual confidentiality and non-disclosure agreement with comprehensive clauses",
+      "templateFile": "mutual_nda_v1.hbs",
       "isActive": true,
       "requiredFields": [
-        "effective_date",
-        "party_a_name",
-        "party_a_address",
-        "party_a_title",
-        "party_b_name",
-        "party_b_address",
-        "party_b_email",
-        "party_b_title",
-        "docName",
-        "term_months",
-        "governing_law"
+        "doc_title",
+        "effective_date_long",
+        "party_1_name",
+        "party_1_address",
+        "party_1_emails_joined",
+        "party_1_signatory_name",
+        "party_1_signatory_title",
+        "party_2_name",
+        "party_2_address",
+        "party_2_emails_joined",
+        "party_2_signatory_name",
+        "party_2_signatory_title",
+        "information_scope_text",
+        "purpose",
+        "governing_law_full",
+        "term_years_number",
+        "term_years_words"
       ],
       "optionalFields": [
-        "party_a_email",
-        "party_a_phone",
-        "party_b_phone",
-        "party_a_signatory_name",
-        "party_b_signatory_name"
+        "party_1_phone",
+        "party_2_phone"
       ],
       "defaultValues": {
-        "term_months": "12",
-        "governing_law": "Delaware"
+        "doc_title": "Mutual Confidentiality and Non-Disclosure Agreement",
+        "information_scope_text": "All information, materials, documents, data, and other content",
+        "term_years_number": "3",
+        "term_years_words": "three"
       },
-      "previewImage": "/templates/previews/mutual-nda-v1.png",
-      "tags": ["mutual", "classic", "standard", "business"],
-      "changelog": "templates/CHANGELOG.md#mutual-nda-v1-version-10---2025-10-25",
-      "deprecated": false,
-      "createdAt": "2025-10-25",
-      "updatedAt": "2025-10-25"
+      "tags": ["mutual", "confidentiality", "nda", "professional"],
+      "createdAt": "2025-11-10",
+      "updatedAt": "2025-11-10"
     },
     {
-      "id": "mutual-nda-v3",
-      "name": "Mutual NDA (Comprehensive)",
-      "version": "3.0",
-      "category": "mutual",
-      "description": "Professional mutual non-disclosure agreement with 15 sections covering confidentiality, liability, and jurisdiction",
-      "templateFile": "mutual-nda-v3.hbs",
-      "isActive": true,
-      "requiredFields": [
-        "effective_date",
-        "party_a_name",
-        "party_a_address",
-        "party_a_title",
-        "party_b_name",
-        "party_b_address",
-        "party_b_email",
-        "party_b_title",
-        "docName",
-        "term_months",
-        "governing_law"
-      ],
-      "optionalFields": [
-        "party_a_email",
-        "party_a_phone",
-        "party_b_phone",
-        "party_a_signatory_name",
-        "party_b_signatory_name",
-        "confidentiality_period_months",
-        "ip_ownership",
-        "non_solicit",
-        "exclusivity"
-      ],
-      "defaultValues": {
-        "term_months": "12",
-        "governing_law": "Delaware"
-      },
-      "previewImage": "/templates/previews/mutual-nda-v3.png",
-      "tags": ["mutual", "comprehensive", "business", "standard"],
-      "changelog": "templates/CHANGELOG.md#mutual-nda-v3-version-30---2025-10-30",
-      "deprecated": false,
-      "createdAt": "2025-10-30",
-      "updatedAt": "2025-10-30"
-    },
-    {
-      "id": "mutual-nda-html",
-      "name": "Mutual NDA (Modern HTML)",
+      "id": "design_mutual_nda_v1",
+      "name": "Mutual NDA v1 (Formal Design)",
       "version": "1.0",
       "category": "mutual",
-      "description": "Beautiful modern HTML-styled mutual NDA with gradient design, cards, and contemporary layout perfect for tech companies",
-      "templateFile": "mutual-nda-html.hbs",
+      "description": "Formal design with underlined headings, increased spacing, and highlighted fillable fields",
+      "templateFile": "design_mutual_nda_v1.hbs",
       "isActive": true,
       "requiredFields": [
-        "effective_date",
-        "party_a_name",
-        "party_a_address",
-        "party_a_signatory_name",
-        "party_a_title",
-        "party_b_name",
-        "party_b_address",
-        "party_b_email",
-        "party_b_signatory_name",
-        "party_b_title",
-        "docName",
-        "term_months",
-        "confidentiality_period_months",
-        "governing_law",
-        "ip_ownership",
-        "non_solicit",
-        "exclusivity"
+        "doc_title",
+        "effective_date_long",
+        "party_1_name",
+        "party_1_address",
+        "party_1_emails_joined",
+        "party_1_signatory_name",
+        "party_1_signatory_title",
+        "party_2_name",
+        "party_2_address",
+        "party_2_emails_joined",
+        "party_2_signatory_name",
+        "party_2_signatory_title",
+        "information_scope_text",
+        "purpose",
+        "governing_law_full",
+        "term_years_number",
+        "term_years_words"
       ],
       "optionalFields": [
-        "party_a_email",
-        "party_b_phone"
+        "party_1_phone",
+        "party_2_phone"
       ],
       "defaultValues": {
-        "term_months": "12",
-        "confidentiality_period_months": "24",
-        "governing_law": "Delaware",
-        "ip_ownership": "All intellectual property remains with the disclosing party",
-        "non_solicit": "No solicitation of employees during term and 12 months after",
-        "exclusivity": "Non-exclusive agreement"
+        "doc_title": "Mutual Confidentiality and Non-Disclosure Agreement",
+        "information_scope_text": "All information, materials, documents, data, and other content",
+        "term_years_number": "3",
+        "term_years_words": "three"
       },
-      "previewImage": "/templates/previews/mutual-nda-html.png",
-      "tags": ["mutual", "modern", "html", "design", "tech", "startup"],
-      "changelog": "templates/CHANGELOG.md#mutual-nda-html-version-10---2025-11-03",
-      "deprecated": false,
-      "createdAt": "2025-11-03",
-      "updatedAt": "2025-11-03"
+      "tags": ["mutual", "confidentiality", "nda", "professional", "formal", "design"],
+      "createdAt": "2025-11-10",
+      "updatedAt": "2025-11-10"
     },
     {
-      "id": "one-way-nda-v1",
-      "name": "One-Way NDA (Simple)",
+      "id": "professional_mutual_nda_v1",
+      "name": "Mutual NDA v1 (Professional Design)",
       "version": "1.0",
-      "category": "one-way",
-      "description": "Simplified one-way NDA where only one party discloses confidential information",
-      "templateFile": "one-way-nda-v1.hbs",
+      "category": "mutual",
+      "description": "Enhanced professional design with bold underlined headings, circular numbered badges, gradient accents, and modern typography",
+      "templateFile": "professional_mutual_nda_v1.hbs",
       "isActive": true,
       "requiredFields": [
-        "effective_date",
-        "party_a_name",
-        "party_a_address",
-        "party_b_name",
-        "party_b_address",
-        "party_b_email",
-        "docName",
-        "term_months",
-        "governing_law"
+        "doc_title",
+        "effective_date_long",
+        "party_1_name",
+        "party_1_address",
+        "party_1_emails_joined",
+        "party_1_signatory_name",
+        "party_1_signatory_title",
+        "party_2_name",
+        "party_2_address",
+        "party_2_emails_joined",
+        "party_2_signatory_name",
+        "party_2_signatory_title",
+        "information_scope_text",
+        "purpose",
+        "governing_law_full",
+        "term_years_number",
+        "term_years_words"
       ],
       "optionalFields": [
-        "party_a_email",
-        "party_a_title",
-        "party_b_title",
-        "party_a_signatory_name",
-        "party_b_signatory_name"
+        "party_1_phone",
+        "party_2_phone"
       ],
       "defaultValues": {
-        "term_months": "24",
-        "governing_law": "California"
+        "doc_title": "Mutual Confidentiality and Non-Disclosure Agreement",
+        "information_scope_text": "All information, materials, documents, data, and other content",
+        "term_years_number": "3",
+        "term_years_words": "three"
       },
-      "previewImage": "/templates/previews/one-way-nda-v1.png",
-      "tags": ["one-way", "simple", "vendor", "consultant"],
-      "changelog": "templates/CHANGELOG.md#one-way-nda-v1-version-10---2025-10-30",
-      "deprecated": false,
-      "createdAt": "2025-10-30",
-      "updatedAt": "2025-10-30"
+      "tags": ["mutual", "confidentiality", "nda", "professional", "premium", "modern", "bold"],
+      "createdAt": "2025-11-10",
+      "updatedAt": "2025-11-10"
     }
   ],
   "fieldDefinitions": {
-    "effective_date": {
+    "doc_title": {
+      "label": "Document Title",
+      "type": "text",
+      "description": "The title of the NDA document"
+    },
+    "effective_date_long": {
       "label": "Effective Date",
-      "type": "date",
-      "description": "The date when the agreement becomes effective"
-    },
-    "party_a_name": {
-      "label": "Party A Name",
       "type": "text",
-      "description": "Full legal name of the first party"
+      "description": "Full date format (e.g., 'November 10, 2025')"
     },
-    "party_a_address": {
-      "label": "Party A Address",
+    "party_1_name": {
+      "label": "Party 1 Name",
+      "type": "text",
+      "description": "Name of the first party (company or individual)"
+    },
+    "party_1_address": {
+      "label": "Party 1 Address",
       "type": "textarea",
-      "description": "Complete address of Party A"
+      "description": "Full address of Party 1"
     },
-    "party_a_title": {
-      "label": "Party A Title/Company",
-      "type": "text",
-      "description": "Title or company name for Party A"
-    },
-    "party_a_email": {
-      "label": "Party A Email",
-      "type": "email",
-      "description": "Contact email for Party A"
-    },
-    "party_a_phone": {
-      "label": "Party A Phone",
+    "party_1_phone": {
+      "label": "Party 1 Phone",
       "type": "tel",
-      "description": "Contact phone for Party A"
+      "description": "Contact phone number for Party 1"
     },
-    "party_a_signatory_name": {
-      "label": "Party A Signatory Name",
+    "party_1_emails_joined": {
+      "label": "Party 1 Email(s)",
+      "type": "email",
+      "description": "Email address(es) for Party 1, separated by commas if multiple"
+    },
+    "party_1_signatory_name": {
+      "label": "Party 1 Signatory Name",
       "type": "text",
-      "description": "Name of person signing for Party A"
+      "description": "Full name of the person signing for Party 1"
     },
-    "party_b_name": {
-      "label": "Party B Name",
+    "party_1_signatory_title": {
+      "label": "Party 1 Signatory Title",
       "type": "text",
-      "description": "Full legal name of the second party"
+      "description": "Job title of the signatory (e.g., CEO, Director)"
     },
-    "party_b_address": {
-      "label": "Party B Address",
+    "party_2_name": {
+      "label": "Party 2 Name",
+      "type": "text",
+      "description": "Name of the second party (company or individual)"
+    },
+    "party_2_address": {
+      "label": "Party 2 Address",
       "type": "textarea",
-      "description": "Complete address of Party B"
+      "description": "Full address of Party 2"
     },
-    "party_b_title": {
-      "label": "Party B Title/Company",
-      "type": "text",
-      "description": "Title or company name for Party B"
-    },
-    "party_b_email": {
-      "label": "Party B Email",
-      "type": "email",
-      "description": "Contact email for Party B"
-    },
-    "party_b_phone": {
-      "label": "Party B Phone",
+    "party_2_phone": {
+      "label": "Party 2 Phone",
       "type": "tel",
-      "description": "Contact phone for Party B"
+      "description": "Contact phone number for Party 2"
     },
-    "party_b_signatory_name": {
-      "label": "Party B Signatory Name",
+    "party_2_emails_joined": {
+      "label": "Party 2 Email(s)",
+      "type": "email",
+      "description": "Email address(es) for Party 2, separated by commas if multiple"
+    },
+    "party_2_signatory_name": {
+      "label": "Party 2 Signatory Name",
       "type": "text",
-      "description": "Name of person signing for Party B"
+      "description": "Full name of the person signing for Party 2"
     },
-    "docName": {
-      "label": "Purpose/Topic",
+    "party_2_signatory_title": {
+      "label": "Party 2 Signatory Title",
       "type": "text",
-      "description": "The topic or purpose of the confidential information (e.g., 'Project Alpha', 'Investment Opportunity')"
+      "description": "Job title of the signatory (e.g., CEO, Director)"
     },
-    "term_months": {
-      "label": "Agreement Term (months)",
-      "type": "number",
-      "description": "Duration of the agreement in months"
+    "information_scope_text": {
+      "label": "Information Scope",
+      "type": "textarea",
+      "description": "Description of what information is covered by the agreement"
     },
-    "confidentiality_period_months": {
-      "label": "Confidentiality Period (months)",
-      "type": "number",
-      "description": "How long information must remain confidential after termination"
+    "purpose": {
+      "label": "Purpose",
+      "type": "textarea",
+      "description": "The purpose for which confidential information will be shared"
     },
-    "governing_law": {
+    "governing_law_full": {
       "label": "Governing Law",
       "type": "text",
-      "description": "State or jurisdiction whose laws will govern the agreement"
+      "description": "State or jurisdiction governing the agreement"
     },
-    "ip_ownership": {
-      "label": "IP Ownership Terms",
-      "type": "textarea",
-      "description": "Optional: Specific terms about intellectual property ownership"
+    "term_years_number": {
+      "label": "Term (Years)",
+      "type": "number",
+      "description": "Duration of the agreement in years (numeric)"
     },
-    "non_solicit": {
-      "label": "Non-Solicitation Terms",
-      "type": "textarea",
-      "description": "Optional: Terms preventing solicitation of employees or clients"
-    },
-    "exclusivity": {
-      "label": "Exclusivity Terms",
-      "type": "textarea",
-      "description": "Optional: Terms about exclusive dealings between parties"
+    "term_years_words": {
+      "label": "Term (Words)",
+      "type": "text",
+      "description": "Duration of the agreement in years (written out)"
     }
   }
 }

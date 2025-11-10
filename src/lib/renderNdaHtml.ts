@@ -1,5 +1,13 @@
 import { renderTemplate, getTemplateById } from './templateManager'
 
+import Handlebars from "handlebars";
+
+Handlebars.registerHelper("ph", function (value: unknown, label: string) {
+  const s = typeof value === "string" ? value.trim() : (value ?? "").toString().trim();
+  return s ? s : `[${label}]`;
+});
+
+
 /**
  * Render NDA HTML from form data
  * @param formData - The form data object from nda_drafts

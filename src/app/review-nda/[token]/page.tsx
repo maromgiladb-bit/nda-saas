@@ -23,6 +23,118 @@ type FormValues = {
 	exclusivity: string;
 };
 
+// Helper component for field with suggestion
+const FieldWithSuggestion = ({ 
+	label, value, field, suggestions, setSuggestions, 
+	type = "text", rows, required = false 
+}: {
+	label: string;
+	value: string;
+	field: string;
+	suggestions: Record<string, string>;
+	setSuggestions: (s: Record<string, string>) => void;
+	type?: string;
+	rows?: number;
+	required?: boolean;
+}) => {
+	const hasSuggestion = suggestions[field] !== undefined;
+	const InputComponent = rows ? "textarea" : "input";
+	
+	return (
+		<div>
+			<label className="block text-sm font-medium text-gray-700 mb-1">
+				{label} {required && <span className="text-red-500">*</span>}
+			</label>
+			<InputComponent
+				type={type}
+				value={value}
+				disabled
+				rows={rows}
+				className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+			/>
+			{value && !hasSuggestion ? (
+				<button
+					onClick={() => setSuggestions({ ...suggestions, [field]: "" })}
+					className="mt-2 text-xs text-yellow-600 hover:text-yellow-700 font-medium"
+				>
+					💡 Suggest a change
+				</button>
+			) : hasSuggestion && (
+				<div className="mt-2">
+					<label className="block text-xs font-medium text-yellow-700 mb-1">
+						💡 Your suggestion:
+					</label>
+					<InputComponent
+						type={type}
+						value={suggestions[field]}
+						onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => 
+							setSuggestions({ ...suggestions, [field]: e.target.value })
+						}
+						placeholder={`Suggest changes to ${label.toLowerCase()}...`}
+						rows={rows}
+						className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
+					/>
+					<button
+						onClick={() => {
+							const newSuggestions = { ...suggestions };
+							delete newSuggestions[field];
+							setSuggestions(newSuggestions);
+						}}
+						className="mt-1 text-xs text-gray-500 hover:text-gray-700"
+					>
+						✕ Cancel
+					</button>
+				</div>
+			)}
+		</div>
+	);
+};
+
+// Helper component for editable Party B field
+const EditableField = ({
+	label, value, field, onChange, disabled, type = "text", rows, required = false
+}: {
+	label: string;
+	value: string;
+	field: keyof FormValues;
+	onChange: (field: keyof FormValues, value: string) => void;
+	disabled: boolean;
+	type?: string;
+	rows?: number;
+	required?: boolean;
+}) => {
+	const isEmpty = !value || value.trim() === "";
+	const InputComponent = rows ? "textarea" : "input";
+	
+	return (
+		<div>
+			<label className="block text-sm font-medium text-gray-700 mb-1">
+				{label} {required && <span className="text-red-500">*</span>}
+			</label>
+			<InputComponent
+				type={type}
+				value={value}
+				onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => 
+					onChange(field, e.target.value)
+				}
+				disabled={disabled}
+				rows={rows}
+				placeholder={!disabled && isEmpty ? "Waiting for your input..." : ""}
+				className={`w-full px-3 py-2 border rounded-lg ${
+					disabled 
+						? "bg-gray-50 border-gray-300" 
+						: isEmpty
+						? "bg-blue-50 border-blue-300 border-2 placeholder-blue-400"
+						: "bg-white border-gray-300"
+				}`}
+			/>
+			{!disabled && isEmpty && (
+				<p className="mt-1 text-xs text-blue-600">⏳ Waiting for your input</p>
+			)}
+		</div>
+	);
+};
+
 export default function ReviewNDA({ params }: { params: Promise<{ token: string }> }) {
 	const { token } = use(params);
 	const router = useRouter();
@@ -39,7 +151,6 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 		signature_date: new Date().toISOString().slice(0, 10),
 	});
 	const [suggestions, setSuggestions] = useState<Record<string, string>>({});
-	const [showSuggestions, setShowSuggestions] = useState(false);
 	const [sendingBack, setSendingBack] = useState(false);
 
 	const loadDraftFromToken = useCallback(async () => {
@@ -154,7 +265,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 		if (!values) return;
 
 		// Check if there are any suggestions
-		const hasSuggestions = Object.keys(suggestions).some(key => suggestions[key].trim());
+		const hasSuggestions = Object.keys(suggestions).some(key => suggestions[key]?.trim());
 		if (!hasSuggestions) {
 			setError("Please add at least one suggestion before sending back");
 			return;
@@ -255,6 +366,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 
 	const canEdit = tokenScope === "EDIT" || tokenScope === "REVIEW" || tokenScope === "SIGN";
 	const canSign = tokenScope === "SIGN" || tokenScope === "REVIEW";
+	const hasSuggestions = Object.keys(suggestions).length > 0;
 
 	return (
 		<div className="min-h-screen bg-gray-50">
@@ -281,213 +393,80 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 				<div className="bg-white rounded-lg shadow-sm p-6 mb-6">
 					<h2 className="text-xl font-semibold mb-4">Document Information</h2>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								Purpose/Topic <span className="text-red-500">*</span>
-							</label>
-							<input
-								type="text"
-								value={values.docName}
-								disabled
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<input
-										type="text"
-										value={suggestions.docName || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, docName: e.target.value })}
-										placeholder="Suggest different purpose..."
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								Effective Date <span className="text-red-500">*</span>
-							</label>
-							<input
-								type="date"
-								value={values.effective_date}
-								disabled
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<input
-										type="date"
-										value={suggestions.effective_date || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, effective_date: e.target.value })}
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								Term (months) <span className="text-red-500">*</span>
-							</label>
-							<input
-								type="number"
-								value={values.term_months}
-								disabled
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<input
-										type="number"
-										value={suggestions.term_months || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, term_months: e.target.value })}
-										placeholder="e.g., 12"
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								Confidentiality Period (months) <span className="text-red-500">*</span>
-							</label>
-							<input
-								type="number"
-								value={values.confidentiality_period_months}
-								disabled
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<input
-										type="number"
-										value={suggestions.confidentiality_period_months || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, confidentiality_period_months: e.target.value })}
-										placeholder="e.g., 24"
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
+						<FieldWithSuggestion 
+							label="Purpose/Topic" 
+							value={values.docName} 
+							field="docName" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							required
+						/>
+						<FieldWithSuggestion 
+							label="Effective Date" 
+							value={values.effective_date} 
+							field="effective_date" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							type="date"
+							required
+						/>
+						<FieldWithSuggestion 
+							label="Term (months)" 
+							value={values.term_months} 
+							field="term_months" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							type="number"
+							required
+						/>
+						<FieldWithSuggestion 
+							label="Confidentiality Period (months)" 
+							value={values.confidentiality_period_months} 
+							field="confidentiality_period_months" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							type="number"
+							required
+						/>
 					</div>
 				</div>
 
 				{/* Party A (Read-only with suggestion fields) */}
 				<div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-					<div className="flex items-center justify-between mb-4">
-						<h2 className="text-xl font-semibold">Party A (Disclosing Party)</h2>
-						<button
-							onClick={() => setShowSuggestions(!showSuggestions)}
-							className="px-4 py-2 text-sm bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors flex items-center gap-2"
-						>
-							💡 {showSuggestions ? "Hide" : "Suggest Changes"}
-						</button>
-					</div>
-					
+					<h2 className="text-xl font-semibold mb-4">Party A (Disclosing Party)</h2>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
-							<input
-								type="text"
-								value={values.party_a_name}
-								disabled
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<input
-										type="text"
-										value={suggestions.party_a_name || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, party_a_name: e.target.value })}
-										placeholder="Suggest different name..."
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-							<input
-								type="text"
-								value={values.party_a_title}
-								disabled
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<input
-										type="text"
-										value={suggestions.party_a_title || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, party_a_title: e.target.value })}
-										placeholder="Suggest different title..."
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
+						<FieldWithSuggestion 
+							label="Name" 
+							value={values.party_a_name} 
+							field="party_a_name" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							required
+						/>
+						<FieldWithSuggestion 
+							label="Title" 
+							value={values.party_a_title} 
+							field="party_a_title" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+						/>
 						<div className="md:col-span-2">
-							<label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-							<textarea
-								value={values.party_a_address}
-								disabled
+							<FieldWithSuggestion 
+								label="Address" 
+								value={values.party_a_address} 
+								field="party_a_address" 
+								suggestions={suggestions} 
+								setSuggestions={setSuggestions}
 								rows={2}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
 							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<textarea
-										value={suggestions.party_a_address || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, party_a_address: e.target.value })}
-										placeholder="Suggest different address..."
-										rows={2}
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
 						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Signatory Name</label>
-							<input
-								type="text"
-								value={values.party_a_signatory_name}
-								disabled
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<input
-										type="text"
-										value={suggestions.party_a_signatory_name || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, party_a_signatory_name: e.target.value })}
-										placeholder="Suggest different signatory name..."
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
+						<FieldWithSuggestion 
+							label="Signatory Name" 
+							value={values.party_a_signatory_name} 
+							field="party_a_signatory_name" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+						/>
 					</div>
 				</div>
 
@@ -495,101 +474,40 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 				<div className="bg-white rounded-lg shadow-sm p-6 mb-6">
 					<h2 className="text-xl font-semibold mb-4">Additional Terms & Clauses</h2>
 					<div className="space-y-4">
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Governing Law</label>
-							<input
-								type="text"
-								value={values.governing_law}
-								disabled
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<input
-										type="text"
-										value={suggestions.governing_law || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, governing_law: e.target.value })}
-										placeholder="e.g., State of California"
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">IP Ownership Clause</label>
-							<textarea
-								value={values.ip_ownership}
-								disabled
-								rows={2}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<textarea
-										value={suggestions.ip_ownership || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, ip_ownership: e.target.value })}
-										placeholder="Suggest changes to IP ownership terms..."
-										rows={2}
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Non-Solicitation Clause</label>
-							<textarea
-								value={values.non_solicit}
-								disabled
-								rows={2}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<textarea
-										value={suggestions.non_solicit || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, non_solicit: e.target.value })}
-										placeholder="Suggest changes to non-solicitation terms..."
-										rows={2}
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Exclusivity Clause</label>
-							<textarea
-								value={values.exclusivity}
-								disabled
-								rows={2}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-							/>
-							{showSuggestions && (
-								<div className="mt-2">
-									<label className="block text-xs font-medium text-yellow-700 mb-1">
-										💡 Suggest a change:
-									</label>
-									<textarea
-										value={suggestions.exclusivity || ""}
-										onChange={(e) => setSuggestions({ ...suggestions, exclusivity: e.target.value })}
-										placeholder="Suggest changes to exclusivity terms..."
-										rows={2}
-										className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-sm"
-									/>
-								</div>
-							)}
-						</div>
+						<FieldWithSuggestion 
+							label="Governing Law" 
+							value={values.governing_law} 
+							field="governing_law" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+						/>
+						<FieldWithSuggestion 
+							label="IP Ownership Clause" 
+							value={values.ip_ownership} 
+							field="ip_ownership" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							rows={2}
+						/>
+						<FieldWithSuggestion 
+							label="Non-Solicitation Clause" 
+							value={values.non_solicit} 
+							field="non_solicit" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							rows={2}
+						/>
+						<FieldWithSuggestion 
+							label="Exclusivity Clause" 
+							value={values.exclusivity} 
+							field="exclusivity" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							rows={2}
+						/>
 					</div>
 
-					{showSuggestions && (
+					{hasSuggestions && (
 						<div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
 							<h3 className="text-sm font-semibold text-yellow-900 mb-2">
 								💡 Additional Comments or Suggestions
@@ -597,7 +515,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 							<textarea
 								value={suggestions.general_comments || ""}
 								onChange={(e) => setSuggestions({ ...suggestions, general_comments: e.target.value })}
-								placeholder="Any other comments or concerns about Party A's information..."
+								placeholder="Any other comments or concerns..."
 								rows={3}
 								className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-white text-sm"
 							/>
@@ -630,54 +548,42 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 						)}
 					</h2>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-							<input
-								type="text"
-								value={values.party_b_name}
-								onChange={(e) => handleChange("party_b_name", e.target.value)}
-								disabled={!canEdit}
-								className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-									canEdit ? "bg-white" : "bg-gray-50"
-								}`}
-							/>
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-							<input
-								type="text"
-								value={values.party_b_title}
-								onChange={(e) => handleChange("party_b_title", e.target.value)}
-								disabled={!canEdit}
-								className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-									canEdit ? "bg-white" : "bg-gray-50"
-								}`}
-							/>
-						</div>
+						<EditableField
+							label="Name"
+							value={values.party_b_name}
+							field="party_b_name"
+							onChange={handleChange}
+							disabled={!canEdit}
+							required
+						/>
+						<EditableField
+							label="Title"
+							value={values.party_b_title}
+							field="party_b_title"
+							onChange={handleChange}
+							disabled={!canEdit}
+							required
+						/>
 						<div className="md:col-span-2">
-							<label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
-							<textarea
+							<EditableField
+								label="Address"
 								value={values.party_b_address}
-								onChange={(e) => handleChange("party_b_address", e.target.value)}
+								field="party_b_address"
+								onChange={handleChange}
 								disabled={!canEdit}
 								rows={2}
-								className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-									canEdit ? "bg-white" : "bg-gray-50"
-								}`}
+								required
 							/>
 						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-							<input
-								type="email"
-								value={values.party_b_email}
-								onChange={(e) => handleChange("party_b_email", e.target.value)}
-								disabled={!canEdit}
-								className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-									canEdit ? "bg-white" : "bg-gray-50"
-								}`}
-							/>
-						</div>
+						<EditableField
+							label="Email"
+							value={values.party_b_email}
+							field="party_b_email"
+							onChange={handleChange}
+							disabled={!canEdit}
+							type="email"
+							required
+						/>
 					</div>
 
 					{canEdit && (

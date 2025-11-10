@@ -1,0 +1,231 @@
+{
+  "id": "mutual_nda_v1",
+  "name": "Mutual NDA v1",
+  "description": "Professional mutual confidentiality and non-disclosure agreement with comprehensive clauses",
+  "type": "mutual",
+  "version": "1.0",
+  "fields": [
+    {
+      "name": "doc_title",
+      "label": "Document Title",
+      "type": "text",
+      "required": true,
+      "default": "Mutual Confidentiality and Non-Disclosure Agreement",
+      "placeholder": "Enter document title"
+    },
+    {
+      "name": "effective_date_long",
+      "label": "Effective Date (Full Format)",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., November 10, 2025",
+      "description": "Full date format (e.g., 'November 10, 2025')"
+    },
+    {
+      "name": "party_1_name",
+      "label": "Party 1 Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Company or Individual Name"
+    },
+    {
+      "name": "party_1_address",
+      "label": "Party 1 Address",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Full address including city, state, and country"
+    },
+    {
+      "name": "party_1_phone",
+      "label": "Party 1 Phone",
+      "type": "text",
+      "required": false,
+      "placeholder": "+1 (555) 123-4567"
+    },
+    {
+      "name": "party_1_emails_joined",
+      "label": "Party 1 Email(s)",
+      "type": "text",
+      "required": true,
+      "placeholder": "email@example.com",
+      "description": "Multiple emails can be separated by commas"
+    },
+    {
+      "name": "party_1_signatory_name",
+      "label": "Party 1 Signatory Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Full name of person signing"
+    },
+    {
+      "name": "party_1_signatory_title",
+      "label": "Party 1 Signatory Title",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., CEO, Director, Manager"
+    },
+    {
+      "name": "party_2_name",
+      "label": "Party 2 Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Company or Individual Name"
+    },
+    {
+      "name": "party_2_address",
+      "label": "Party 2 Address",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Full address including city, state, and country"
+    },
+    {
+      "name": "party_2_phone",
+      "label": "Party 2 Phone",
+      "type": "text",
+      "required": false,
+      "placeholder": "+1 (555) 123-4567"
+    },
+    {
+      "name": "party_2_emails_joined",
+      "label": "Party 2 Email(s)",
+      "type": "text",
+      "required": true,
+      "placeholder": "email@example.com",
+      "description": "Multiple emails can be separated by commas"
+    },
+    {
+      "name": "party_2_signatory_name",
+      "label": "Party 2 Signatory Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Full name of person signing"
+    },
+    {
+      "name": "party_2_signatory_title",
+      "label": "Party 2 Signatory Title",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., CEO, Director, Manager"
+    },
+    {
+      "name": "information_scope_text",
+      "label": "Information Scope",
+      "type": "textarea",
+      "required": true,
+      "default": "All information, materials, documents, data, and other content",
+      "placeholder": "Describe what information is covered",
+      "description": "Define the scope of confidential information"
+    },
+    {
+      "name": "purpose",
+      "label": "Purpose of Agreement",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "e.g., exploring a potential business partnership, evaluating a potential transaction",
+      "description": "Describe the purpose for which confidential information will be used"
+    },
+    {
+      "name": "governing_law_full",
+      "label": "Governing Law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., California, New York, Delaware",
+      "description": "State or jurisdiction that governs this agreement"
+    },
+    {
+      "name": "term_years_number",
+      "label": "Term (Years - Number)",
+      "type": "number",
+      "required": true,
+      "default": "3",
+      "placeholder": "e.g., 3",
+      "description": "Duration in years (numeric)"
+    },
+    {
+      "name": "term_years_words",
+      "label": "Term (Years - Words)",
+      "type": "text",
+      "required": true,
+      "default": "three",
+      "placeholder": "e.g., three",
+      "description": "Duration in years (written out)"
+    }
+  ],
+  "clauses": [
+    {
+      "id": "confidential_information",
+      "title": "Confidential Information",
+      "description": "Defines what constitutes confidential information"
+    },
+    {
+      "id": "exclusions",
+      "title": "Exclusions",
+      "description": "Information that is not considered confidential"
+    },
+    {
+      "id": "use_of_information",
+      "title": "Use of the Confidential Information",
+      "description": "How confidential information may be used"
+    },
+    {
+      "id": "ownership",
+      "title": "Ownership of Rights",
+      "description": "Ownership and return of confidential information"
+    },
+    {
+      "id": "no_representations",
+      "title": "No Representations; No Rights Granted",
+      "description": "Disclaimers and limitations"
+    },
+    {
+      "id": "limited_relationship",
+      "title": "Limited Relationship",
+      "description": "Clarifies no partnership or employment relationship"
+    },
+    {
+      "id": "governing_law",
+      "title": "Governing Law and Jurisdiction",
+      "description": "Legal jurisdiction and applicable law"
+    },
+    {
+      "id": "successors",
+      "title": "Successors",
+      "description": "Binding on successors and assigns"
+    },
+    {
+      "id": "severability",
+      "title": "Severability",
+      "description": "Invalid provisions don't affect rest of agreement"
+    },
+    {
+      "id": "entire_agreement",
+      "title": "Entire Agreement",
+      "description": "This is the complete agreement"
+    },
+    {
+      "id": "notices",
+      "title": "Notices",
+      "description": "How to send legal notices"
+    },
+    {
+      "id": "liability",
+      "title": "Liability",
+      "description": "Liability for breach"
+    },
+    {
+      "id": "counterparts",
+      "title": "Counterparts",
+      "description": "Agreement can be signed in multiple copies"
+    },
+    {
+      "id": "term",
+      "title": "Term",
+      "description": "Duration of the agreement"
+    },
+    {
+      "id": "no_third_party_rights",
+      "title": "No Third-Party Rights",
+      "description": "Only parties have rights under this agreement"
+    }
+  ]
+}
