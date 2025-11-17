@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     console.log('🌐 HTML Preview request received')
+    console.log('🌐 Request body keys:', Object.keys(body))
+    console.log('🌐 body.templateId:', body.templateId)
 
     // Support both draftId (for saved drafts) and direct data (for unsaved forms)
     let formData: Record<string, unknown>
@@ -52,6 +54,9 @@ export async function POST(request: NextRequest) {
     // Allow template override from request
     if (body.templateId) {
       templateId = body.templateId
+      console.log('🌐 Using templateId from request:', templateId)
+    } else {
+      console.log('🌐 Using default templateId:', templateId)
     }
 
     // Process "ask receiver to fill" placeholders

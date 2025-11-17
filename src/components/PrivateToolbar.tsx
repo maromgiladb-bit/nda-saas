@@ -22,7 +22,7 @@ export default function PrivateToolbar() {
     { name: 'Fill NDA', href: '/templates', current: pathname === '/fillnda' || pathname === '/templates' },
     { name: 'My NDAs', href: '/mynda', current: pathname === '/mynda' },
     { name: 'My Drafts', href: '/mydrafts', current: pathname === '/mydrafts' },
-    { name: 'Company Details', href: '/companydetails', current: pathname === '/companydetails' },
+    { name: 'Company Profile', href: '/companydetails', current: pathname === '/companydetails' },
     { name: 'Settings', href: '/settings', current: pathname === '/settings' },
   ]
 

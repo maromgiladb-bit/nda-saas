@@ -42,18 +42,18 @@ model nda_drafts {
   created_by_id                   String          @db.Uuid
   title                           String?         @default("Untitled NDA")
   status                          draft_status?   @default(DRAFT)
-  last_actor                      ActorRole?
-  provisional_recipient_signed_at DateTime?       @db.Timestamptz(6)
   data                            Json?           @default("{}")
   preview_key                     String?
   final_key                       String?
   created_at                      DateTime?       @default(now()) @db.Timestamptz(6)
   updated_at                      DateTime?       @default(now()) @db.Timestamptz(6)
+  last_actor                      ActorRole?
+  provisional_recipient_signed_at DateTime?       @db.Timestamptz(6)
   audit_events                    audit_events[]
-  revisions                       nda_revisions[]
   users                           users           @relation(fields: [created_by_id], references: [id], onUpdate: NoAction)
   organizations                   organizations   @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   nda_templates                   nda_templates   @relation(fields: [template_id], references: [id], onUpdate: NoAction)
+  revisions                       nda_revisions[]
   signers                         signers[]
 }
 
@@ -96,16 +96,16 @@ model organizations {
 }
 
 model sign_requests {
-  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  signer_id       String       @db.Uuid
-  token           String       @unique
-  scope           TokenScope   @default(EDIT)
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  signer_id       String     @db.Uuid
+  token           String     @unique
+  expires_at      DateTime   @db.Timestamptz(6)
+  created_at      DateTime?  @default(now()) @db.Timestamptz(6)
+  consumed_at     DateTime?  @db.Timestamptz(6)
   editable_fields Json?
   payload         Json?
-  expires_at      DateTime     @db.Timestamptz(6)
-  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
-  consumed_at     DateTime?    @db.Timestamptz(6)
-  signers         signers      @relation(fields: [signer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  scope           TokenScope @default(EDIT)
+  signers         signers    @relation(fields: [signer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model signers {
@@ -131,6 +131,27 @@ model users {
   memberships  memberships[]
   nda_drafts   nda_drafts[]
   signers      signers[]
+}
+
+model company_profile {
+  id             String   @id
+  userid         String
+  companyname    String
+  email          String
+  phone          String?
+  website        String?
+  addressline1   String
+  addressline2   String?
+  city           String
+  state          String?
+  postalcode     String?
+  country        String
+  signatoryname  String
+  signatorytitle String?
+  meta           Json?
+  isdefault      Boolean  @default(true)
+  createdat      DateTime @default(now()) @db.Timestamptz(6)
+  updatedat      DateTime @default(now()) @db.Timestamptz(6)
 }
 
 enum draft_status {

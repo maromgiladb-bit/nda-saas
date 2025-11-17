@@ -114,10 +114,11 @@ export function getTemplateFields(templateId: string): {
  * Uses caching for performance
  */
 export function getCompiledTemplate(templateId: string): HandlebarsTemplateDelegate {
+  // TEMPORARILY DISABLE CACHE to force reload of templates
   // Check cache first
-  if (compiledTemplateCache.has(templateId)) {
-    return compiledTemplateCache.get(templateId)!;
-  }
+  // if (compiledTemplateCache.has(templateId)) {
+  //   return compiledTemplateCache.get(templateId)!;
+  // }
 
   // Get template config
   const templateConfig = getTemplateById(templateId);
@@ -128,6 +129,10 @@ export function getCompiledTemplate(templateId: string): HandlebarsTemplateDeleg
   // Read template file
   const templatePath = path.join(process.cwd(), 'templates', templateConfig.templateFile);
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
+  
+  console.log(`📄 Loading template from disk: ${templateId}`);
+  console.log(`📄 Template file: ${templateConfig.templateFile}`);
+  console.log(`📄 Template contains @media print: ${templateSource.includes('@media print')}`);
 
   // Compile and cache
   const compiled = Handlebars.compile(templateSource);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
-import { htmlToPdf } from '@/lib/htmlToPdf'
+import { renderHtmlToPdf } from '@/lib/htmlToPdf'
 
 export const runtime = 'nodejs' // Required for Puppeteer
 
@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    console.log('📄 Preview request received')
+    console.log('📄 PDF Preview request received')
 
     // Support both draftId (for saved drafts) and direct data (for unsaved forms)
     let formData: Record<string, unknown>
-    let templateId = 'mutual-nda-v3' // Default template
+    let templateId = 'professional_mutual_nda_v1' // Default template
 
     if (body.draftId) {
       // Load from database
@@ -44,9 +44,12 @@ export async function POST(request: NextRequest) {
       }
 
       formData = (draft.data as Record<string, unknown>) || {}
-      // Use template from draft or fall back to default
-      // Note: template_id in DB is UUID, we'll need to map this later
-      // For now, use the default template
+      
+      // Allow template override from request even when loading from draft
+      if (body.templateId) {
+        templateId = body.templateId
+        console.log('📋 Using templateId from request (with draftId):', templateId)
+      }
     } else {
       // Use provided data directly
       formData = { ...body }
@@ -54,6 +57,8 @@ export async function POST(request: NextRequest) {
       // Allow template override from request
       if (body.templateId) {
         templateId = body.templateId
+        delete formData.templateId // Remove from formData to avoid confusion
+        console.log('📋 Using templateId from request:', templateId)
       }
     }
 
@@ -77,13 +82,40 @@ export async function POST(request: NextRequest) {
       console.log('📄 Party B: ask receiver to fill')
     }
 
-    console.log('📄 Rendering HTML from template...')
+    // Transform party_a/party_b to party_1/party_2 if needed (for templates that use party_1/party_2 naming)
+    // This ensures compatibility with all template formats
+    if (!processedData.party_1_name && processedData.party_a_name) {
+      processedData.party_1_name = processedData.party_a_name
+      processedData.party_1_address = processedData.party_a_address
+      processedData.party_1_signatory_name = processedData.party_a_signatory_name
+      processedData.party_1_signatory_title = processedData.party_a_title
+      processedData.party_1_phone = processedData.party_a_phone || ''
+      processedData.party_1_emails_joined = processedData.party_a_email || ''
+      console.log('📄 Mapped party_a_* to party_1_*')
+    }
+    
+    if (!processedData.party_2_name && processedData.party_b_name) {
+      processedData.party_2_name = processedData.party_b_name
+      processedData.party_2_address = processedData.party_b_address
+      processedData.party_2_signatory_name = processedData.party_b_signatory_name
+      processedData.party_2_signatory_title = processedData.party_b_title
+      processedData.party_2_phone = processedData.party_b_phone || ''
+      processedData.party_2_emails_joined = processedData.party_b_email || ''
+      console.log('📄 Mapped party_b_* to party_2_*')
+    }
+
+    console.log('📄 Rendering HTML from template:', templateId)
     const html = await renderNdaHtml(processedData, templateId)
 
-    console.log('📄 Converting HTML to PDF...')
-    const pdfBuffer = await htmlToPdf(html)
+    console.log('📄 Converting HTML to PDF with 1:1 rendering...')
+    const pdfBuffer = await renderHtmlToPdf(html, {
+      pageWidthPx: 900,  // Match preview container width
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
+      isA4: true,
+      debugScreenshot: false,  // Set to true to save debug screenshot
+    })
 
-    console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes')
+    console.log('✅ PDF generated successfully')
 
     // Return as base64 data URL for compatibility with existing UI
     const base64 = pdfBuffer.toString('base64')

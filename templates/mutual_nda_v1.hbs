@@ -2,9 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>{{doc_title}}</title>
+  <title>{{docName}}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    /* ===== PDF Page Control - Ensures 1:1 rendering ===== */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    /* Force exact color rendering in PDF */
+    * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
     :root {
       --text:#111; --muted:#444; --line:#ddd;
       --page-bg:#fff; --page-shadow:0 4px 30px rgba(0,0,0,.08);
@@ -13,7 +25,8 @@
     html,body { margin:0; padding:0; background:#fafafa; color:var(--text); }
     .page {
       box-sizing:border-box; margin:24px auto; background:var(--page-bg);
-      box-shadow:var(--page-shadow); padding:28mm 22mm; max-width:850px;
+      box-shadow:var(--page-shadow); padding:28mm 22mm; 
+      width: 210mm; max-width: 210mm; min-height: 297mm;
       font-family: var(--font); line-height:1.45; font-size:12.2pt;
     }
     h1 { font-size:20pt; letter-spacing:.3px; text-align:center; margin:0 0 10mm; }
@@ -34,11 +47,18 @@
     .muted { color:var(--muted); }
     .center { text-align:center; }
     .nowrap { white-space:nowrap; }
+    
+    /* @media print - DISABLED for 1:1 HTML/PDF matching */
+    /* PDF uses SCREEN media type for exact visual match */
+    /*
     @media print {
       body { background:#fff; }
-      .page { box-shadow:none; margin:0; padding:25mm 20mm; }
+      .page { box-shadow:none; margin:0; border-radius:0; }
       a { color:inherit; text-decoration:none; }
+      .section, .clause, .lead { orphans:3; widows:3; }
+      h2 { page-break-after:avoid; }
     }
+    */
   </style>
 </head>
 <body>
@@ -47,9 +67,9 @@
 
     <p class="lead">
       THIS CONFIDENTIALITY AND NON-DISCLOSURE AGREEMENT (this “<span class="smallcaps">Agreement</span>”)
-      is made effective as of {{effective_date_long}} (the “<span class="smallcaps">Effective Date</span>”),
-      by and between {{party_1_name}}, of {{party_1_address}},
-      and {{party_2_name}}, of {{party_2_address}}
+      is made effective as of {{effective_date}} (the “<span class="smallcaps">Effective Date</span>”),
+      by and between {{party_a_name}}, of {{party_a_address}},
+      and {{party_b_name}}, of {{party_b_address}}
       to assure the protection and preservation of any confidential or proprietary information to be
       disclosed or made available by one party to the other (individually a “<span class="smallcaps">Party</span>”
       and collectively the “<span class="smallcaps">Parties</span>”) in connection with a possible business
@@ -58,9 +78,9 @@
 
     <p class="lead">
       A Party, and/or any of its Permitted Entities (as defined below) receiving Confidential Information (as defined below) from the other Party hereof and/or anyone on its behalf, shall be referred to hereinafter as the
-      “<span class="smallcaps">Receiving Party</span>” ({{party_2_name}}); (with regard to the Confidential Information disclosed to it by the other Party and/or anyone on its behalf)
+      “<span class="smallcaps">Receiving Party</span>” ({{party_b_name}}); (with regard to the Confidential Information disclosed to it by the other Party and/or anyone on its behalf)
        and a Party hereof and/or anyone on its behalf disclosing Confidential Information to the other Party, and/or any of its Permitted Entities (as defined below), shall be referred to hereinafter as the
-      “<span class="smallcaps">Disclosing Party</span>” ({{party_1_name}}).
+      “<span class="smallcaps">Disclosing Party</span>” ({{party_a_name}}).
     </p>
 
     <!-- 1 -->

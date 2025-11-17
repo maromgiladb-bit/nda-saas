@@ -48,43 +48,144 @@ async function getBrowser(): Promise<Browser> {
     executablePath,
     args: process.env.NODE_ENV === 'production' 
       ? chromium.args
-      : ['--no-sandbox', '--disable-setuid-sandbox'],
+      : ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=medium'],
   })
 
   return browserInstance
 }
 
 /**
- * Convert HTML string to PDF buffer
- * @param html - HTML string to convert
- * @returns PDF as Buffer
+ * Inject base tag for absolute asset URLs
  */
-export async function htmlToPdf(html: string): Promise<Buffer> {
+function injectBase(html: string, baseUrl: string): string {
+  // Skip if base tag already exists
+  if (html.includes('<base ')) {
+    return html
+  }
+  
+  // Ensure baseUrl ends with /
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'
+  
+  // Inject after <head>
+  return html.replace('<head>', `<head><base href="${normalizedBase}">`)
+}
+
+/**
+ * Options for PDF rendering
+ */
+export type PdfOptions = {
+  /** Width of the page in pixels - should match preview container width (default: 900) */
+  pageWidthPx?: number
+  /** Base URL for resolving assets (fonts, images, etc.) */
+  baseUrl?: string
+  /** Use A4 page size (default: true, otherwise Letter) */
+  isA4?: boolean
+  /** Enable debug screenshot (saves to pdf-debug.png) */
+  debugScreenshot?: boolean
+}
+
+/**
+ * Convert HTML string to PDF buffer with pixel-perfect 1:1 rendering
+ * 
+ * This function ensures the PDF matches the on-screen HTML preview exactly by:
+ * - Using the same viewport width as the preview
+ * - Applying SCREEN media type (not print) for exact visual match
+ * - Forcing background colors/images to render
+ * - Respecting @page CSS rules for size
+ * 
+ * @param rawHtml - HTML string to convert (must include full <html> document)
+ * @param opts - Rendering options
+ * @returns PDF as Buffer
+ * 
+ * @example
+ * ```ts
+ * const html = await renderNdaHtml(data, templateId)
+ * const pdf = await renderHtmlToPdf(html, {
+ *   pageWidthPx: 900,  // Match your preview container width
+ *   baseUrl: 'http://localhost:3000',
+ *   isA4: true
+ * })
+ * ```
+ */
+export async function renderHtmlToPdf(
+  rawHtml: string, 
+  opts: PdfOptions = {}
+): Promise<Buffer> {
+  const {
+    pageWidthPx = 900,
+    baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
+    isA4 = true,
+    debugScreenshot = false,
+  } = opts
+
+  // Inject base tag for asset resolution
+  const html = injectBase(rawHtml, baseUrl)
+
   const browser = await getBrowser()
   const page = await browser.newPage()
 
   try {
-    // Set content and wait for network to be idle
-    await page.setContent(html, {
-      waitUntil: 'networkidle0',
+    // Match the preview width with high DPR for sharp text
+    // Height is arbitrary since PDF will flow to multiple pages
+    await page.setViewport({
+      width: pageWidthPx,
+      height: 1600,
+      deviceScaleFactor: 1,  // Use 1x for exact pixel matching
     })
 
-    // Generate PDF with A4 format and margins
+    // Use 'screen' media type for exact 1:1 matching with HTML preview
+    // This ensures PDF looks identical to what user sees in browser
+    await page.emulateMediaType('screen')
+
+    // Load HTML and wait for all network resources AND fonts
+    await page.setContent(html, {
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+    })
+    
+    // Wait an additional moment for fonts to render
+    await page.evaluateHandle('document.fonts.ready')
+
+    // Optional debug screenshot to verify visual parity
+    if (debugScreenshot) {
+      await page.screenshot({
+        path: 'pdf-debug.png',
+        fullPage: true,
+      })
+      console.log('🐛 Debug screenshot saved to pdf-debug.png')
+    }
+
+    // Generate PDF with exact control
     const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
+      printBackground: true,        // CRITICAL: render backgrounds, shadows, colors
+      preferCSSPageSize: true,      // CRITICAL: respect @page { size: A4; margin: 0; }
+      format: isA4 ? 'A4' : 'Letter', // Fallback if CSS doesn't specify
       margin: {
-        top: '16mm',
-        right: '16mm',
-        bottom: '16mm',
-        left: '16mm',
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0',
       },
+      scale: 1,                       // No scaling for exact match
+    })
+
+    console.log('✅ PDF generated:', {
+      size: `${(pdfBuffer.length / 1024).toFixed(1)} KB`,
+      viewport: `${pageWidthPx}px`,
+      pageSize: isA4 ? 'A4' : 'Letter',
     })
 
     return Buffer.from(pdfBuffer)
   } finally {
     await page.close()
   }
+}
+
+/**
+ * Legacy function name - now calls renderHtmlToPdf
+ * @deprecated Use renderHtmlToPdf directly
+ */
+export async function htmlToPdf(html: string): Promise<Buffer> {
+  return renderHtmlToPdf(html, {})
 }
 
 /**

@@ -5,6 +5,18 @@
   <title>{{doc_title}}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    /* ===== PDF Page Control - Ensures 1:1 rendering ===== */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    /* Force exact color rendering in PDF */
+    * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
     :root{
       --ink:#0b0b0b;
       --muted:#525c67;
@@ -30,7 +42,9 @@
       box-shadow:var(--page-shadow);
       border:1px solid var(--rule);
       border-radius:14px;
-      max-width:880px;
+      width: 210mm;
+      max-width: 210mm;
+      min-height: 297mm;
       padding:28mm 24mm;
       font-family: var(--serif);
       font-size:12.4pt;
@@ -199,7 +213,9 @@
     /* Fine-tune link aesthetics if any appear */
     a{ color:#0f3bd7; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:2px; }
 
-    /* Print refinements */
+    /* @media print - DISABLED for 1:1 HTML/PDF matching */
+    /* PDF uses SCREEN media type for exact visual match */
+    /*
     @media print{
       body{ background:#fff; }
       .page{
@@ -207,30 +223,11 @@
         margin:0;
         border:none;
         border-radius:0;
-        padding:24mm 20mm;
       }
-      .field{
-        background:transparent;
-        box-shadow:none;
-        border:0;
-        border-bottom:1px solid #bdbdbd;
-      }
-      h1{
-        border-bottom-color:#000;
-        border-image:none;
-        color:#000;
-      }
-      .table th{
-        background:#eee !important;
-        -webkit-print-color-adjust:exact;
-        print-color-adjust:exact;
-      }
-      .table,
-      .table th, .table td{ border-color:#999; }
-      .table tbody tr:nth-child(even) td{ background:#fff !important; }
       .section, .clause, .lead{ orphans:3; widows:3; }
       h2{ page-break-after:avoid; }
     }
+    */
   </style>
 </head>
 <body>
