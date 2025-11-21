@@ -126,11 +126,19 @@ model users {
   id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   external_id  String         @unique
   email        String         @unique @db.Citext
+  plan         user_plan?     @default(FREE)
   created_at   DateTime?      @default(now()) @db.Timestamptz(6)
   audit_events audit_events[]
   memberships  memberships[]
   nda_drafts   nda_drafts[]
   signers      signers[]
+}
+
+enum user_plan {
+  FREE
+  PRO
+  ENTERPRISE
+  DEVELOPER
 }
 
 model company_profile {

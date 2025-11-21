@@ -20,6 +20,7 @@ export default function PrivateToolbar() {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
     { name: 'Fill NDA', href: '/templates', current: pathname === '/fillnda' || pathname === '/templates' },
+    { name: 'Fill NDA HTML', href: '/templates?mode=html', current: pathname === '/fillndahtml' },
     { name: 'My NDAs', href: '/mynda', current: pathname === '/mynda' },
     { name: 'My Drafts', href: '/mydrafts', current: pathname === '/mydrafts' },
     { name: 'Company Profile', href: '/companydetails', current: pathname === '/companydetails' },
@@ -27,7 +28,6 @@ export default function PrivateToolbar() {
   ]
 
   const additionalLinks = [
-    { name: 'Fill HTML NDA', href: '/fillndahtml' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
     { name: 'Plans', href: '/plans' },
@@ -89,9 +89,9 @@ export default function PrivateToolbar() {
               </div>
             </Link>
             
-            {/* Desktop Navigation - Show first 3 items */}
+            {/* Desktop Navigation - Show first 4 items */}
             <div className="hidden xl:ml-8 xl:flex xl:space-x-4">
-              {navigation.slice(0, 3).map((item) => (
+              {navigation.slice(0, 4).map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -122,7 +122,7 @@ export default function PrivateToolbar() {
                 {isMoreMenuOpen && (
                   <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
                     <div className="py-1">
-                      {navigation.slice(3).map((item) => (
+                      {navigation.slice(4).map((item) => (
                         <Link
                           key={item.name}
                           href={item.href}
@@ -192,9 +192,9 @@ export default function PrivateToolbar() {
               )}
             </div>
 
-            {/* Tablet/Small Desktop - Show first 2 items */}
+            {/* Tablet/Small Desktop - Show first 3 items */}
             <div className="hidden lg:ml-8 lg:flex lg:space-x-4 xl:hidden">
-              {navigation.slice(0, 2).map((item) => (
+              {navigation.slice(0, 3).map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -225,7 +225,7 @@ export default function PrivateToolbar() {
                 {isMoreMenuOpen && (
                   <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
                     <div className="py-1">
-                      {navigation.slice(2).map((item) => (
+                      {navigation.slice(3).map((item) => (
                         <Link
                           key={item.name}
                           href={item.href}

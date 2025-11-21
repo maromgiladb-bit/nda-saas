@@ -61,6 +61,33 @@ export async function POST(request: NextRequest) {
         data: { title, data, updated_at: new Date() }
       })
     } else {
+      // Create new draft - check free plan limit
+      const userPlan = dbUser.plan || 'FREE'
+      
+      // Developer email gets DEVELOPER plan automatically
+      if (userEmail.toLowerCase() === 'maromgiladb@gmail.com' && userPlan === 'FREE') {
+        await prisma.users.update({
+          where: { id: dbUser.id },
+          data: { plan: 'DEVELOPER' }
+        })
+        dbUser.plan = 'DEVELOPER'
+      }
+      
+      // Only check limits for FREE plan users
+      if (userPlan === 'FREE') {
+        const ndaCount = await prisma.nda_drafts.count({
+          where: { created_by_id: dbUser.id }
+        })
+        
+        if (ndaCount >= 3) {
+          return NextResponse.json({
+            error: 'Free plan limit reached',
+            message: 'You have reached the free plan limit of 3 NDAs. Upgrade to Pro for unlimited NDAs.',
+            limitReached: true
+          }, { status: 403 })
+        }
+      }
+      
       // Create new draft
       draft = await prisma.nda_drafts.create({
         data: {

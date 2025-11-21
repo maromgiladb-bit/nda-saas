@@ -287,3 +287,268 @@ validateData(data: Record<string, unknown>) {
 
 **Status**: ✅ Implemented and working  
 **Last Updated**: October 29, 2025
+
+---
+
+## HTML Editor: Individual Field Checkboxes (NEW)
+
+### Overview
+The HTML NDA editor (`fillndahtml`) now supports **individual checkboxes** for each Party B field, providing granular control over which specific fields the receiver should fill.
+
+### Key Difference from PDF Editor
+
+**PDF Editor (`fillnda`):**
+- Single "Ask receiver to fill" checkbox for all Party B fields
+- All-or-nothing approach
+
+**HTML Editor (`fillndahtml`):**
+- Individual checkbox for each Party B field
+- Fine-grained control per field
+
+### Individual Checkboxes
+
+Each Party B field has its own checkbox:
+1. ☑️ **Party Name** - `party_b_name_ask_receiver`
+2. ☑️ **Address** - `party_b_address_ask_receiver`
+3. ☑️ **Phone Number** - `party_b_phone_ask_receiver`
+4. ☑️ **Signatory Name** - `party_b_signatory_name_ask_receiver`
+5. ☑️ **Title** - `party_b_title_ask_receiver`
+6. ☑️ **Email Address** - `party_b_email_ask_receiver`
+
+### Use Cases
+
+#### Scenario 1: Partial Company Information
+You know the company name and address, but not the contact person:
+```
+✅ Party B Name: "XYZ Corporation" (filled)
+✅ Party B Address: "456 Business Blvd" (filled)
+☑️ Signatory Name: Ask receiver to fill
+☑️ Title: Ask receiver to fill
+☑️ Email: Ask receiver to fill
+☐ Phone: (optional, not asking)
+```
+
+#### Scenario 2: Missing Contact Details
+You have the signatory's name but not their contact information:
+```
+✅ Party B Name: "ABC Inc" (filled)
+✅ Signatory Name: "Jane Smith" (filled)
+☑️ Email: Ask receiver to fill
+☑️ Phone: Ask receiver to fill
+☐ Address: (optional, not asking)
+☐ Title: (optional, not asking)
+```
+
+#### Scenario 3: Email Only
+You have everything except the email:
+```
+✅ All fields filled EXCEPT
+☑️ Email: Ask receiver to fill
+```
+
+### UI Design
+
+**Checkbox Placement:**
+- Located above each field label in a flex container
+- Right-aligned with `justify-between`
+- Compact styling for space efficiency
+
+**Checkbox Styling:**
+```css
+/* Container */
+.flex.items-center.gap-2.text-xs.bg-blue-50.px-3.py-1.rounded-lg
+
+/* Checkbox */
+.form-checkbox.h-3.w-3.text-blue-600.rounded
+
+/* Label Text */
+- Full-width fields: "Ask receiver to fill"
+- Narrow fields (Signatory, Title): "Ask receiver"
+```
+
+**Field States:**
+- Unchecked: Field enabled, normal background
+- Checked: Field disabled, gray background (`disabled:bg-gray-100`)
+
+### Data Structure
+
+**FormValues Type:**
+```typescript
+type FormValues = {
+  // ... other fields
+  
+  // Individual Party B flags
+  party_b_name_ask_receiver: boolean;
+  party_b_address_ask_receiver: boolean;
+  party_b_phone_ask_receiver: boolean;
+  party_b_signatory_name_ask_receiver: boolean;
+  party_b_title_ask_receiver: boolean;
+  party_b_email_ask_receiver: boolean;
+  
+  // OLD: party_b_ask_receiver_fill (removed)
+}
+```
+
+**Defaults:**
+```typescript
+const DEFAULTS = {
+  // ... other defaults
+  party_b_name_ask_receiver: false,
+  party_b_address_ask_receiver: false,
+  party_b_phone_ask_receiver: false,
+  party_b_signatory_name_ask_receiver: false,
+  party_b_title_ask_receiver: false,
+  party_b_email_ask_receiver: false,
+}
+```
+
+### Validation Logic
+
+**Conditional Field Requirements:**
+```typescript
+const mandatoryFields = [/* base fields */];
+
+// Add each Party B field only if NOT asking receiver to fill
+if (!values.party_b_name_ask_receiver) {
+  mandatoryFields.push("party_b_name");
+}
+if (!values.party_b_address_ask_receiver) {
+  mandatoryFields.push("party_b_address");
+}
+if (!values.party_b_phone_ask_receiver) {
+  mandatoryFields.push("party_b_phone");
+}
+// ... etc
+```
+
+**Step Completion:**
+```typescript
+case 2: // Party B step
+  // Add fields to check based on individual flags
+  if (!values.party_b_name_ask_receiver) {
+    stepFields.push("party_b_name");
+  }
+  // ... for each field
+  
+  // If all fields have "ask receiver" checked, step is complete
+  if (stepFields.length === 0) {
+    return true;
+  }
+  break;
+```
+
+### Preview Behavior
+
+**HTML Preview API (`/api/ndas/preview-html`):**
+```typescript
+// Check each field individually
+if (formData.party_b_name_ask_receiver) {
+  processedData.party_b_name = formData.party_b_name || "[To be filled by receiving party]"
+}
+if (formData.party_b_address_ask_receiver) {
+  processedData.party_b_address = formData.party_b_address || "[To be filled by receiving party]"
+}
+// ... etc for each field
+```
+
+**Result:**
+- Only checked fields show placeholder text
+- Unchecked fields show actual entered values
+- Mixed placeholders and real data in same section
+
+### Progress Display
+
+**Review Step:**
+Shows which specific fields receiver will fill:
+```typescript
+{(() => {
+  const fieldsToFill = [];
+  if (values.party_b_name_ask_receiver) fieldsToFill.push("Name");
+  if (values.party_b_address_ask_receiver) fieldsToFill.push("Address");
+  if (values.party_b_phone_ask_receiver) fieldsToFill.push("Phone");
+  if (values.party_b_signatory_name_ask_receiver) fieldsToFill.push("Signatory");
+  if (values.party_b_title_ask_receiver) fieldsToFill.push("Title");
+  if (values.party_b_email_ask_receiver) fieldsToFill.push("Email");
+  
+  if (fieldsToFill.length > 0) {
+    return <span>Receiver will fill: {fieldsToFill.join(", ")}</span>;
+  }
+})()}
+```
+
+**Display Examples:**
+- `Receiver will fill: Email, Phone`
+- `Receiver will fill: Signatory, Title, Email`
+- `Receiver will fill: Name, Address, Phone, Signatory, Title, Email` (all fields)
+- No badge if no fields are delegated
+
+### Files Modified
+
+1. **src/app/fillndahtml/page.tsx**
+   - FormValues type (6 new boolean fields)
+   - DEFAULTS object (6 new fields)
+   - Party B UI section (individual checkboxes)
+   - validate() function (granular checks)
+   - isStepComplete() function (per-field validation)
+   - computeCompletionPercent() function
+   - Review step display (comma-separated list)
+
+2. **src/app/api/ndas/preview-html/route.ts**
+   - Individual flag checks for placeholder text
+   - Per-field placeholder application
+
+### Benefits
+
+✅ **Maximum Flexibility** - Choose exactly which fields to delegate  
+✅ **Partial Information** - Fill what you know, ask for what you don't  
+✅ **Clear Intent** - Receiver sees exactly which fields need their input  
+✅ **Better UX** - No need to clear fields or re-enter data  
+✅ **Professional Output** - Mix of real data and placeholders as needed
+
+### Comparison
+
+| Feature | PDF Editor | HTML Editor |
+|---------|-----------|-------------|
+| Control Level | All-or-nothing | Per-field |
+| Checkboxes | 1 global | 6 individual |
+| Flexibility | Limited | Maximum |
+| Preview | All/none placeholders | Mixed content |
+| Use Cases | Simple delegation | Complex scenarios |
+
+### Implementation Status
+
+- ✅ FormValues type updated
+- ✅ DEFAULTS initialized
+- ✅ Individual checkboxes in UI
+- ✅ Field disable/enable logic
+- ✅ Validation respects individual flags
+- ✅ Step completion logic
+- ✅ Preview HTML API handles individual flags
+- ✅ Progress display shows delegated fields
+- ✅ Server compiles without errors
+
+### Testing Checklist
+
+- [x] Individual checkboxes render correctly
+- [x] Checking checkbox disables field
+- [x] Unchecking checkbox enables field
+- [x] Validation skips checked fields
+- [x] Step 2 completion considers individual flags
+- [x] Progress display shows correct list
+- [x] Preview shows placeholders only for checked fields
+- [x] Can check any combination of fields
+- [x] Can check all fields (same as old behavior)
+- [x] Can check no fields (all sender-filled)
+
+### Future Enhancements
+
+1. Add individual checkboxes to Party A fields
+2. Update review-nda page to handle individual flags
+3. Add "Select All" / "Clear All" quick actions
+4. Add tooltips for clarity
+5. Save preset patterns (e.g., "Email only", "Contact details only")
+
+---
+
+**HTML Editor Status**: ✅ Individual checkboxes implemented  
+**Last Updated**: [Current Date]

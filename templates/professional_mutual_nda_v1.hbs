@@ -67,7 +67,7 @@
     body {
       margin: 0;
       padding: 0;
-      background: var(--bg);
+      background: #ffffff;        /* Changed from var(--bg) to white for 1:1 matching */
     }
 
     /* Page - Fixed dimensions for consistent PDF rendering */
@@ -79,8 +79,8 @@
       padding: 18mm 16mm;        /* Reduced padding: was 24mm 20mm */
       box-sizing: border-box;
       background: var(--page-bg);
-      box-shadow: var(--page-shadow);
-      border: 1px solid var(--rule);
+      box-shadow: none;          /* Removed shadow for 1:1 matching */
+      border: none;              /* Removed border for 1:1 matching */
       border-radius: 0;
       font-family: var(--serif);
       font-size: 10pt;           /* Reduced: was 12.5pt */

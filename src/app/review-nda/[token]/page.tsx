@@ -10,10 +10,12 @@ type FormValues = {
 	confidentiality_period_months: string;
 	party_a_name: string;
 	party_a_address: string;
+	party_a_phone: string;
 	party_a_signatory_name: string;
 	party_a_title: string;
 	party_b_name: string;
 	party_b_address: string;
+	party_b_phone: string;
 	party_b_signatory_name: string;
 	party_b_title: string;
 	party_b_email: string;
@@ -196,6 +198,25 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 	const saveChanges = async () => {
 		if (!values || !draftId) return;
 
+		// Validate required Party B fields
+		const requiredFields = {
+			party_b_name: "Name",
+			party_b_title: "Title",
+			party_b_address: "Address",
+			party_b_phone: "Phone Number",
+			party_b_email: "Email",
+			party_b_signatory_name: "Signatory Name"
+		};
+
+		const missingFields = Object.entries(requiredFields)
+			.filter(([field]) => !values[field as keyof FormValues]?.trim())
+			.map(([, label]) => label);
+
+		if (missingFields.length > 0) {
+			setError(`Please fill in all required Party B fields: ${missingFields.join(", ")}`);
+			return;
+		}
+
 		try {
 			setSaving(true);
 			const res = await fetch(`/api/ndas/review/${token}`, {
@@ -210,6 +231,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 				return;
 			}
 
+			setError(""); // Clear any previous errors
 			alert("Changes saved successfully!");
 		} catch (err) {
 			console.error("Error saving:", err);
@@ -306,6 +328,27 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 			return;
 		}
 
+		// Validate required Party B fields before signing
+		if (!values) return;
+		
+		const requiredFields = {
+			party_b_name: "Name",
+			party_b_title: "Title",
+			party_b_address: "Address",
+			party_b_phone: "Phone Number",
+			party_b_email: "Email",
+			party_b_signatory_name: "Signatory Name"
+		};
+
+		const missingFields = Object.entries(requiredFields)
+			.filter(([field]) => !values[field as keyof FormValues]?.trim())
+			.map(([, label]) => label);
+
+		if (missingFields.length > 0) {
+			setError(`Please fill in all required Party B fields before signing: ${missingFields.join(", ")}`);
+			return;
+		}
+
 		try {
 			setSigning(true);
 			const res = await fetch(`/api/ndas/review/${token}/sign`, {
@@ -320,6 +363,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 				return;
 			}
 
+			setError(""); // Clear any previous errors
 			alert("Document signed successfully! The owner will be notified.");
 			// Reload to show signed state
 			loadDraftFromToken();
@@ -386,6 +430,81 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 						<div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
 							{error}
 						</div>
+					)}
+				</div>
+
+				{/* Party B (Editable if allowed) - MOVED TO TOP */}
+				<div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-2 border-blue-300">
+					<h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+						Party B (Receiving Party) - Your Information
+						{canEdit && (
+							<span className="text-sm font-normal text-blue-600">✏️ Editable</span>
+						)}
+					</h2>
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<EditableField
+							label="Name"
+							value={values.party_b_name}
+							field="party_b_name"
+							onChange={handleChange}
+							disabled={!canEdit}
+							required
+						/>
+						<EditableField
+							label="Title"
+							value={values.party_b_title}
+							field="party_b_title"
+							onChange={handleChange}
+							disabled={!canEdit}
+							required
+						/>
+						<div className="md:col-span-2">
+							<EditableField
+								label="Address"
+								value={values.party_b_address}
+								field="party_b_address"
+								onChange={handleChange}
+								disabled={!canEdit}
+								rows={2}
+								required
+							/>
+						</div>
+						<EditableField
+							label="Phone Number"
+							value={values.party_b_phone || ''}
+							field="party_b_phone"
+							onChange={handleChange}
+							disabled={!canEdit}
+							type="tel"
+							required
+						/>
+						<EditableField
+							label="Email"
+							value={values.party_b_email}
+							field="party_b_email"
+							onChange={handleChange}
+							disabled={!canEdit}
+							type="email"
+							required
+						/>
+						<EditableField
+							label="Signatory Name"
+							value={values.party_b_signatory_name}
+							field="party_b_signatory_name"
+							onChange={handleChange}
+							disabled={!canEdit}
+							required
+						/>
+					</div>
+
+					{canEdit && (
+						<button
+							onClick={saveChanges}
+							disabled={saving}
+							className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+						>
+							{saving ? "Saving..." : "Save Changes"}
+						</button>
 					)}
 				</div>
 
@@ -460,6 +579,14 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 								rows={2}
 							/>
 						</div>
+						<FieldWithSuggestion 
+							label="Phone Number" 
+							value={values.party_a_phone || ''} 
+							field="party_a_phone" 
+							suggestions={suggestions} 
+							setSuggestions={setSuggestions}
+							type="tel"
+						/>
 						<FieldWithSuggestion 
 							label="Signatory Name" 
 							value={values.party_a_signatory_name} 
@@ -536,64 +663,6 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 								Party A will receive your suggestions and can accept, reject, or edit the information
 							</p>
 						</div>
-					)}
-				</div>
-
-				{/* Party B (Editable if allowed) */}
-				<div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-					<h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-						Party B (Receiving Party) - Your Information
-						{canEdit && (
-							<span className="text-sm font-normal text-blue-600">✏️ Editable</span>
-						)}
-					</h2>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<EditableField
-							label="Name"
-							value={values.party_b_name}
-							field="party_b_name"
-							onChange={handleChange}
-							disabled={!canEdit}
-							required
-						/>
-						<EditableField
-							label="Title"
-							value={values.party_b_title}
-							field="party_b_title"
-							onChange={handleChange}
-							disabled={!canEdit}
-							required
-						/>
-						<div className="md:col-span-2">
-							<EditableField
-								label="Address"
-								value={values.party_b_address}
-								field="party_b_address"
-								onChange={handleChange}
-								disabled={!canEdit}
-								rows={2}
-								required
-							/>
-						</div>
-						<EditableField
-							label="Email"
-							value={values.party_b_email}
-							field="party_b_email"
-							onChange={handleChange}
-							disabled={!canEdit}
-							type="email"
-							required
-						/>
-					</div>
-
-					{canEdit && (
-						<button
-							onClick={saveChanges}
-							disabled={saving}
-							className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-						>
-							{saving ? "Saving..." : "Save Changes"}
-						</button>
 					)}
 				</div>
 

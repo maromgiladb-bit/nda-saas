@@ -12,10 +12,12 @@ type FormValues = {
 	confidentiality_period_months: string;
 	party_a_name: string;
 	party_a_address: string;
+	party_a_phone: string;
 	party_a_signatory_name: string;
 	party_a_title: string;
 	party_b_name: string;
 	party_b_address: string;
+	party_b_phone: string;
 	party_b_signatory_name: string;
 	party_b_title: string;
 	party_b_email: string;
@@ -24,7 +26,12 @@ type FormValues = {
 	non_solicit: string;
 	exclusivity: string;
 	party_a_ask_receiver_fill: boolean;
-	party_b_ask_receiver_fill: boolean;
+	party_b_name_ask_receiver: boolean;
+	party_b_address_ask_receiver: boolean;
+	party_b_phone_ask_receiver: boolean;
+	party_b_signatory_name_ask_receiver: boolean;
+	party_b_title_ask_receiver: boolean;
+	party_b_email_ask_receiver: boolean;
 };
 
 const DEFAULTS: FormValues = {
@@ -34,10 +41,12 @@ const DEFAULTS: FormValues = {
 	confidentiality_period_months: "",
 	party_a_name: "",
 	party_a_address: "",
+	party_a_phone: "",
 	party_a_signatory_name: "",
 	party_a_title: "",
 	party_b_name: "",
 	party_b_address: "",
+	party_b_phone: "",
 	party_b_signatory_name: "",
 	party_b_title: "",
 	party_b_email: "",
@@ -46,7 +55,12 @@ const DEFAULTS: FormValues = {
 	non_solicit: "",
 	exclusivity: "",
 	party_a_ask_receiver_fill: false,
-	party_b_ask_receiver_fill: false,
+	party_b_name_ask_receiver: false,
+	party_b_address_ask_receiver: false,
+	party_b_phone_ask_receiver: false,
+	party_b_signatory_name_ask_receiver: false,
+	party_b_title_ask_receiver: false,
+	party_b_email_ask_receiver: false,
 };
 
 export default function FillNDAHTML() {
@@ -104,15 +118,14 @@ export default function FillNDAHTML() {
 					profile.country
 				].filter(Boolean).join(', ');
 
-				setValues(prev => ({
-					...prev,
-					party_a_name: profile.companyname || prev.party_a_name,
-					party_a_address: address || prev.party_a_address,
-					party_a_signatory_name: profile.signatoryname || prev.party_a_signatory_name,
-					party_a_title: profile.signatorytitle || prev.party_a_title
-				}));
-				
-				console.log('✅ Auto-filled Party A from company profile');
+			setValues(prev => ({
+				...prev,
+				party_a_name: profile.companyname || prev.party_a_name,
+				party_a_address: address || prev.party_a_address,
+				party_a_phone: profile.phone || prev.party_a_phone,
+				party_a_signatory_name: profile.signatoryname || prev.party_a_signatory_name,
+				party_a_title: profile.signatorytitle || prev.party_a_title
+			}));				console.log('✅ Auto-filled Party A from company profile');
 			}
 		} catch (error) {
 			console.error('Error loading company profile:', error);
@@ -203,14 +216,14 @@ export default function FillNDAHTML() {
 		party_1_address: values.party_a_address,
 		party_1_signatory_name: values.party_a_signatory_name,
 		party_1_signatory_title: values.party_a_title,
-		party_1_phone: '', // Not in form
+		party_1_phone: values.party_a_phone || '',
 		party_1_emails_joined: '', // Not in form
 		// Map party_b fields to party_2
 		party_2_name: values.party_b_name,
 		party_2_address: values.party_b_address,
 		party_2_signatory_name: values.party_b_signatory_name,
 		party_2_signatory_title: values.party_b_title,
-		party_2_phone: '', // Not in form
+		party_2_phone: values.party_b_phone || '',
 		party_2_emails_joined: values.party_b_email || '',
 		// Map other fields
 		effective_date_long: values.effective_date ? new Date(values.effective_date).toLocaleDateString('en-US', {
@@ -375,9 +388,21 @@ export default function FillNDAHTML() {
 			mandatoryFields.push("party_a_name", "party_a_address", "party_a_signatory_name", "party_a_title");
 		}
 
-		// Add Party B fields only if not asking receiver to fill
-		if (!values.party_b_ask_receiver_fill) {
-			mandatoryFields.push("party_b_name", "party_b_address", "party_b_signatory_name", "party_b_title", "party_b_email");
+		// Add Party B fields only if not asking receiver to fill for that specific field
+		if (!values.party_b_name_ask_receiver) {
+			mandatoryFields.push("party_b_name");
+		}
+		if (!values.party_b_address_ask_receiver) {
+			mandatoryFields.push("party_b_address");
+		}
+		if (!values.party_b_signatory_name_ask_receiver) {
+			mandatoryFields.push("party_b_signatory_name");
+		}
+		if (!values.party_b_title_ask_receiver) {
+			mandatoryFields.push("party_b_title");
+		}
+		if (!values.party_b_email_ask_receiver) {
+			mandatoryFields.push("party_b_email");
 		}
 
 		mandatoryFields.forEach((field) => {
@@ -391,8 +416,8 @@ export default function FillNDAHTML() {
 			}
 		});
 
-		// Still validate email format if Party B email is provided or not asking receiver to fill
-		if (!values.party_b_ask_receiver_fill && (!values.party_b_email || !values.party_b_email.includes("@"))) {
+		// Still validate email format if Party B email is provided and not asking receiver to fill
+		if (!values.party_b_email_ask_receiver && (!values.party_b_email || !values.party_b_email.includes("@"))) {
 			errors.add("party_b_email");
 		}
 
@@ -420,11 +445,24 @@ export default function FillNDAHTML() {
 				}
 				break;
 			case 2:
-				// Party B fields only required if not asking receiver to fill
-				if (!values.party_b_ask_receiver_fill) {
-					stepFields.push("party_b_name", "party_b_address", "party_b_signatory_name", "party_b_title", "party_b_email");
-				} else {
-					// If asking receiver to fill, step is complete
+				// Party B fields only required if not asking receiver to fill for that specific field
+				if (!values.party_b_name_ask_receiver) {
+					stepFields.push("party_b_name");
+				}
+				if (!values.party_b_address_ask_receiver) {
+					stepFields.push("party_b_address");
+				}
+				if (!values.party_b_signatory_name_ask_receiver) {
+					stepFields.push("party_b_signatory_name");
+				}
+				if (!values.party_b_title_ask_receiver) {
+					stepFields.push("party_b_title");
+				}
+				if (!values.party_b_email_ask_receiver) {
+					stepFields.push("party_b_email");
+				}
+				// If all Party B fields are set to "ask receiver", step is complete
+				if (stepFields.length === 0) {
 					return true;
 				}
 				break;
@@ -444,8 +482,11 @@ export default function FillNDAHTML() {
 				if (!values.party_a_ask_receiver_fill) {
 					stepFields.push("party_a_name");
 				}
-				if (!values.party_b_ask_receiver_fill) {
-					stepFields.push("party_b_name", "party_b_email");
+				if (!values.party_b_name_ask_receiver) {
+					stepFields.push("party_b_name");
+				}
+				if (!values.party_b_email_ask_receiver) {
+					stepFields.push("party_b_email");
 				}
 				break;
 			default:
@@ -455,7 +496,7 @@ export default function FillNDAHTML() {
 		for (const field of stepFields) {
 			const val = values[field as keyof FormValues];
 			if (!val || (typeof val === "string" && !val.trim())) return false;
-			if (field === "party_b_email" && !values.party_b_ask_receiver_fill && !values.party_b_email.includes("@")) return false;
+			if (field === "party_b_email" && !values.party_b_email_ask_receiver && !values.party_b_email.includes("@")) return false;
 		}
 		return true;
 	};
@@ -478,9 +519,21 @@ export default function FillNDAHTML() {
 			requiredFields.push("party_a_name", "party_a_address", "party_a_signatory_name", "party_a_title");
 		}
 
-		// Add Party B fields only if not asking receiver to fill
-		if (!values.party_b_ask_receiver_fill) {
-			requiredFields.push("party_b_name", "party_b_address", "party_b_signatory_name", "party_b_title", "party_b_email");
+		// Add Party B fields only if not asking receiver to fill for that specific field
+		if (!values.party_b_name_ask_receiver) {
+			requiredFields.push("party_b_name");
+		}
+		if (!values.party_b_address_ask_receiver) {
+			requiredFields.push("party_b_address");
+		}
+		if (!values.party_b_signatory_name_ask_receiver) {
+			requiredFields.push("party_b_signatory_name");
+		}
+		if (!values.party_b_title_ask_receiver) {
+			requiredFields.push("party_b_title");
+		}
+		if (!values.party_b_email_ask_receiver) {
+			requiredFields.push("party_b_email");
 		}
 
 		const total = requiredFields.length;
@@ -904,6 +957,16 @@ export default function FillNDAHTML() {
 													placeholder="Enter full address" 
 												/>
 											</div>
+											<div>
+												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+												<input 
+													type="tel"
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+													value={values.party_a_phone} 
+													onChange={(e) => setField("party_a_phone", e.target.value)} 
+													placeholder="e.g., +1 (555) 123-4567" 
+												/>
+											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 												<div>
 													<label className="block text-sm font-semibold text-gray-700 mb-2">Signatory Name</label>
@@ -939,72 +1002,140 @@ export default function FillNDAHTML() {
 											</div>
 											<div className="flex-1">
 												<h2 className="text-xl font-bold text-gray-800">Party B Information</h2>
-												<p className="text-sm text-gray-600">Details of the second party</p>
+												<p className="text-sm text-gray-600">Details of the second party (check boxes to let receiver fill specific fields)</p>
 											</div>
-											<label className="flex items-center gap-2 text-sm bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-												<input 
-													type="checkbox" 
-													checked={values.party_b_ask_receiver_fill} 
-													onChange={(e) => setField("party_b_ask_receiver_fill", e.target.checked)} 
-													className="form-checkbox h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
-												/>
-												<span className="font-medium text-blue-700">Ask receiver to fill</span>
-											</label>
 										</div>
 
 										<div className="space-y-4">
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Party Name *</label>
+												<div className="flex items-center justify-between mb-2">
+													<label className="block text-sm font-semibold text-gray-700">Party Name *</label>
+													<label className="flex items-center gap-2 text-xs bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+														<input 
+															type="checkbox" 
+															checked={values.party_b_name_ask_receiver} 
+															onChange={(e) => setField("party_b_name_ask_receiver", e.target.checked)} 
+															className="form-checkbox h-3 w-3 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
+														/>
+														<span className="font-medium text-blue-700">Ask receiver to fill</span>
+													</label>
+												</div>
 												<input 
 													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed`} 
 													value={values.party_b_name} 
 													onChange={(e) => setField("party_b_name", e.target.value)} 
 													placeholder="Enter party name" 
-													disabled={values.party_b_ask_receiver_fill} 
+													disabled={values.party_b_name_ask_receiver} 
 												/>
 											</div>
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
+												<div className="flex items-center justify-between mb-2">
+													<label className="block text-sm font-semibold text-gray-700">Address</label>
+													<label className="flex items-center gap-2 text-xs bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+														<input 
+															type="checkbox" 
+															checked={values.party_b_address_ask_receiver} 
+															onChange={(e) => setField("party_b_address_ask_receiver", e.target.checked)} 
+															className="form-checkbox h-3 w-3 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
+														/>
+														<span className="font-medium text-blue-700">Ask receiver to fill</span>
+													</label>
+												</div>
 												<textarea 
 													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" 
 													rows={3}
 													value={values.party_b_address} 
 													onChange={(e) => setField("party_b_address", e.target.value)} 
 													placeholder="Enter full address" 
-													disabled={values.party_b_ask_receiver_fill} 
+													disabled={values.party_b_address_ask_receiver} 
+												/>
+											</div>
+											<div>
+												<div className="flex items-center justify-between mb-2">
+													<label className="block text-sm font-semibold text-gray-700">Phone Number</label>
+													<label className="flex items-center gap-2 text-xs bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+														<input 
+															type="checkbox" 
+															checked={values.party_b_phone_ask_receiver} 
+															onChange={(e) => setField("party_b_phone_ask_receiver", e.target.checked)} 
+															className="form-checkbox h-3 w-3 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
+														/>
+														<span className="font-medium text-blue-700">Ask receiver to fill</span>
+													</label>
+												</div>
+												<input 
+													type="tel"
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" 
+													value={values.party_b_phone} 
+													onChange={(e) => setField("party_b_phone", e.target.value)} 
+													placeholder="e.g., +1 (555) 123-4567" 
+													disabled={values.party_b_phone_ask_receiver} 
 												/>
 											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 												<div>
-													<label className="block text-sm font-semibold text-gray-700 mb-2">Signatory Name</label>
+													<div className="flex items-center justify-between mb-2">
+														<label className="block text-sm font-semibold text-gray-700">Signatory Name</label>
+														<label className="flex items-center gap-2 text-xs bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+															<input 
+																type="checkbox" 
+																checked={values.party_b_signatory_name_ask_receiver} 
+																onChange={(e) => setField("party_b_signatory_name_ask_receiver", e.target.checked)} 
+																className="form-checkbox h-3 w-3 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
+															/>
+															<span className="font-medium text-blue-700">Ask receiver</span>
+														</label>
+													</div>
 													<input 
 														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" 
 														value={values.party_b_signatory_name} 
 														onChange={(e) => setField("party_b_signatory_name", e.target.value)} 
 														placeholder="Full name" 
-														disabled={values.party_b_ask_receiver_fill} 
+														disabled={values.party_b_signatory_name_ask_receiver} 
 													/>
 												</div>
 												<div>
-													<label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
+													<div className="flex items-center justify-between mb-2">
+														<label className="block text-sm font-semibold text-gray-700">Title</label>
+														<label className="flex items-center gap-2 text-xs bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+															<input 
+																type="checkbox" 
+																checked={values.party_b_title_ask_receiver} 
+																onChange={(e) => setField("party_b_title_ask_receiver", e.target.checked)} 
+																className="form-checkbox h-3 w-3 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
+															/>
+															<span className="font-medium text-blue-700">Ask receiver</span>
+														</label>
+													</div>
 													<input 
 														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" 
 														value={values.party_b_title} 
 														onChange={(e) => setField("party_b_title", e.target.value)} 
 														placeholder="e.g., CEO, Director" 
-														disabled={values.party_b_ask_receiver_fill} 
+														disabled={values.party_b_title_ask_receiver} 
 													/>
 												</div>
 											</div>
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+												<div className="flex items-center justify-between mb-2">
+													<label className="block text-sm font-semibold text-gray-700">Email Address *</label>
+													<label className="flex items-center gap-2 text-xs bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+														<input 
+															type="checkbox" 
+															checked={values.party_b_email_ask_receiver} 
+															onChange={(e) => setField("party_b_email_ask_receiver", e.target.checked)} 
+															className="form-checkbox h-3 w-3 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
+														/>
+														<span className="font-medium text-blue-700">Ask receiver to fill</span>
+													</label>
+												</div>
 												<input 
 													type="email"
 													className={`${getFieldClass("party_b_email", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed`} 
 													value={values.party_b_email} 
 													onChange={(e) => setField("party_b_email", e.target.value)} 
 													placeholder="email@example.com" 
-													disabled={values.party_b_ask_receiver_fill} 
+													disabled={values.party_b_email_ask_receiver} 
 												/>
 											</div>
 										</div>
@@ -1130,7 +1261,19 @@ export default function FillNDAHTML() {
 														<div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Party B</div>
 														<div className="text-base font-medium text-gray-900">
 															{values.party_b_name || <span className="text-gray-400 italic">Not provided</span>}
-															{values.party_b_ask_receiver_fill && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Receiver will fill</span>}
+															{(() => {
+																const fieldsToFill = [];
+																if (values.party_b_name_ask_receiver) fieldsToFill.push("Name");
+																if (values.party_b_address_ask_receiver) fieldsToFill.push("Address");
+																if (values.party_b_phone_ask_receiver) fieldsToFill.push("Phone");
+																if (values.party_b_signatory_name_ask_receiver) fieldsToFill.push("Signatory");
+																if (values.party_b_title_ask_receiver) fieldsToFill.push("Title");
+																if (values.party_b_email_ask_receiver) fieldsToFill.push("Email");
+																if (fieldsToFill.length > 0) {
+																	return <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Receiver will fill: {fieldsToFill.join(", ")}</span>;
+																}
+																return null;
+															})()}
 														</div>
 														<div className="text-sm text-gray-600 mt-1">{values.party_b_email || <span className="text-gray-400 italic">No email</span>}</div>
 													</div>

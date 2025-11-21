@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import Image from "next/image";
 import PublicToolbar from "@/components/PublicToolbar";
@@ -18,6 +18,8 @@ interface Template {
 export default function TemplateSelectionPage() {
   const { isLoaded, user } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode"); // Check for mode=html
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -41,8 +43,12 @@ export default function TemplateSelectionPage() {
   };
 
   const handleSelectTemplate = (templateId: string) => {
-    // Navigate to fillnda page with template ID and new=true for blank form
-    router.push(`/fillnda?templateId=${templateId}&new=true`);
+    // Check if mode is html, redirect to fillndahtml, otherwise fillnda
+    if (mode === "html") {
+      router.push(`/fillndahtml?templateId=${templateId}&new=true`);
+    } else {
+      router.push(`/fillnda?templateId=${templateId}&new=true`);
+    }
   };
 
   const categories = ["all", ...new Set(templates.map(t => t.category))];
@@ -73,10 +79,11 @@ export default function TemplateSelectionPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Choose Your NDA Template
+            Choose Your NDA Template {mode === "html" && <span className="text-blue-600">(HTML Editor)</span>}
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Select the template that best fits your needs. Each template is professionally designed and legally sound.
+            {mode === "html" && <span className="block mt-2 text-blue-600 font-medium">You&apos;ll be redirected to the HTML-based editor with live preview.</span>}
           </p>
         </div>
 

@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       console.log('🌐 Using default templateId:', templateId)
     }
 
-    // Process "ask receiver to fill" placeholders
+    // Process "ask receiver to fill" placeholders for individual Party B fields
     const processedData = { ...formData }
     
     if (formData.party_a_ask_receiver_fill) {
@@ -70,13 +70,30 @@ export async function POST(request: NextRequest) {
       console.log('🌐 Party A: ask receiver to fill')
     }
     
-    if (formData.party_b_ask_receiver_fill) {
+    // Handle individual Party B fields
+    if (formData.party_b_name_ask_receiver) {
       processedData.party_b_name = formData.party_b_name || "[To be filled by receiving party]"
+      console.log('🌐 Party B name: ask receiver to fill')
+    }
+    if (formData.party_b_address_ask_receiver) {
       processedData.party_b_address = formData.party_b_address || "[To be filled by receiving party]"
+      console.log('🌐 Party B address: ask receiver to fill')
+    }
+    if (formData.party_b_phone_ask_receiver) {
+      processedData.party_b_phone = formData.party_b_phone || "[To be filled by receiving party]"
+      console.log('🌐 Party B phone: ask receiver to fill')
+    }
+    if (formData.party_b_signatory_name_ask_receiver) {
       processedData.party_b_signatory_name = formData.party_b_signatory_name || "[To be filled by receiving party]"
+      console.log('🌐 Party B signatory: ask receiver to fill')
+    }
+    if (formData.party_b_title_ask_receiver) {
       processedData.party_b_title = formData.party_b_title || "[To be filled by receiving party]"
+      console.log('🌐 Party B title: ask receiver to fill')
+    }
+    if (formData.party_b_email_ask_receiver) {
       processedData.party_b_email = formData.party_b_email || "[To be filled by receiving party]"
-      console.log('🌐 Party B: ask receiver to fill')
+      console.log('🌐 Party B email: ask receiver to fill')
     }
 
     console.log('🌐 Rendering HTML from template:', templateId)
