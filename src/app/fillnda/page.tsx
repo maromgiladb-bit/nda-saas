@@ -68,6 +68,7 @@ export default function FillNDA() {
 	const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
 	const [step, setStep] = useState<number>(0);
 	const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
+	const [showExitWarningModal, setShowExitWarningModal] = useState(false);
 	const [templateId, setTemplateId] = useState<string>("mutual-nda-v3"); // Default template
 	
 	// Email suggestions state
@@ -728,15 +729,6 @@ export default function FillNDA() {
 												<h2 className="text-xl font-bold text-gray-800">Party A Information</h2>
 												<p className="text-sm text-gray-600">Details of the first party</p>
 											</div>
-											<label className="flex items-center gap-2 text-sm bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-												<input 
-													type="checkbox" 
-													checked={values.party_a_ask_receiver_fill} 
-													onChange={(e) => setField("party_a_ask_receiver_fill", e.target.checked)} 
-													className="form-checkbox h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
-												/>
-												<span className="font-medium text-blue-700">Ask receiver to fill</span>
-											</label>
 										</div>
 
 										<div className="space-y-4">
@@ -1070,7 +1062,7 @@ export default function FillNDA() {
 										{saving ? "Saving..." : "Save Draft"}
 									</button>
 									<button 
-										onClick={() => router.push('/dashboard')} 
+										onClick={() => setShowExitWarningModal(true)} 
 										className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200 hover:shadow-md flex items-center gap-2"
 									>
 										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1551,6 +1543,81 @@ export default function FillNDA() {
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 									</svg>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Exit Warning Modal */}
+			{showExitWarningModal && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
+					<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+						<div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 border-b border-gray-200">
+							<div className="flex items-center gap-3 mb-2">
+								<div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+									<svg className="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+									</svg>
+								</div>
+								<div className="flex-1">
+									<h2 className="text-xl font-bold text-gray-800">Save Changes?</h2>
+									<p className="text-sm text-gray-600">You have unsaved changes</p>
+								</div>
+								<button 
+									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg" 
+									onClick={() => setShowExitWarningModal(false)} 
+									aria-label="Close modal"
+								>
+									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
+							</div>
+						</div>
+						<div className="p-6">
+							<div className="mb-6">
+								<p className="text-gray-700 mb-3">
+									Are you sure you want to exit? Any unsaved data will be deleted.
+								</p>
+								<div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+									<p className="text-sm text-orange-800">
+										<strong>Warning:</strong> All your changes will be lost if you don&apos;t save them first.
+									</p>
+								</div>
+							</div>
+							<div className="flex gap-3 justify-end flex-wrap">
+								<button 
+									onClick={() => setShowExitWarningModal(false)} 
+									className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200"
+								>
+									Stay & Continue Editing
+								</button>
+								<button 
+									onClick={async () => {
+										setShowExitWarningModal(false);
+										await saveDraft();
+										setTimeout(() => router.push('/dashboard'), 500);
+									}} 
+									className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+								>
+									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+									</svg>
+									Save & Exit
+								</button>
+								<button 
+									onClick={() => {
+										setShowExitWarningModal(false);
+										router.push('/dashboard');
+									}} 
+									className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all duration-200 flex items-center gap-2"
+								>
+									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+									</svg>
+									Exit Without Saving
 								</button>
 							</div>
 						</div>

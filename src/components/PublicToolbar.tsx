@@ -13,7 +13,7 @@ export default function PublicToolbar() {
   if (userId) return null
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-white shadow-md border-b-2 border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -31,32 +31,32 @@ export default function PublicToolbar() {
             </Link>
             
             {/* Desktop Navigation */}
-            <div className="hidden md:ml-8 md:flex md:space-x-8">
-              <Link href="/" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 text-sm font-medium transition-colors">
+            <div className="hidden md:ml-8 md:flex md:space-x-2">
+              <Link href="/" className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 text-sm font-semibold transition-all">
                 Home
               </Link>
-              <Link href="/about" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 text-sm font-medium transition-colors">
+              <Link href="/about" className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 text-sm font-semibold transition-all">
                 About
               </Link>
-              <Link href="/plans" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 text-sm font-medium transition-colors">
+              <Link href="/plans" className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 text-sm font-semibold transition-all">
                 Plans
               </Link>
-              <Link href="/contact" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 text-sm font-medium transition-colors">
+              <Link href="/contact" className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 text-sm font-semibold transition-all">
                 Contact
               </Link>
             </div>
           </div>
           
           {/* Desktop Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             <SignInButton mode="modal">
-              <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 text-sm font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all">
                 Sign In
               </button>
             </SignInButton>
               <SignUpButton mode="modal">
-                <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
-                  Get Started
+                <button className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all">
+                  Get Started →
                 </button>
               </SignUpButton>
           </div>
@@ -65,17 +65,17 @@ export default function PublicToolbar() {
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"
+              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500 transition-all"
               aria-expanded="false"
             >
               <span className="sr-only">Open main menu</span>
               {!isMobileMenuOpen ? (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               ) : (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
             </button>
@@ -85,42 +85,42 @@ export default function PublicToolbar() {
 
       {/* Mobile menu dropdown */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white shadow-lg">
-          <div className="px-2 pt-2 pb-3 space-y-1">
+        <div className="md:hidden border-t-2 border-gray-200 bg-white shadow-xl">
+          <div className="px-4 pt-2 pb-3 space-y-1">
             <Link
               href="/"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Home
             </Link>
             <Link
               href="/about"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               About
             </Link>
             <Link
               href="/plans"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Plans
             </Link>
             <Link
               href="/contact"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Contact
             </Link>
           </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            <div className="px-2 space-y-2">
+          <div className="pt-4 pb-4 border-t-2 border-gray-200">
+            <div className="px-4 space-y-2">
               <SignInButton mode="modal">
                 <button 
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-center px-5 py-3 border border-gray-300 text-base font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
@@ -128,10 +128,10 @@ export default function PublicToolbar() {
               </SignInButton>
                 <SignUpButton mode="modal">
                   <button 
-                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
+                    className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Get Started
+                    Get Started →
                   </button>
                 </SignUpButton>
             </div>

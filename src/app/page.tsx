@@ -1,11 +1,39 @@
 "use client";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { FileText, CheckCircle, Shield, Users, Zap, TrendingUp } from "lucide-react";
 
 export default function Home() {
   const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('fade-in-element');
+        }
+      });
+    }, observerOptions);
+
+    if (featuresRef.current) observer.observe(featuresRef.current);
+    if (statsRef.current) observer.observe(statsRef.current);
+    if (ctaRef.current) observer.observe(ctaRef.current);
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -14,91 +42,235 @@ export default function Home() {
   }, [isLoaded, isSignedIn, router]);
 
   if (!isLoaded) {
-    return <div className="min-h-screen">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
+      </div>
+    );
   }
 
   if (isSignedIn) {
-    return <div className="min-h-screen">Redirecting to dashboard...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-gray-600">Redirecting to dashboard...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white">
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+
+        .animate-fade-in-up {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .animate-fade-in {
+          animation: fadeIn 1s ease-out forwards;
+        }
+
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+
+        .fade-in-element {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .opacity-0 {
+          opacity: 0;
+        }
+
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+
+        .bg-grid-pattern {
+          background-image: 
+            linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+          background-size: 50px 50px;
+        }
+      `}</style>
+      
+      <main>
         {/* Hero Section */}
-        <div className="pt-20 pb-16 text-center lg:pt-32">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            Create Professional NDAs
-            <span className="text-blue-600"> Effortlessly</span>
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-            Streamline your confidentiality agreements with our intuitive NDA creation platform. 
-            Generate, customize, and manage NDAs with just a few clicks.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <button
-              onClick={() => router.push("/signup")}
-              className="rounded-md bg-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-            >
-              Get Started Free
-            </button>
-            <button
-              onClick={() => router.push("/about")}
-              className="text-lg font-semibold leading-6 text-gray-900 hover:text-blue-600"
-            >
-              Learn more <span aria-hidden="true">→</span>
-            </button>
+        <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden">
+          {/* Grid Pattern Background */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+          
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+            <div className="text-center">
+              {mounted && (
+                <>
+                  <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6 animate-fade-in-up">
+                    Create Professional NDAs
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">
+                      Effortlessly
+                    </span>
+                  </h1>
+                  
+                  <p className="mt-6 text-xl leading-8 text-gray-300 max-w-3xl mx-auto animate-fade-in-up delay-100">
+                    Streamline your confidentiality agreements with our intuitive NDA creation platform. 
+                    Generate, customize, and manage NDAs with just a few clicks.
+                  </p>
+                  
+                  <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-200">
+                    <button
+                      onClick={() => router.push("/signup")}
+                      className="group px-8 py-4 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-teal-700 transition-all duration-200"
+                    >
+                      Get Started Free
+                      <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </button>
+                    <button
+                      onClick={() => router.push("/about")}
+                      className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white text-lg font-semibold rounded-lg hover:bg-white/20 transition-all duration-200"
+                    >
+                      Learn More
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Section */}
+        <div ref={statsRef} className="opacity-0 bg-gray-50 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-lg">
+                <div className="text-4xl font-bold text-teal-600 mb-2">10,000+</div>
+                <div className="text-gray-600 font-semibold">NDAs Created</div>
+              </div>
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-lg">
+                <div className="text-4xl font-bold text-teal-600 mb-2">99.9%</div>
+                <div className="text-gray-600 font-semibold">Uptime</div>
+              </div>
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-lg">
+                <div className="text-4xl font-bold text-teal-600 mb-2">5,000+</div>
+                <div className="text-gray-600 font-semibold">Happy Users</div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Features Section */}
-        <div className="py-16">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Easy Creation</h3>
-              <p className="text-gray-600">Create professional NDAs in minutes with our step-by-step wizard and pre-built templates.</p>
+        <div ref={featuresRef} className="opacity-0 py-24 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Everything You Need for NDAs
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Powerful features to streamline your confidentiality agreements
+              </p>
             </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <FileText className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Easy Creation</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Create professional NDAs in minutes with our step-by-step wizard and pre-built templates.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Digital Signatures</h3>
-              <p className="text-gray-600">Send NDAs for electronic signatures and track signing status in real-time.</p>
-            </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+              <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <CheckCircle className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Digital Signatures</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Send NDAs for electronic signatures and track signing status in real-time.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure & Compliant</h3>
-              <p className="text-gray-600">Bank-level security and legal compliance to protect your confidential information.</p>
+
+              <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Secure & Compliant</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Bank-level security and legal compliance to protect your confidential information.
+                </p>
+              </div>
+
+              <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-600 to-red-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Collaboration</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Share drafts with team members and collaborate on NDA creation seamlessly.
+                </p>
+              </div>
+
+              <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <TrendingUp className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Status Tracking</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Monitor NDA status from draft to signed with comprehensive tracking features.
+                </p>
+              </div>
+
+              <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-pink-600 to-rose-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Zap className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Lightning Fast</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Quick turnaround times with automated workflows and instant notifications.
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* CTA Section */}
-        <div className="bg-blue-600 rounded-2xl py-16 px-8 text-center mb-16">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to streamline your NDAs?
-          </h2>
-          <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-            Join thousands of businesses who trust our platform for their confidentiality agreements.
-          </p>
-          <button
-            onClick={() => router.push("/signup")}
-            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-          >
-            Start Creating NDAs Today
-          </button>
+        <div ref={ctaRef} className="opacity-0 bg-gradient-to-br from-slate-900 to-slate-800 py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+              Ready to streamline your NDAs?
+            </h2>
+            <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+              Join thousands of businesses who trust our platform for their confidentiality agreements.
+            </p>
+            <button
+              onClick={() => router.push("/signup")}
+              className="group px-10 py-5 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-xl hover:bg-teal-700 transition-all duration-200"
+            >
+              Start Creating NDAs Today
+              <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </div>
         </div>
       </main>
     </div>

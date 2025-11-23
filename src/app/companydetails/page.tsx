@@ -123,12 +123,12 @@ export default function CompanyDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="min-h-screen bg-gray-50">
         <PublicToolbar />
         <div className="flex items-center justify-center h-[80vh]">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-600">Loading company profile...</p>
+            <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-600 font-medium">Loading company profile...</p>
           </div>
         </div>
       </div>
@@ -136,26 +136,29 @@ export default function CompanyDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       <PublicToolbar />
       
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Company Profile</h1>
-                <p className="text-blue-100">Set your default company information for quick NDA generation</p>
-              </div>
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10 max-w-4xl">
+          <div className="flex items-center gap-4 animate-fade-in">
+            <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-5xl font-bold mb-2">Company Profile</h1>
+              <p className="text-xl text-gray-200">Set your default company information for quick NDA generation</p>
             </div>
           </div>
-
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Message Banner */}
           {message && (
             <div className={`p-4 ${message.type === 'success' ? 'bg-green-50 border-l-4 border-green-500' : 'bg-red-50 border-l-4 border-red-500'}`}>
@@ -169,7 +172,7 @@ export default function CompanyDetailsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 )}
-                <p className={`font-medium ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+                <p className={`font-semibold ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
                   {message.text}
                 </p>
               </div>
@@ -180,13 +183,13 @@ export default function CompanyDetailsPage() {
           <form onSubmit={handleSubmit} className="p-8 space-y-8">
             {/* Company Information */}
             <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">1</span>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span className="w-10 h-10 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">1</span>
                 Company Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Company Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -196,12 +199,12 @@ export default function CompanyDetailsPage() {
                     onChange={handleChange}
                     required
                     placeholder="e.g., Acme Corporation Inc."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Email <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -211,12 +214,12 @@ export default function CompanyDetailsPage() {
                     onChange={handleChange}
                     required
                     placeholder="contact@company.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Phone
                   </label>
                   <input
@@ -225,12 +228,12 @@ export default function CompanyDetailsPage() {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="+1 (555) 123-4567"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Website
                   </label>
                   <input
@@ -239,7 +242,7 @@ export default function CompanyDetailsPage() {
                     value={formData.website}
                     onChange={handleChange}
                     placeholder="https://www.company.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
               </div>
@@ -247,13 +250,13 @@ export default function CompanyDetailsPage() {
 
             {/* Address Information */}
             <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">2</span>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span className="w-10 h-10 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">2</span>
                 Address
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Address Line 1 <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -263,12 +266,12 @@ export default function CompanyDetailsPage() {
                     onChange={handleChange}
                     required
                     placeholder="123 Main Street"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Address Line 2
                   </label>
                   <input
@@ -277,12 +280,12 @@ export default function CompanyDetailsPage() {
                     value={formData.addressline2}
                     onChange={handleChange}
                     placeholder="Suite 100"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     City <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -292,12 +295,12 @@ export default function CompanyDetailsPage() {
                     onChange={handleChange}
                     required
                     placeholder="San Francisco"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     State / Province
                   </label>
                   <input
@@ -306,12 +309,12 @@ export default function CompanyDetailsPage() {
                     value={formData.state}
                     onChange={handleChange}
                     placeholder="California"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Postal Code
                   </label>
                   <input
@@ -320,12 +323,12 @@ export default function CompanyDetailsPage() {
                     value={formData.postalcode}
                     onChange={handleChange}
                     placeholder="94102"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Country <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -335,7 +338,7 @@ export default function CompanyDetailsPage() {
                     onChange={handleChange}
                     required
                     placeholder="United States"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
               </div>
@@ -343,13 +346,13 @@ export default function CompanyDetailsPage() {
 
             {/* Signatory Information */}
             <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">3</span>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span className="w-10 h-10 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">3</span>
                 Authorized Signatory
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Signatory Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -359,12 +362,12 @@ export default function CompanyDetailsPage() {
                     onChange={handleChange}
                     required
                     placeholder="John Smith"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Signatory Title
                   </label>
                   <input
@@ -373,21 +376,21 @@ export default function CompanyDetailsPage() {
                     value={formData.signatorytitle}
                     onChange={handleChange}
                     placeholder="CEO"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                   />
                 </div>
               </div>
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+            <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-6 border-2 border-teal-200">
               <div className="flex gap-3">
-                <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div>
-                  <h3 className="font-semibold text-blue-900 mb-1">Quick NDA Generation</h3>
-                  <p className="text-sm text-blue-800">
+                  <h3 className="font-bold text-teal-900 mb-1">Quick NDA Generation</h3>
+                  <p className="text-sm text-teal-800 font-medium">
                     This information will be automatically filled in when you create a new NDA, saving you time. 
                     You can always modify these details for individual NDAs.
                   </p>
@@ -396,18 +399,18 @@ export default function CompanyDetailsPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 justify-end pt-4 border-t">
+            <div className="flex gap-4 justify-end pt-6 border-t-2 border-gray-200">
               <button
                 type="button"
                 onClick={() => router.push('/dashboard')}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all"
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all shadow-sm hover:shadow-md"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-8 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold hover:from-teal-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 duration-300"
               >
                 {saving ? (
                   <>
@@ -427,6 +430,30 @@ export default function CompanyDetailsPage() {
           </form>
         </div>
       </div>
+
+      <style jsx>{`
+        .bg-grid-pattern {
+          background-image: 
+            linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px);
+          background-size: 40px 40px;
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 }

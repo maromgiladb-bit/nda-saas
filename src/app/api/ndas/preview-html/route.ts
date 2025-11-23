@@ -104,8 +104,13 @@ export async function POST(request: NextRequest) {
     const DOMPurify = createDOMPurify(window)
     const sanitizedHtml = DOMPurify.sanitize(html, {
       USE_PROFILES: { html: true },
-      ALLOWED_TAGS: ['div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'br', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'section', 'article', 'header', 'footer', 'style'],
-      ALLOWED_ATTR: ['class', 'style', 'id'],
+      // Allow all necessary tags for a complete HTML document
+      ALLOWED_TAGS: ['html', 'head', 'body', 'meta', 'title', 'link', 'style', 'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'b', 'i', 'br', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'section', 'article', 'header', 'footer', 'main', 'aside', 'nav', 'hr', 'blockquote', 'pre', 'code', 'img', 'svg', 'path', 'circle', 'rect', 'line', 'polygon', 'polyline'],
+      // Allow all necessary attributes including meta and link attributes
+      ALLOWED_ATTR: ['class', 'style', 'id', 'href', 'rel', 'type', 'charset', 'name', 'content', 'crossorigin', 'viewport', 'width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width', 'd', 'cx', 'cy', 'r', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'points', 'src', 'alt'],
+      WHOLE_DOCUMENT: true,
+      RETURN_DOM: false,
+      RETURN_DOM_FRAGMENT: false,
     })
 
     console.log('✅ HTML generated and sanitized, size:', sanitizedHtml.length, 'chars')
