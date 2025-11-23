@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import PublicToolbar from "@/components/PublicToolbar";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
+import { sanitizeForHtml } from "@/lib/sanitize";
 
 type FormValues = {
 	docName: string;
@@ -211,31 +212,34 @@ export default function FillNDAHTML() {
 	const templateData = {
 		...values,
 		templateId,
-		// Map party_a fields to party_1
-		party_1_name: values.party_a_name,
-		party_1_address: values.party_a_address,
-		party_1_signatory_name: values.party_a_signatory_name,
-		party_1_signatory_title: values.party_a_title,
-		party_1_phone: values.party_a_phone || '',
+		// Map party_a fields to party_1 with sanitization
+		party_1_name: sanitizeForHtml(values.party_a_name),
+		party_1_address: sanitizeForHtml(values.party_a_address),
+		party_1_signatory_name: sanitizeForHtml(values.party_a_signatory_name),
+		party_1_signatory_title: sanitizeForHtml(values.party_a_title),
+		party_1_phone: sanitizeForHtml(values.party_a_phone),
 		party_1_emails_joined: '', // Not in form
-		// Map party_b fields to party_2
-		party_2_name: values.party_b_name,
-		party_2_address: values.party_b_address,
-		party_2_signatory_name: values.party_b_signatory_name,
-		party_2_signatory_title: values.party_b_title,
-		party_2_phone: values.party_b_phone || '',
-		party_2_emails_joined: values.party_b_email || '',
-		// Map other fields
+		// Map party_b fields to party_2 with sanitization
+		party_2_name: sanitizeForHtml(values.party_b_name),
+		party_2_address: sanitizeForHtml(values.party_b_address),
+		party_2_signatory_name: sanitizeForHtml(values.party_b_signatory_name),
+		party_2_signatory_title: sanitizeForHtml(values.party_b_title),
+		party_2_phone: sanitizeForHtml(values.party_b_phone),
+		party_2_emails_joined: sanitizeForHtml(values.party_b_email),
+		// Map other fields with sanitization
 		effective_date_long: values.effective_date ? new Date(values.effective_date).toLocaleDateString('en-US', {
 			year: 'numeric',
 			month: 'long',
 			day: 'numeric'
 		}) : '',
-		governing_law_full: values.governing_law || '',
+		governing_law_full: sanitizeForHtml(values.governing_law),
 		term_years_number: values.term_months ? Math.floor(parseInt(values.term_months) / 12) : '',
 		term_years_words: values.term_months ? (Math.floor(parseInt(values.term_months) / 12) === 1 ? 'one' : 'two') : '',
 		purpose: 'evaluating a potential business relationship',
 		information_scope_text: 'All information and materials',
+		// Sanitize other text fields that might have newlines
+		ip_ownership: sanitizeForHtml(values.ip_ownership),
+		additional_terms: sanitizeForHtml(values.additional_terms),
 	};
 	
 	const { data: liveData, loading: previewLoading, error: previewError } = useDebouncedPreview(

@@ -9,6 +9,7 @@ export async function GET(
 ) {
 	try {
 		const { token } = params;
+		const isDev = process.env.NODE_ENV === 'development';
 
 		// Find the review sign request
 		const signRequest = await prisma.sign_requests.findUnique({
@@ -21,6 +22,28 @@ export async function GET(
 				},
 			},
 		});
+
+		// Development mode: return mock data if token not found
+		if (!signRequest && isDev) {
+			console.log('🔧 Development mode: Using mock data for review-suggestions API');
+			return NextResponse.json({
+				draftId: 'dev-draft-id',
+				currentData: {
+					docName: '[DEV] Sample NDA',
+					effective_date: new Date().toISOString().split('T')[0],
+					party_a_name: 'Acme Corporation',
+					party_b_name: 'Widget Industries',
+					governing_law: 'California',
+				},
+				suggestions: {
+					party_b_name: 'Widget Industries Inc.',
+					governing_law: 'Delaware',
+				},
+				party_b_name: 'Jane Smith',
+				party_b_email: 'jane@widget.example',
+				original_token: 'dev-original-token',
+			});
+		}
 
 		if (!signRequest) {
 			return NextResponse.json(

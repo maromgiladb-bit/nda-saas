@@ -9,8 +9,14 @@ export const runtime = 'nodejs' // Required for Puppeteer
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth()
-    if (!userId) {
+    const isDev = process.env.NODE_ENV === 'development'
+    
+    if (!userId && !isDev) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (isDev && !userId) {
+      console.log('🔧 Development mode: Allowing preview without authentication')
     }
 
     const body = await request.json()
@@ -21,7 +27,14 @@ export async function POST(request: NextRequest) {
     let templateId = 'professional_mutual_nda_v1' // Default template
 
     if (body.draftId) {
-      // Load from database
+      // Load from database (only works with authenticated users)
+      if (!userId) {
+        return NextResponse.json({ 
+          error: 'Authentication required to load drafts',
+          details: 'Please provide data directly instead of using draftId'
+        }, { status: 401 })
+      }
+
       console.log('📄 Loading draft from database:', body.draftId)
       
       const user = await prisma.users.findUnique({

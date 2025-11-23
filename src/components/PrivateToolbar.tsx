@@ -40,8 +40,9 @@ export default function PrivateToolbar() {
     { name: '✨ Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
     { name: '👁️ Live Preview (Design)', href: '/preview-template?template=design_mutual_nda_v1' },
     { name: '�️ Live Preview (Pro)', href: '/preview-template?template=professional_mutual_nda_v1' },
+    { name: '✅ Review Changes', href: '/review/dev-test' },
     { name: '�📝 Review & Sign', href: '/review-nda/test-token-123' },
-    { name: '💡 Review Suggestions', href: '/review-suggestions' },
+    { name: '💡 Review Suggestions', href: '/review-suggestions/dev-test' },
     { name: '📋 Templates', href: '/templates' },
     { name: '📄 Templates Viewer', href: '/devtemplates' },
   ]

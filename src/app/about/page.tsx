@@ -44,7 +44,7 @@ export default function About() {
             <div>
               <h2 className="text-5xl font-bold text-teal-600 mb-6">Why we built it</h2>
               <p className="text-xl text-gray-700 leading-relaxed">
-                NDAs shouldn&apos;t take days. We kept seeing the same pain: unclear changes, 
+                NDAs shouldn&apos;t take hours to create. We kept seeing the same pain: unclear changes, 
                 copy-paste errors, and endless back-and-forth. Agreedo makes NDAs collaborative 
                 and accurate—without changing your legal language.
               </p>

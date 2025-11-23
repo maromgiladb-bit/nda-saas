@@ -9,6 +9,7 @@ export async function GET(
 ) {
 	try {
 		const { token } = params;
+		const isDev = process.env.NODE_ENV === 'development';
 
 		// Find the sign request by token
 		const signRequest = await prisma.sign_requests.findUnique({
@@ -21,6 +22,40 @@ export async function GET(
 				},
 			},
 		});
+
+		// Development mode: return mock data if token not found
+		if (!signRequest && isDev) {
+			console.log('🔧 Development mode: Using mock data for review API');
+			return NextResponse.json({
+				draftId: 'dev-draft-id',
+				templateId: 'professional_mutual_nda_v1',
+				formData: {
+					docName: '[DEV] Sample NDA',
+					effective_date: new Date().toISOString().split('T')[0],
+					term_months: '12',
+					confidentiality_period_months: '24',
+					party_a_name: 'Acme Corporation',
+					party_a_address: '123 Main St, San Francisco, CA 94102',
+					party_a_phone: '(555) 123-4567',
+					party_a_signatory_name: 'John Doe',
+					party_a_title: 'CEO',
+					party_b_name: 'Widget Industries',
+					party_b_address: '456 Market St, San Francisco, CA 94103',
+					party_b_phone: '(555) 987-6543',
+					party_b_signatory_name: '',
+					party_b_title: '',
+					party_b_email: 'contact@widget.example',
+					governing_law: 'California',
+					ip_ownership: 'Each party retains ownership of their intellectual property',
+					non_solicit: 'No',
+					exclusivity: 'No',
+				},
+				scope: 'EDIT',
+				signerEmail: 'recipient@example.com',
+				signerRole: 'RECIPIENT',
+				status: 'SENT',
+			});
+		}
 
 		if (!signRequest) {
 			return NextResponse.json(

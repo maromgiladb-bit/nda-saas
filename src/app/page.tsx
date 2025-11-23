@@ -1,5 +1,5 @@
 "use client";
-import { useUser } from "@clerk/nextjs";
+import { useUser, SignUpButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FileText, CheckCircle, Shield, Users, Zap, TrendingUp } from "lucide-react";
@@ -138,13 +138,12 @@ export default function Home() {
                   </p>
                   
                   <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-200">
-                    <button
-                      onClick={() => router.push("/signup")}
-                      className="group px-8 py-4 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-teal-700 transition-all duration-200"
-                    >
-                      Get Started Free
-                      <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
-                    </button>
+                    <SignUpButton mode="modal">
+                      <button className="group px-8 py-4 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-teal-700 transition-all duration-200">
+                        Get Started Free
+                        <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                      </button>
+                    </SignUpButton>
                     <button
                       onClick={() => router.push("/about")}
                       className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white text-lg font-semibold rounded-lg hover:bg-white/20 transition-all duration-200"
@@ -263,13 +262,12 @@ export default function Home() {
             <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
               Join thousands of businesses who trust our platform for their confidentiality agreements.
             </p>
-            <button
-              onClick={() => router.push("/signup")}
-              className="group px-10 py-5 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-xl hover:bg-teal-700 transition-all duration-200"
-            >
-              Start Creating NDAs Today
-              <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
-            </button>
+            <SignUpButton mode="modal">
+              <button className="group px-10 py-5 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-xl hover:bg-teal-700 transition-all duration-200">
+                Start Creating NDAs Today
+                <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+              </button>
+            </SignUpButton>
           </div>
         </div>
       </main>

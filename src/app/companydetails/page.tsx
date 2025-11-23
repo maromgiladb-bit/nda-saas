@@ -184,7 +184,7 @@ export default function CompanyDetailsPage() {
             {/* Company Information */}
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <span className="w-10 h-10 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">1</span>
+                <span className="w-10 h-10 bg-teal-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">1</span>
                 Company Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -251,7 +251,7 @@ export default function CompanyDetailsPage() {
             {/* Address Information */}
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <span className="w-10 h-10 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">2</span>
+                <span className="w-10 h-10 bg-teal-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">2</span>
                 Address
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -347,7 +347,7 @@ export default function CompanyDetailsPage() {
             {/* Signatory Information */}
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <span className="w-10 h-10 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">3</span>
+                <span className="w-10 h-10 bg-teal-600 text-white rounded-xl flex items-center justify-center text-base font-bold shadow-md">3</span>
                 Authorized Signatory
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

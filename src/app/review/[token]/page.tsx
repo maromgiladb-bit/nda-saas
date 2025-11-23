@@ -9,9 +9,10 @@ interface PageProps {
 
 export default async function ReviewPage({ params }: PageProps) {
   const { token } = params
+  const isDev = process.env.NODE_ENV === 'development'
 
   // Validate token
-  const signRequest = await prisma.sign_requests.findUnique({
+  let signRequest = await prisma.sign_requests.findUnique({
     where: { token },
     include: {
       signers: {
@@ -29,6 +30,45 @@ export default async function ReviewPage({ params }: PageProps) {
       }
     }
   })
+
+  // Development mode: use mock data if token not found
+  if (!signRequest && isDev) {
+    console.log('🔧 Development mode: Using mock data for review page')
+    signRequest = {
+      token: token || 'dev-token',
+      consumed_at: null,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      scope: 'REVIEW',
+      signers: {
+        nda_drafts: {
+          id: 'dev-draft-id',
+          title: '[DEV] Sample NDA Review',
+          status: 'PENDING_OWNER_REVIEW',
+          data: {
+            partyACompany: 'Acme Corp',
+            partyBCompany: 'Widget Inc',
+            effectiveDate: new Date().toISOString().split('T')[0],
+          },
+          provisional_recipient_signed_at: null,
+          revisions: [
+            {
+              id: 'dev-revision-id',
+              number: 1,
+              message: 'Updated company names and effective date',
+              actor_role: 'RECIPIENT',
+              diff: {
+                'partyBCompany': { before: 'Old Company', after: 'Widget Inc' },
+                'effectiveDate': { before: '2024-01-01', after: new Date().toISOString().split('T')[0] }
+              },
+              comments: {}
+            }
+          ],
+          users: { name: 'Dev User', email: 'dev@example.com' }
+        }
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  }
 
   if (!signRequest) {
     notFound()
