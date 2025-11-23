@@ -86,7 +86,7 @@ export default function About() {
             </div>
 
             <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300">
-              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:shadow-xl transition-shadow">
+              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:shadow-xl transition-shadow">
                 2
               </div>
               <div className="flex-1 bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -96,7 +96,7 @@ export default function About() {
             </div>
 
             <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300">
-              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:shadow-xl transition-shadow">
+              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:shadow-xl transition-shadow">
                 3
               </div>
               <div className="flex-1 bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
