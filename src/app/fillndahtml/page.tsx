@@ -26,6 +26,7 @@ type FormValues = {
 	ip_ownership: string;
 	non_solicit: string;
 	exclusivity: string;
+	additional_terms: string;
 	party_a_ask_receiver_fill: boolean;
 	party_b_name_ask_receiver: boolean;
 	party_b_address_ask_receiver: boolean;
@@ -34,7 +35,6 @@ type FormValues = {
 	party_b_title_ask_receiver: boolean;
 	party_b_email_ask_receiver: boolean;
 };
-
 const DEFAULTS: FormValues = {
 	docName: "",
 	effective_date: new Date().toISOString().slice(0, 10),
@@ -55,6 +55,7 @@ const DEFAULTS: FormValues = {
 	ip_ownership: "",
 	non_solicit: "",
 	exclusivity: "",
+	additional_terms: "",
 	party_a_ask_receiver_fill: false,
 	party_b_name_ask_receiver: false,
 	party_b_address_ask_receiver: false,
@@ -641,6 +642,20 @@ export default function FillNDAHTML() {
 		setEmailSuggestions([]);
 	};
 
+	// Check if there are empty Party B fields that need to be filled
+	const hasEmptyPartyBFields = () => {
+		const partyBFields = [
+			{ value: values.party_b_name, askReceiver: values.party_b_name_ask_receiver },
+			{ value: values.party_b_address, askReceiver: values.party_b_address_ask_receiver },
+			{ value: values.party_b_phone, askReceiver: values.party_b_phone_ask_receiver },
+			{ value: values.party_b_signatory_name, askReceiver: values.party_b_signatory_name_ask_receiver },
+			{ value: values.party_b_title, askReceiver: values.party_b_title_ask_receiver },
+			{ value: values.party_b_email, askReceiver: values.party_b_email_ask_receiver },
+		];
+
+		return partyBFields.some(field => !field.value.trim() && field.askReceiver);
+	};
+
 	const sendForSignature = async () => {
 		const validation = validate();
 		if (!validation.isValid) {
@@ -651,7 +666,7 @@ export default function FillNDAHTML() {
 		}
 
 		if (!draftId) {
-			setWarning("Please save the draft first before sending for signature.");
+			setWarning("Please save the draft first before sending.");
 			return;
 		}
 
@@ -669,23 +684,48 @@ export default function FillNDAHTML() {
 
 		setSendingForSignature(true);
 		setWarning("");
+		
 		try {
-			const res = await fetch("/api/ndas/send", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ draftId, signerEmail: signersEmail.trim(), signerRole: "Party B" }),
-			});
-			const json = await res.json();
-			if (!res.ok) throw new Error(json.error || "Failed to send for signature");
-			
-			// Show shareable link modal
-			const fullLink = `${window.location.origin}/sign/${json.signRequest.token}`;
-			setShareableLink(fullLink);
-			setShowSendModal(false);
-			setShowShareLinkModal(true);
-			setSignersEmail("");
+			// Check if Party B needs to fill fields
+			if (hasEmptyPartyBFields()) {
+				// Send to Party B for input (no signing yet)
+				const res = await fetch("/api/ndas/send", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ 
+						draftId, 
+						signerEmail: signersEmail.trim(), 
+						signerRole: "Party B",
+						action: "fill_fields" // Party B needs to fill fields first
+					}),
+				});
+				const json = await res.json();
+				if (!res.ok) throw new Error(json.error || "Failed to send");
+				
+				// Show shareable link modal
+				const fullLink = `${window.location.origin}/sign/${json.signRequest.token}`;
+				setShareableLink(fullLink);
+				setShowSendModal(false);
+				setShowShareLinkModal(true);
+				setSignersEmail("");
+			} else {
+				// All fields filled → Go to signature page
+				// Save the NDA data to session storage for the sign page
+				sessionStorage.setItem('ndaSignData', JSON.stringify({
+					draftId,
+					values,
+					htmlContent: livePreviewHtml,
+					partyAEmail: user?.primaryEmailAddress?.emailAddress || '',
+					partyAName: values.party_a_name,
+					partyBEmail: values.party_b_email || signersEmail.trim(),
+					partyBName: values.party_b_name,
+				}));
+				
+				// Navigate to sign page
+				router.push('/sign-nda-simple');
+			}
 		} catch (e) {
-			setWarning(e instanceof Error ? e.message : "Failed to send for signature");
+			setWarning(e instanceof Error ? e.message : "Failed to send");
 		} finally {
 			setSendingForSignature(false);
 		}
@@ -1326,7 +1366,7 @@ export default function FillNDAHTML() {
 													<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
 													</svg>
-													Send for Signature
+													{hasEmptyPartyBFields() ? "Send to Party B" : "Continue to Sign"}
 												</button>
 											)}
 										</>
@@ -1467,8 +1507,14 @@ export default function FillNDAHTML() {
 									</svg>
 								</div>
 								<div className="flex-1">
-									<h2 className="text-xl font-bold text-gray-800">Send for Signature</h2>
-									<p className="text-sm text-gray-600">Ready to send your NDA?</p>
+									<h2 className="text-xl font-bold text-gray-800">
+										{hasEmptyPartyBFields() ? "Send to Party B" : "Ready to Sign"}
+									</h2>
+									<p className="text-sm text-gray-500 mt-1">
+										{hasEmptyPartyBFields() 
+											? "Party B will fill in their details before signing" 
+											: "All fields are complete. Proceed to signature page"}
+									</p>
 								</div>
 								<button 
 									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg" 
@@ -1596,7 +1642,7 @@ export default function FillNDAHTML() {
 											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
 											</svg>
-											Send Now
+											{hasEmptyPartyBFields() ? "Send to Party B" : "Continue to Sign"}
 										</>
 									)}
 								</button>

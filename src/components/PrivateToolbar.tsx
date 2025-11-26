@@ -35,16 +35,12 @@ export default function PrivateToolbar() {
 
   const devLinks = [
     { name: '🔧 Fill NDA (Classic)', href: '/fillnda' },
-    { name: '🎨 Fill NDA (HTML)', href: '/fillndahtml' },
-    { name: '🎨 Fill NDA (Design)', href: '/fillndahtml?templateId=design_mutual_nda_v1' },
     { name: '✨ Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
-    { name: '👁️ Live Preview (Design)', href: '/preview-template?template=design_mutual_nda_v1' },
-    { name: '�️ Live Preview (Pro)', href: '/preview-template?template=professional_mutual_nda_v1' },
-    { name: '✅ Review Changes', href: '/review/dev-test' },
-    { name: '�📝 Review & Sign', href: '/review-nda/test-token-123' },
+    { name: '✍️ Sign Simple', href: '/sign-nda-simple' },
+    { name: '📝 Review & Sign', href: '/review-nda/test-token-123' },
+    { name: '📋 Review NDA as Fill', href: '/review-nda-asfill/test-token-123' },
     { name: '💡 Review Suggestions', href: '/review-suggestions/dev-test' },
     { name: '📋 Templates', href: '/templates' },
-    { name: '📄 Templates Viewer', href: '/devtemplates' },
   ]
 
   const isDev = process.env.NODE_ENV === 'development'
