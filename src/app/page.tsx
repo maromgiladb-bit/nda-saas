@@ -14,7 +14,7 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    
+
     const observerOptions = {
       threshold: 0.1,
       rootMargin: '0px 0px -100px 0px'
@@ -114,13 +114,13 @@ export default function Home() {
           background-size: 50px 50px;
         }
       `}</style>
-      
+
       <main>
         {/* Hero Section */}
-        <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[var(--navy-900)] to-[var(--navy-800)] text-white overflow-hidden">
           {/* Grid Pattern Background */}
           <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-          
+
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
             <div className="text-center">
               {mounted && (
@@ -131,15 +131,15 @@ export default function Home() {
                       Effortlessly
                     </span>
                   </h1>
-                  
+
                   <p className="mt-6 text-xl leading-8 text-gray-300 max-w-3xl mx-auto animate-fade-in-up delay-100">
-                    Streamline your confidentiality agreements with our intuitive NDA creation platform. 
+                    Streamline your confidentiality agreements with our intuitive NDA creation platform.
                     Generate, customize, and manage NDAs with just a few clicks.
                   </p>
-                  
+
                   <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-200">
                     <SignUpButton mode="modal">
-                      <button className="group px-8 py-4 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-teal-700 transition-all duration-200">
+                      <button className="group px-8 py-4 bg-[var(--teal-600)] text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-[var(--teal-700)] transition-all duration-200">
                         Get Started Free
                         <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
                       </button>
@@ -161,16 +161,16 @@ export default function Home() {
         <div ref={statsRef} className="opacity-0 bg-gray-50 py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-lg">
-                <div className="text-4xl font-bold text-teal-600 mb-2">10,000+</div>
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-[var(--teal-600)] transition-all duration-300 hover:shadow-lg">
+                <div className="text-4xl font-bold text-[var(--teal-600)] mb-2">10,000+</div>
                 <div className="text-gray-600 font-semibold">NDAs Created</div>
               </div>
-              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-lg">
-                <div className="text-4xl font-bold text-teal-600 mb-2">99.9%</div>
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-[var(--teal-600)] transition-all duration-300 hover:shadow-lg">
+                <div className="text-4xl font-bold text-[var(--teal-600)] mb-2">99.9%</div>
                 <div className="text-gray-600 font-semibold">Uptime</div>
               </div>
-              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-lg">
-                <div className="text-4xl font-bold text-teal-600 mb-2">5,000+</div>
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-[var(--teal-600)] transition-all duration-300 hover:shadow-lg">
+                <div className="text-4xl font-bold text-[var(--teal-600)] mb-2">5,000+</div>
                 <div className="text-gray-600 font-semibold">Happy Users</div>
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function Home() {
                 Powerful features to streamline your confidentiality agreements
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-xl hover:scale-105">
                 <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -240,7 +240,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-600 transition-all duration-300 hover:shadow-xl hover:scale-105">
+              <div className="group bg-white p-8 rounded-2xl border-2 border-gray-200 hover:border-[var(--teal-600)] transition-all duration-300 hover:shadow-xl hover:scale-105">
                 <div className="w-16 h-16 bg-gradient-to-br from-pink-600 to-rose-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Zap className="w-8 h-8 text-white" />
                 </div>
@@ -254,7 +254,7 @@ export default function Home() {
         </div>
 
         {/* CTA Section */}
-        <div ref={ctaRef} className="opacity-0 bg-gradient-to-br from-slate-900 to-slate-800 py-24">
+        <div ref={ctaRef} className="opacity-0 bg-gradient-to-br from-[var(--navy-900)] to-[var(--navy-800)] py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
               Ready to streamline your NDAs?
@@ -263,7 +263,7 @@ export default function Home() {
               Join thousands of businesses who trust our platform for their confidentiality agreements.
             </p>
             <SignUpButton mode="modal">
-              <button className="group px-10 py-5 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-xl hover:bg-teal-700 transition-all duration-200">
+              <button className="group px-10 py-5 bg-[var(--teal-600)] text-white text-lg font-semibold rounded-lg shadow-xl hover:bg-[var(--teal-700)] transition-all duration-200">
                 Start Creating NDAs Today
                 <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </button>

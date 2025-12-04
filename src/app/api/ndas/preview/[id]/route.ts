@@ -21,8 +21,8 @@ export async function GET(
     console.log('📄 Preview request for draft:', params.id)
 
     // Get user from database
-    const user = await prisma.users.findUnique({
-      where: { external_id: userId }
+    const user = await prisma.user.findUnique({
+      where: { externalId: userId }
     })
 
     if (!user) {
@@ -30,10 +30,10 @@ export async function GET(
     }
 
     // Load draft from database
-    const draft = await prisma.nda_drafts.findUnique({
+    const draft = await prisma.ndaDraft.findUnique({
       where: {
         id: params.id,
-        created_by_id: user.id
+        createdByUserId: user.id
       }
     })
 
@@ -41,12 +41,12 @@ export async function GET(
       return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
     }
 
-    const formData = (draft.data as Record<string, unknown>) || {}
+    const formData = (draft.content as Record<string, unknown>) || {}
     const templateId = 'mutual-nda-v3' // Default template for now
 
     // Process "ask receiver to fill" placeholders
     const processedData = { ...formData }
-    
+
     if (formData.party_a_ask_receiver_fill) {
       processedData.party_a_name = formData.party_a_name || "[To be filled by receiving party]"
       processedData.party_a_address = formData.party_a_address || "[To be filled by receiving party]"
@@ -54,7 +54,7 @@ export async function GET(
       processedData.party_a_title = formData.party_a_title || "[To be filled by receiving party]"
       console.log('📄 Party A: ask receiver to fill')
     }
-    
+
     if (formData.party_b_ask_receiver_fill) {
       processedData.party_b_name = formData.party_b_name || "[To be filled by receiving party]"
       processedData.party_b_address = formData.party_b_address || "[To be filled by receiving party]"
@@ -72,7 +72,7 @@ export async function GET(
 
     // Save PDF locally in tmp folder
     const tmpDir = path.join(process.cwd(), 'tmp')
-    
+
     // Ensure tmp directory exists
     if (!fs.existsSync(tmpDir)) {
       fs.mkdirSync(tmpDir, { recursive: true })

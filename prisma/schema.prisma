@@ -1,83 +1,287 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
+
+// Enums mapped to Postgres enums
+enum BillingPlan {
+  FREE
+  PRO
+  ENTERPRISE
+
+  @@map("billing_plan")
+}
+
+enum BillingStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELLED
+
+  @@map("billing_status")
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+
+  @@map("membership_role")
+}
+
+enum NdaStatus {
+  DRAFT
+  READY_TO_SEND
+  SENT
+  SIGNED
+  CANCELLED
+
+  @@map("nda_status")
+}
+
+enum SignRequestStatus {
+  PENDING
+  SENT
+  VIEWED
+  SIGNED
+  DECLINED
+  EXPIRED
+
+  @@map("sign_request_status")
+}
+
+enum SignerStatus {
+  PENDING
+  SENT
+  VIEWED
+  SIGNED
+  DECLINED
+
+  @@map("signer_status")
+}
+
+enum SignerRole {
+  SIGNER
+  APPROVER
+  VIEWER
+
+  @@map("signer_role")
+}
+
+enum NdaEventType {
+  CREATED
+  UPDATED
+  SENT
+  VIEWED
+  SIGNED
+  CANCELLED
+
+  @@map("nda_event_type")
+}
+
+// Models
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  externalId    String    @unique @map("external_id")
   email         String    @unique
-  emailVerified DateTime?
+  name          String?
   image         String?
-  accounts      Account[]
-  sessions      Session[]
-  ndas          NDA[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  emailVerified DateTime? @map("email_verified")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  memberships         Membership[]
+  ownedOrganizations  Organization[] @relation("OwnedOrganizations")
+  createdTemplates    NdaTemplate[]  @relation("TemplateCreator")
+  createdDrafts       NdaDraft[]     @relation("DraftCreator")
+  createdSignRequests SignRequest[]  @relation("SignRequestCreator")
+  signers             Signer[]
+  auditEvents         AuditEvent[]
+
+  @@map("users")
 }
 
-model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
+model Organization {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  slug          String        @unique
+  ownerUserId   String        @map("owner_user_id") @db.Uuid
+  billingPlan   BillingPlan   @default(FREE) @map("billing_plan")
+  billingStatus BillingStatus @default(ACTIVE) @map("billing_status")
+  settings      Json?         @default("{}")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Relations
+  owner          User            @relation("OwnedOrganizations", fields: [ownerUserId], references: [id])
+  memberships    Membership[]
+  templates      NdaTemplate[]
+  drafts         NdaDraft[]
+  signRequests   SignRequest[]
+  auditEvents    AuditEvent[]
+  companyProfile CompanyProfile?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([provider, providerAccountId])
+  @@map("organizations")
 }
 
-model Session {
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Membership {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String         @map("user_id") @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  role           MembershipRole @default(MEMBER) @map("role")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("memberships")
 }
 
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
+model CompanyProfile {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @unique @map("organization_id") @db.Uuid
+  companyName    String   @map("company_name")
+  email          String?
+  phone          String?
+  website        String?
+  address        String?
+  addressLine2   String?  @map("address_line_2")
+  city           String?
+  state          String?
+  zipCode        String?  @map("zip_code")
+  country        String?
+  logoUrl        String?  @map("logo_url")
+  signatoryName  String?  @map("signatory_name")
+  signatoryTitle String?  @map("signatory_title")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  @@id([identifier, token])
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("company_profiles")
 }
 
-model NDA {
-  id                String   @id @default(cuid())
-  userId            String
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  partyName         String
-  effectiveDate     DateTime
-  governingLaw      String
-  disclosingParty   String
-  receivingParty    String
-  purpose           String
-  duration          String
-  
-  content           String
-  status            String   @default("draft")
-  signedAt          DateTime?
-  signatureData     String?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+model NdaTemplate {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  title           String
+  content         String   @db.Text
+  isDefault       Boolean  @default(false) @map("is_default")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("TemplateCreator", fields: [createdByUserId], references: [id])
+  drafts       NdaDraft[]
+
+  @@map("nda_templates")
+}
+
+model NdaDraft {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  templateId      String?   @map("template_id") @db.Uuid
+  createdByUserId String    @map("created_by_user_id") @db.Uuid
+  title           String?
+  status          NdaStatus @default(DRAFT)
+  content         Json? // Storing form data/content
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  template     NdaTemplate?  @relation(fields: [templateId], references: [id])
+  createdBy    User          @relation("DraftCreator", fields: [createdByUserId], references: [id])
+  revisions    NdaRevision[]
+  signRequests SignRequest[]
+  auditEvents  AuditEvent[]
+
+  @@map("nda_drafts")
+}
+
+model NdaRevision {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  draftId   String   @map("draft_id") @db.Uuid
+  content   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  draft        NdaDraft      @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  signRequests SignRequest[]
+
+  @@map("nda_revisions")
+}
+
+model SignRequest {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String            @map("organization_id") @db.Uuid
+  draftId         String            @map("draft_id") @db.Uuid
+  revisionId      String?           @map("revision_id") @db.Uuid
+  createdByUserId String            @map("created_by_user_id") @db.Uuid
+  status          SignRequestStatus @default(PENDING)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  draft        NdaDraft     @relation(fields: [draftId], references: [id])
+  revision     NdaRevision? @relation(fields: [revisionId], references: [id])
+  createdBy    User         @relation("SignRequestCreator", fields: [createdByUserId], references: [id])
+  signers      Signer[]
+  auditEvents  AuditEvent[]
+
+  @@map("sign_requests")
+}
+
+model Signer {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  signRequestId String       @map("sign_request_id") @db.Uuid
+  userId        String?      @map("user_id") @db.Uuid
+  email         String
+  name          String?
+  role          SignerRole   @default(SIGNER)
+  status        SignerStatus @default(PENDING)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  signRequest SignRequest  @relation(fields: [signRequestId], references: [id], onDelete: Cascade)
+  user        User?        @relation(fields: [userId], references: [id])
+  auditEvents AuditEvent[]
+
+  @@map("signers")
+}
+
+model AuditEvent {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  userId         String?      @map("user_id") @db.Uuid
+  draftId        String?      @map("draft_id") @db.Uuid
+  signRequestId  String?      @map("sign_request_id") @db.Uuid
+  signerId       String?      @map("signer_id") @db.Uuid
+  eventType      NdaEventType @map("event_type")
+  metadata       Json?        @default("{}")
+  ipAddress      String?      @map("ip_address")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
+  draft        NdaDraft?    @relation(fields: [draftId], references: [id])
+  signRequest  SignRequest? @relation(fields: [signRequestId], references: [id])
+  signer       Signer?      @relation(fields: [signerId], references: [id])
+
+  @@map("audit_events")
 }

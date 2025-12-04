@@ -7,53 +7,61 @@ export async function POST(request: Request) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+      import { NextResponse } from 'next/server';
+      import { auth } from '@clerk/nextjs/server';
+      import { prisma } from '@/lib/prisma';
 
-    const body = await request.json();
-    const { ndaId, signatureData } = body;
+      export async function POST(request: Request) {
+        try {
+          const { userId } = await auth();
 
-    if (!ndaId || !signatureData) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+          if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+          }
 
-    const user = await prisma.users.findUnique({
-      where: { external_id: userId },
-    });
+          const body = await request.json();
+          const { ndaId, signatureData } = body;
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+          if (!ndaId || !signatureData) {
+            return NextResponse.json(
+              { error: 'Missing required fields' },
+              { status: 400 }
+            );
+          }
 
-    // Verify the NDA belongs to this user before updating
-    const existingDraft = await prisma.nda_drafts.findUnique({
-      where: { id: ndaId },
-    });
+          const user = await prisma.user.findUnique({
+            where: { externalId: userId },
+          });
 
-    if (!existingDraft || existingDraft.created_by_id !== user.id) {
-      return NextResponse.json({ error: 'NDA not found or unauthorized' }, { status: 404 });
-    }
+          if (!user) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+          }
 
-    const nda = await prisma.nda_drafts.update({
-      where: {
-        id: ndaId,
-      },
-      data: {
-        status: 'SIGNED',
-        provisional_recipient_signed_at: new Date(),
-        updated_at: new Date(),
-      },
-    });
+          // Verify the NDA belongs to this user before updating
+          const existingDraft = await prisma.ndaDraft.findUnique({
+            where: { id: ndaId },
+          });
 
-    return NextResponse.json({ success: true, nda });
-  } catch (error) {
-    console.error('Error saving signed NDA:', error);
-    return NextResponse.json(
-      { error: 'Failed to save signed NDA' },
-      { status: 500 }
-    );
-  }
-}
+          if (!existingDraft || existingDraft.createdByUserId !== user.id) {
+            return NextResponse.json({ error: 'NDA not found or unauthorized' }, { status: 404 });
+          }
+
+          const nda = await prisma.ndaDraft.update({
+            where: {
+              id: ndaId,
+            },
+            data: {
+              status: 'SIGNED',
+              updatedAt: new Date(),
+            },
+          });
+
+          return NextResponse.json({ success: true, nda });
+        } catch (error) {
+          console.error('Error saving signed NDA:', error);
+          return NextResponse.json(
+            { error: 'Failed to save signed NDA' },
+            { status: 500 }
+          );
+        }
+      }

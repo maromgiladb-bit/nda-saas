@@ -51,7 +51,8 @@ body {
   margin-bottom: 0.5em;
 }
 
-.docx-preview ul, .docx-preview ol {
+.docx-preview ul,
+.docx-preview ol {
   margin-left: 2em;
   margin-bottom: 0.75em;
 }
@@ -74,7 +75,8 @@ body {
   margin-bottom: 1em;
 }
 
-.docx-preview td, .docx-preview th {
+.docx-preview td,
+.docx-preview th {
   border: 1px solid #ddd;
   padding: 8px;
 }
@@ -85,6 +87,7 @@ body {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -93,4 +96,67 @@ body {
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
+}
+
+/* 
+  Navy & Teal Theme Variables 
+  These should be used via Tailwind arbitrary values or configured in tailwind.config.ts
+  For now, we'll add utility classes for them if needed, or just use them as CSS variables.
+*/
+:root {
+  /* Navy Palette */
+  --navy-900: #0f172a;
+  /* Slate 900 */
+  --navy-800: #1e293b;
+  /* Slate 800 */
+  --navy-700: #334155;
+  /* Slate 700 */
+
+  /* Teal Palette */
+  --teal-50: #f0fdfa;
+  --teal-100: #ccfbf1;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
+}
+
+/* Animation Utilities */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }

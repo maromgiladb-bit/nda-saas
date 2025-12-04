@@ -37,6 +37,8 @@ export default function PrivateToolbar() {
     { name: '🔧 Fill NDA (Classic)', href: '/fillnda' },
     { name: '✨ Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
     { name: '✍️ Sign Simple', href: '/sign-nda-simple' },
+    { name: '✍️ Sign Simple (Dev)', href: '/sign-nda-simple?dev=true' },
+    { name: '📄 Sign PDF', href: '/sign-simple-pdf?dev=true' },
     { name: '📝 Review & Sign', href: '/review-nda/test-token-123' },
     { name: '📋 Review NDA as Fill', href: '/review-nda-asfill/test-token-123' },
     { name: '💡 Review Suggestions', href: '/review-suggestions/dev-test' },
@@ -69,53 +71,51 @@ export default function PrivateToolbar() {
   if (!userId) return null
 
   return (
-    <nav className="bg-white shadow-md border-b-2 border-gray-200 sticky top-0 z-50">
+    <nav className="bg-white shadow-md border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/dashboard" className="flex-shrink-0">
               <div className="flex items-center">
-                <Image 
-                  src="/agreedo-logo.png" 
-                  alt="Agreedo" 
-                  width={200} 
+                <Image
+                  src="/agreedo-logo.png"
+                  alt="Agreedo"
+                  width={200}
                   height={50}
                   className="h-30 w-auto"
                   priority
                 />
               </div>
             </Link>
-            
+
             {/* Desktop Navigation - Show first 4 items */}
             <div className="hidden xl:ml-8 xl:flex xl:space-x-1">
               {navigation.slice(0, 4).map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                    item.current
-                      ? 'bg-teal-50 text-teal-700 shadow-sm'
-                      : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
-                  }`}
+                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${item.current
+                    ? 'bg-[var(--teal-50)] text-[var(--teal-700)] shadow-sm'
+                    : 'text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)]'
+                    }`}
                 >
                   {item.name}
                 </Link>
               ))}
-              
+
               {/* More Dropdown for desktop */}
               <div className="relative" ref={moreMenuRef}>
                 <button
                   onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                    isMoreMenuOpen ? 'bg-teal-50 text-teal-700' : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
-                  }`}
+                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${isMoreMenuOpen ? 'bg-[var(--teal-50)] text-[var(--teal-700)]' : 'text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)]'
+                    }`}
                 >
                   More
                   <svg className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                
+
                 {isMoreMenuOpen && (
                   <div className="absolute top-full left-0 mt-2 w-56 bg-white border-2 border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden">
                     <div className="py-1">
@@ -123,11 +123,10 @@ export default function PrivateToolbar() {
                         <Link
                           key={item.name}
                           href={item.href}
-                          className={`block px-4 py-3 text-sm font-bold transition-all ${
-                            item.current
-                              ? 'bg-teal-50 text-teal-700'
-                              : 'text-gray-700 hover:bg-teal-50 hover:text-teal-600'
-                          }`}
+                          className={`block px-4 py-3 text-sm font-bold transition-all ${item.current
+                            ? 'bg-[var(--teal-50)] text-[var(--teal-700)]'
+                            : 'text-[var(--navy-700)] hover:bg-[var(--teal-50)] hover:text-[var(--teal-600)]'
+                            }`}
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
                           {item.name}
@@ -138,7 +137,7 @@ export default function PrivateToolbar() {
                         <Link
                           key={link.name}
                           href={link.href}
-                          className="block px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all"
+                          className="block px-4 py-3 text-sm font-bold text-[var(--navy-700)] hover:bg-gray-50 hover:text-[var(--navy-900)] transition-all"
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
                           {link.name}
@@ -154,16 +153,15 @@ export default function PrivateToolbar() {
                 <div className="relative" ref={devMenuRef}>
                   <button
                     onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
-                    className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                      isDevMenuOpen ? 'bg-purple-50 text-purple-700 shadow-sm' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                    }`}
+                    className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${isDevMenuOpen ? 'bg-purple-50 text-purple-700 shadow-sm' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                      }`}
                   >
                     🔧 Dev
                     <svg className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  
+
                   {isDevMenuOpen && (
                     <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-purple-200 rounded-xl shadow-2xl z-50 overflow-hidden">
                       <div className="py-2 bg-gradient-to-r from-purple-50 to-purple-100">
@@ -195,30 +193,28 @@ export default function PrivateToolbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                    item.current
-                      ? 'bg-teal-50 text-teal-700 shadow-sm'
-                      : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
-                  }`}
+                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${item.current
+                    ? 'bg-[var(--teal-50)] text-[var(--teal-700)] shadow-sm'
+                    : 'text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)]'
+                    }`}
                 >
                   {item.name}
                 </Link>
               ))}
-              
+
               {/* More Dropdown for tablet */}
               <div className="relative" ref={moreMenuRefTablet}>
                 <button
                   onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                    isMoreMenuOpen ? 'bg-teal-50 text-teal-700' : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
-                  }`}
+                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${isMoreMenuOpen ? 'bg-[var(--teal-50)] text-[var(--teal-700)]' : 'text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)]'
+                    }`}
                 >
                   More
                   <svg className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                
+
                 {isMoreMenuOpen && (
                   <div className="absolute top-full left-0 mt-2 w-56 bg-white border-2 border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden">
                     <div className="py-1">
@@ -226,11 +222,10 @@ export default function PrivateToolbar() {
                         <Link
                           key={item.name}
                           href={item.href}
-                          className={`block px-4 py-3 text-sm font-bold transition-all ${
-                            item.current
-                              ? 'bg-teal-50 text-teal-700'
-                              : 'text-gray-700 hover:bg-teal-50 hover:text-teal-600'
-                          }`}
+                          className={`block px-4 py-3 text-sm font-bold transition-all ${item.current
+                            ? 'bg-[var(--teal-50)] text-[var(--teal-700)]'
+                            : 'text-[var(--navy-700)] hover:bg-[var(--teal-50)] hover:text-[var(--teal-600)]'
+                            }`}
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
                           {item.name}
@@ -241,7 +236,7 @@ export default function PrivateToolbar() {
                         <Link
                           key={link.name}
                           href={link.href}
-                          className="block px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all"
+                          className="block px-4 py-3 text-sm font-bold text-[var(--navy-700)] hover:bg-gray-50 hover:text-[var(--navy-900)] transition-all"
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
                           {link.name}
@@ -257,16 +252,15 @@ export default function PrivateToolbar() {
                 <div className="relative" ref={devMenuRefTablet}>
                   <button
                     onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
-                    className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                      isDevMenuOpen ? 'bg-purple-50 text-purple-700 shadow-sm' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                    }`}
+                    className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${isDevMenuOpen ? 'bg-purple-50 text-purple-700 shadow-sm' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                      }`}
                   >
                     🔧 Dev
                     <svg className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  
+
                   {isDevMenuOpen && (
                     <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-purple-200 rounded-xl shadow-2xl z-50 overflow-hidden">
                       <div className="py-2 bg-gradient-to-r from-purple-50 to-purple-100">
@@ -292,12 +286,12 @@ export default function PrivateToolbar() {
               )}
             </div>
           </div>
-          
+
           {/* Right side buttons - Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
             <Link
               href="/templates"
-              className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all"
+              className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-[var(--teal-600)] hover:bg-[var(--teal-700)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--teal-600)] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
             >
               <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -337,11 +331,10 @@ export default function PrivateToolbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`block px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  item.current
-                    ? 'bg-teal-50 text-teal-700'
-                    : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
-                }`}
+                className={`block px-4 py-3 rounded-xl text-base font-bold transition-all ${item.current
+                  ? 'bg-teal-50 text-teal-700'
+                  : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
+                  }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item.name}

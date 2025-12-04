@@ -40,12 +40,12 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Header */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[var(--navy-900)] to-[var(--navy-800)] text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 animate-fade-in">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-[var(--teal-600)] rounded-2xl flex items-center justify-center shadow-lg">
                 <FileText className="h-8 w-8 text-white" />
               </div>
               <div>
@@ -54,7 +54,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
               </div>
             </div>
             <Link href="/newnda">
-              <button className="px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2">
+              <button className="px-6 py-3 bg-[var(--teal-600)] text-white rounded-xl font-bold shadow-lg hover:bg-[var(--teal-700)] hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2">
                 <Plus className="h-5 w-5" />
                 Create New NDA
               </button>
@@ -68,41 +68,37 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <button
             onClick={() => setFilter('all')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${
-              filter === 'all'
-                ? 'bg-teal-50 border-teal-500'
-                : 'bg-white border-gray-200 hover:border-teal-300'
-            }`}
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'all'
+                ? 'bg-[var(--teal-50)] border-[var(--teal-600)]'
+                : 'bg-white border-gray-200 hover:border-[var(--teal-100)]'
+              }`}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-gray-600">Total NDAs</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
               </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                filter === 'all' ? 'bg-teal-600' : 'bg-teal-100'
-              }`}>
-                <FileText className={`w-6 h-6 ${filter === 'all' ? 'text-white' : 'text-teal-600'}`} />
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'all' ? 'bg-[var(--teal-600)]' : 'bg-[var(--teal-100)]'
+                }`}>
+                <FileText className={`w-6 h-6 ${filter === 'all' ? 'text-white' : 'text-[var(--teal-600)]'}`} />
               </div>
             </div>
           </button>
 
           <button
             onClick={() => setFilter('draft')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${
-              filter === 'draft'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'draft'
                 ? 'bg-yellow-50 border-yellow-500'
                 : 'bg-white border-gray-200 hover:border-yellow-300'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-gray-600">Drafts</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.draft}</p>
               </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                filter === 'draft' ? 'bg-yellow-600' : 'bg-yellow-100'
-              }`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'draft' ? 'bg-yellow-600' : 'bg-yellow-100'
+                }`}>
                 <svg className={`w-6 h-6 ${filter === 'draft' ? 'text-white' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
@@ -112,20 +108,18 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
           <button
             onClick={() => setFilter('sent')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${
-              filter === 'sent'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'sent'
                 ? 'bg-purple-50 border-purple-500'
                 : 'bg-white border-gray-200 hover:border-purple-300'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-gray-600">Sent</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.sent}</p>
               </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                filter === 'sent' ? 'bg-purple-600' : 'bg-purple-100'
-              }`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'sent' ? 'bg-purple-600' : 'bg-purple-100'
+                }`}>
                 <svg className={`w-6 h-6 ${filter === 'sent' ? 'text-white' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
@@ -135,20 +129,18 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
           <button
             onClick={() => setFilter('received')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${
-              filter === 'received'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'received'
                 ? 'bg-orange-50 border-orange-500'
                 : 'bg-white border-gray-200 hover:border-orange-300'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-gray-600">Waiting for You</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.received}</p>
               </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                filter === 'received' ? 'bg-orange-600' : 'bg-orange-100'
-              }`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'received' ? 'bg-orange-600' : 'bg-orange-100'
+                }`}>
                 <svg className={`w-6 h-6 ${filter === 'received' ? 'text-white' : 'text-orange-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -158,20 +150,18 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
           <button
             onClick={() => setFilter('signed')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${
-              filter === 'signed'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'signed'
                 ? 'bg-green-50 border-green-500'
                 : 'bg-white border-gray-200 hover:border-green-300'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-gray-600">Signed</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.signed}</p>
               </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                filter === 'signed' ? 'bg-green-600' : 'bg-green-100'
-              }`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'signed' ? 'bg-green-600' : 'bg-green-100'
+                }`}>
                 <svg className={`w-6 h-6 ${filter === 'signed' ? 'text-white' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -188,7 +178,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
               <h3 className="text-lg font-bold text-gray-900 mb-2">No NDAs found</h3>
               <p className="text-gray-600 mb-6">Create your first NDA to get started.</p>
               <Link href="/newnda">
-                <button className="px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                <button className="px-6 py-3 bg-[var(--teal-600)] text-white rounded-xl font-bold shadow-lg hover:bg-[var(--teal-700)] hover:shadow-xl hover:scale-105 transition-all duration-300">
                   Create New NDA
                 </button>
               </Link>
@@ -211,15 +201,14 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                         </span>
                       )}
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          nda.status === 'signed'
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${nda.status === 'signed'
                             ? 'bg-green-100 text-green-800'
                             : nda.status === 'draft'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : nda.status === 'sent' || nda.status === 'pending'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : nda.status === 'sent' || nda.status === 'pending'
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-gray-100 text-gray-800'
+                          }`}
                       >
                         {nda.status.toUpperCase()}
                       </span>
@@ -243,14 +232,14 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                   </div>
                   <div className="flex gap-2">
                     <Link href={`/preview-template?draftId=${nda.id}`}>
-                      <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-teal-500 transition-all flex items-center gap-2">
+                      <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2">
                         <Eye className="h-4 w-4" />
                         View
                       </button>
                     </Link>
                     {nda.status === 'draft' && (
                       <Link href={`/fillndahtml?draftId=${nda.id}`}>
-                        <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-teal-500 transition-all flex items-center gap-2">
+                        <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2">
                           <Edit className="h-4 w-4" />
                           Edit
                         </button>

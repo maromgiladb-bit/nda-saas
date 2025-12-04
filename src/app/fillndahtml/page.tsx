@@ -16,6 +16,7 @@ type FormValues = {
 	party_a_phone: string;
 	party_a_signatory_name: string;
 	party_a_title: string;
+	party_a_email: string;
 	party_b_name: string;
 	party_b_address: string;
 	party_b_phone: string;
@@ -45,6 +46,7 @@ const DEFAULTS: FormValues = {
 	party_a_phone: "",
 	party_a_signatory_name: "",
 	party_a_title: "",
+	party_a_email: "",
 	party_b_name: "",
 	party_b_address: "",
 	party_b_phone: "",
@@ -70,23 +72,25 @@ export default function FillNDAHTML() {
 	const searchParams = useSearchParams();
 	const { isLoaded, user } = useUser();
 	const [values, setValues] = useState<FormValues>(DEFAULTS);
+	const [lastSavedValues, setLastSavedValues] = useState<FormValues>(DEFAULTS);
 	const [warning, setWarning] = useState("");
 	const [saving, setSaving] = useState(false);
 	const [showLivePreview, setShowLivePreview] = useState(true);
 	const [livePreviewHtml, setLivePreviewHtml] = useState("");
 	const [draftId, setDraftId] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [showSendModal, setShowSendModal] = useState(false);
+
 	const [signersEmail, setSignersEmail] = useState("");
 	const [sendingForSignature, setSendingForSignature] = useState(false);
 	const [shareableLink, setShareableLink] = useState("");
 	const [showShareLinkModal, setShowShareLinkModal] = useState(false);
 	const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
 	const [step, setStep] = useState<number>(0);
-	const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
-	const [showExitWarningModal, setShowExitWarningModal] = useState(false);
+	// const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false); // Removed
+
+	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
 	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
-	
+
 	// Email suggestions state
 	const [emailSuggestions, setEmailSuggestions] = useState<Array<{
 		email: string;
@@ -98,6 +102,24 @@ export default function FillNDAHTML() {
 	const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
 	const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 	const [loadingCompanyProfile, setLoadingCompanyProfile] = useState(false);
+
+	// Warn on tab close if unsaved changes
+	useEffect(() => {
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			// Check if form is dirty (compare against last saved values)
+			const isDirty = JSON.stringify(values) !== JSON.stringify(lastSavedValues);
+
+			if (isDirty) {
+				e.preventDefault();
+				const msg = "any unsaved changes may be deleted";
+				e.returnValue = msg;
+				return msg;
+			}
+		};
+
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+	}, [values, lastSavedValues]);
 	const [showPdfPreview, setShowPdfPreview] = useState(false);
 	const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
 	const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -110,7 +132,7 @@ export default function FillNDAHTML() {
 		try {
 			const response = await fetch('/api/company-profile');
 			const data = await response.json();
-			
+
 			if (data.profile) {
 				const profile = data.profile;
 				const address = [
@@ -120,14 +142,15 @@ export default function FillNDAHTML() {
 					profile.country
 				].filter(Boolean).join(', ');
 
-			setValues(prev => ({
-				...prev,
-				party_a_name: profile.companyname || prev.party_a_name,
-				party_a_address: address || prev.party_a_address,
-				party_a_phone: profile.phone || prev.party_a_phone,
-				party_a_signatory_name: profile.signatoryname || prev.party_a_signatory_name,
-				party_a_title: profile.signatorytitle || prev.party_a_title
-			}));				console.log('✅ Auto-filled Party A from company profile');
+				setValues(prev => ({
+					...prev,
+					party_a_name: profile.companyname || prev.party_a_name,
+					party_a_address: address || prev.party_a_address,
+					party_a_phone: profile.phone || prev.party_a_phone,
+					party_a_signatory_name: profile.signatoryname || prev.party_a_signatory_name,
+					party_a_title: profile.signatorytitle || prev.party_a_title,
+					party_a_email: profile.email || prev.party_a_email
+				})); console.log('✅ Auto-filled Party A from company profile');
 			}
 		} catch (error) {
 			console.error('Error loading company profile:', error);
@@ -140,39 +163,39 @@ export default function FillNDAHTML() {
 	const previewPDF = async () => {
 		setGeneratingPdf(true);
 		try {
-		console.log("📄 Generating PDF preview with data:", values);
-		console.log("📋 Using template:", templateId);
-		
-		// Always use current form data for preview (not draft from DB)
-		// This ensures the preview matches what you see in the HTML preview
-		const payload = { ...templateData };  // templateData already includes templateId
-		
-		console.log("📦 Sending payload to PDF API:", {
-			hasTemplateId: !!payload.templateId,
-			templateId: payload.templateId,
-			hasDraftId: false
-		});			// Use PDF preview endpoint (supports both draftId and direct data)
+			console.log("📄 Generating PDF preview with data:", values);
+			console.log("📋 Using template:", templateId);
+
+			// Always use current form data for preview (not draft from DB)
+			// This ensures the preview matches what you see in the HTML preview
+			const payload = { ...templateData };  // templateData already includes templateId
+
+			console.log("📦 Sending payload to PDF API:", {
+				hasTemplateId: !!payload.templateId,
+				templateId: payload.templateId,
+				hasDraftId: false
+			});			// Use PDF preview endpoint (supports both draftId and direct data)
 			const res = await fetch("/api/ndas/preview", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
 			});
-			
+
 			const json = await res.json();
 			console.log("PDF Preview response:", json);
-			
+
 			if (!res.ok) {
 				console.error("❌ PDF preview failed:", json);
 				console.error("❌ Error details:", json.details);
 				setWarning(json.error || json.details || "PDF preview failed");
 				return;
 			}
-			
+
 			// fileUrl contains the data:application/pdf;base64,... string
 			if (!json.fileUrl || !json.fileUrl.startsWith("data:application/pdf;base64,")) {
 				throw new Error("Invalid PDF data received");
 			}
-			
+
 			// Open PDF in new tab
 			const newWindow = window.open();
 			if (newWindow) {
@@ -197,7 +220,7 @@ export default function FillNDAHTML() {
 				setPdfPreviewUrl(json.fileUrl);
 				setShowPdfPreview(true);
 			}
-			
+
 			console.log("✅ PDF preview opened successfully");
 			setWarning(""); // Clear any previous warnings
 		} catch (e) {
@@ -219,7 +242,7 @@ export default function FillNDAHTML() {
 		party_1_signatory_name: sanitizeForHtml(values.party_a_signatory_name),
 		party_1_signatory_title: sanitizeForHtml(values.party_a_title),
 		party_1_phone: sanitizeForHtml(values.party_a_phone),
-		party_1_emails_joined: '', // Not in form
+		party_1_emails_joined: sanitizeForHtml(values.party_a_email),
 		// Map party_b fields to party_2 with sanitization
 		party_2_name: sanitizeForHtml(values.party_b_name),
 		party_2_address: sanitizeForHtml(values.party_b_address),
@@ -242,12 +265,16 @@ export default function FillNDAHTML() {
 		ip_ownership: sanitizeForHtml(values.ip_ownership),
 		additional_terms: sanitizeForHtml(values.additional_terms),
 	};
-	
+
 	const { data: liveData, loading: previewLoading, error: previewError } = useDebouncedPreview(
 		"/api/ndas/preview-html",
 		templateData,
 		400
 	);
+
+	// Refs for iframe scroll preservation
+	const iframeRef = React.useRef<HTMLIFrameElement>(null);
+	const scrollPosRef = React.useRef<number>(0);
 
 	// Update live preview HTML when data arrives
 	useEffect(() => {
@@ -259,6 +286,14 @@ export default function FillNDAHTML() {
 			values: values
 		});
 		if (liveData?.html) {
+			// Save current scroll position before update
+			if (iframeRef.current && iframeRef.current.contentWindow) {
+				try {
+					scrollPosRef.current = iframeRef.current.contentWindow.scrollY;
+				} catch (e) {
+					console.warn("Could not save scroll position", e);
+				}
+			}
 			console.log('🎨 Setting live preview HTML, length:', liveData.html.length);
 			setLivePreviewHtml(liveData.html);
 		}
@@ -284,13 +319,13 @@ export default function FillNDAHTML() {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ email: user.emailAddresses[0].emailAddress }),
-			}).catch(() => {});
+			}).catch(() => { });
 		}
 
 		const urlDraftId = searchParams.get("draftId");
 		const urlTemplateId = searchParams.get("templateId");
 		const isNewNda = searchParams.get("new") === "true";
-		
+
 		// Always use HTML template for this page, but allow override from URL
 		if (urlTemplateId) {
 			console.log("📋 Using template:", urlTemplateId);
@@ -299,11 +334,12 @@ export default function FillNDAHTML() {
 			console.log("📋 Using default HTML template: professional_mutual_nda_v1");
 			setTemplateId("professional_mutual_nda_v1");
 		}
-		
+
 		if (isNewNda) {
 			// Starting a new NDA - clear everything and use defaults
 			console.log("🆕 Starting new NDA - clearing all data");
 			setValues(DEFAULTS);
+			setLastSavedValues(DEFAULTS);
 			setDraftId(null);
 			localStorage.removeItem("fillndahtmlDraft");
 		} else if (urlDraftId) {
@@ -334,18 +370,19 @@ export default function FillNDAHTML() {
 		try {
 			const res = await fetch(`/api/ndas/drafts/${id}`);
 			console.log('Response status:', res.status)
-			
+
 			const json = await res.json();
 			console.log('Response data:', json)
-			
+
 			if (!res.ok) throw new Error(json.error || "Failed to load draft");
-			
+
 			if (json.draft?.data) {
 				console.log('Setting form values from draft data:', json.draft.data)
 				// Compute next values in one pass, then set once
 				const next = { ...DEFAULTS, ...json.draft.data };
 				if (json.draft.title) next.docName = json.draft.title;
 				setValues(next);
+				setLastSavedValues(next);
 				setDraftId(json.draft.id);
 			} else {
 				console.log('No draft data found, using defaults')
@@ -405,9 +442,11 @@ export default function FillNDAHTML() {
 		if (!values.party_b_title_ask_receiver) {
 			mandatoryFields.push("party_b_title");
 		}
-		if (!values.party_b_email_ask_receiver) {
-			mandatoryFields.push("party_b_email");
+		if (!values.party_b_title_ask_receiver) {
+			mandatoryFields.push("party_b_title");
 		}
+		// party_b_email is no longer mandatory here, can be added in sign-nda
+
 
 		mandatoryFields.forEach((field) => {
 			const value = values[field as keyof FormValues];
@@ -421,9 +460,8 @@ export default function FillNDAHTML() {
 		});
 
 		// Still validate email format if Party B email is provided and not asking receiver to fill
-		if (!values.party_b_email_ask_receiver && (!values.party_b_email || !values.party_b_email.includes("@"))) {
-			errors.add("party_b_email");
-		}
+		// Removed strict check to allow skipping email in this step
+
 
 		let message = null;
 		if (errors.size > 0) {
@@ -462,9 +500,6 @@ export default function FillNDAHTML() {
 				if (!values.party_b_title_ask_receiver) {
 					stepFields.push("party_b_title");
 				}
-				if (!values.party_b_email_ask_receiver) {
-					stepFields.push("party_b_email");
-				}
 				// If all Party B fields are set to "ask receiver", step is complete
 				if (stepFields.length === 0) {
 					return true;
@@ -489,9 +524,6 @@ export default function FillNDAHTML() {
 				if (!values.party_b_name_ask_receiver) {
 					stepFields.push("party_b_name");
 				}
-				if (!values.party_b_email_ask_receiver) {
-					stepFields.push("party_b_email");
-				}
 				break;
 			default:
 				return false;
@@ -500,7 +532,6 @@ export default function FillNDAHTML() {
 		for (const field of stepFields) {
 			const val = values[field as keyof FormValues];
 			if (!val || (typeof val === "string" && !val.trim())) return false;
-			if (field === "party_b_email" && !values.party_b_email_ask_receiver && !values.party_b_email.includes("@")) return false;
 		}
 		return true;
 	};
@@ -536,8 +567,8 @@ export default function FillNDAHTML() {
 		if (!values.party_b_title_ask_receiver) {
 			requiredFields.push("party_b_title");
 		}
-		if (!values.party_b_email_ask_receiver) {
-			requiredFields.push("party_b_email");
+		if (!values.party_b_title_ask_receiver) {
+			requiredFields.push("party_b_title");
 		}
 
 		const total = requiredFields.length;
@@ -546,11 +577,7 @@ export default function FillNDAHTML() {
 		for (const field of requiredFields) {
 			const val = values[field as keyof FormValues];
 			if (val && typeof val === "string" && val.trim()) {
-				if (field === "party_b_email") {
-					if (val.includes("@")) filled += 1;
-				} else {
-					filled += 1;
-				}
+				filled += 1;
 			}
 		}
 
@@ -572,20 +599,13 @@ export default function FillNDAHTML() {
 	};
 
 	const saveDraft = async () => {
-		// If editing an existing draft, show confirmation modal
-		if (draftId) {
-			setShowSaveConfirmModal(true);
-			return;
-		}
-		
-		// New draft - save directly
+		// Save directly without confirmation modal
 		await performSave();
 	};
 
 	const performSave = async () => {
 		setSaving(true);
 		setWarning("");
-		setShowSaveConfirmModal(false);
 		try {
 			const payload = { draftId, title: values.docName, data: values };
 			const res = await fetch("/api/ndas/drafts", {
@@ -596,6 +616,7 @@ export default function FillNDAHTML() {
 			const json = await res.json();
 			if (!res.ok) throw new Error(json.error || "Failed to save draft");
 			setDraftId(json.draftId || json.id || draftId);
+			setLastSavedValues(values);
 			localStorage.setItem("fillndahtmlDraft", JSON.stringify({ values, draftId: json.draftId || json.id || draftId }));
 			setWarning("Draft saved successfully.");
 		} catch (e) {
@@ -617,7 +638,7 @@ export default function FillNDAHTML() {
 			setLoadingSuggestions(true);
 			const res = await fetch(`/api/ndas/email-suggestions?q=${encodeURIComponent(query)}`);
 			const data = await res.json();
-			
+
 			if (res.ok && data.suggestions) {
 				setEmailSuggestions(data.suggestions);
 				setShowEmailSuggestions(data.suggestions.length > 0);
@@ -661,7 +682,6 @@ export default function FillNDAHTML() {
 		if (!validation.isValid) {
 			setValidationErrors(validation.errors);
 			setWarning(validation.message || "Please fill in all required fields");
-			setShowSendModal(false);
 			return;
 		}
 
@@ -670,60 +690,31 @@ export default function FillNDAHTML() {
 			return;
 		}
 
-		if (!signersEmail.trim()) {
-			setWarning("Please enter an email address for the signer.");
-			return;
-		}
-
-		// Validate email format
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailRegex.test(signersEmail.trim())) {
-			setWarning("Please enter a valid email address.");
-			return;
-		}
+		// We no longer check for signersEmail here as it will be handled in the sign-nda page
+		// if it's missing from the form values.
 
 		setSendingForSignature(true);
 		setWarning("");
-		
+
 		try {
 			// Check if Party B needs to fill fields
-			if (hasEmptyPartyBFields()) {
-				// Send to Party B for input (no signing yet)
-				const res = await fetch("/api/ndas/send", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ 
-						draftId, 
-						signerEmail: signersEmail.trim(), 
-						signerRole: "Party B",
-						action: "fill_fields" // Party B needs to fill fields first
-					}),
-				});
-				const json = await res.json();
-				if (!res.ok) throw new Error(json.error || "Failed to send");
-				
-				// Show shareable link modal
-				const fullLink = `${window.location.origin}/sign/${json.signRequest.token}`;
-				setShareableLink(fullLink);
-				setShowSendModal(false);
-				setShowShareLinkModal(true);
-				setSignersEmail("");
-			} else {
-				// All fields filled → Go to signature page
-				// Save the NDA data to session storage for the sign page
-				sessionStorage.setItem('ndaSignData', JSON.stringify({
-					draftId,
-					values,
-					htmlContent: livePreviewHtml,
-					partyAEmail: user?.primaryEmailAddress?.emailAddress || '',
-					partyAName: values.party_a_name,
-					partyBEmail: values.party_b_email || signersEmail.trim(),
-					partyBName: values.party_b_name,
-				}));
-				
-				// Navigate to sign page
-				router.push('/sign-nda-simple');
-			}
+			const needsReceiverFill = hasEmptyPartyBFields();
+
+			// Save the NDA data to session storage for the sign page
+			sessionStorage.setItem('ndaSignData', JSON.stringify({
+				draftId,
+				values,
+				htmlContent: livePreviewHtml,
+				partyAEmail: user?.primaryEmailAddress?.emailAddress || '',
+				partyAName: values.party_a_name,
+				partyBEmail: values.party_b_email, // Use form value directly
+				partyBName: values.party_b_name,
+				askReceiverToFill: needsReceiverFill
+			}));
+
+			// Navigate to sign page
+			router.push('/sign-nda');
+
 		} catch (e) {
 			setWarning(e instanceof Error ? e.message : "Failed to send");
 		} finally {
@@ -734,10 +725,19 @@ export default function FillNDAHTML() {
 	if (!isLoaded) return <div className="min-h-screen">Loading...</div>;
 	if (!user) return <RedirectToSignIn />;
 
+	const handleToolbarLinkClick = (e: React.MouseEvent) => {
+		const isDirty = JSON.stringify(values) !== JSON.stringify(lastSavedValues);
+		if (isDirty) {
+			if (!window.confirm("any unsaved changes may be deleted")) {
+				e.preventDefault();
+			}
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-gray-50">
-			<PublicToolbar />
-			
+			<PublicToolbar onLinkClick={handleToolbarLinkClick} />
+
 			{/* Main Container with Fixed Layout */}
 			<div className="flex h-[calc(100vh-64px)]">
 				{/* LEFT SIDE: Form Content (Scrollable) */}
@@ -786,9 +786,9 @@ export default function FillNDAHTML() {
 									<span className="text-sm font-bold text-teal-600">{computeCompletionPercent()}%</span>
 								</div>
 								<div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-									<div 
-										className="h-2.5 bg-teal-600 transition-all duration-500 ease-out rounded-full" 
-										style={{ width: `${computeCompletionPercent()}%` }} 
+									<div
+										className="h-2.5 bg-teal-600 transition-all duration-500 ease-out rounded-full"
+										style={{ width: `${computeCompletionPercent()}%` }}
 									/>
 								</div>
 							</div>
@@ -829,18 +829,17 @@ export default function FillNDAHTML() {
 								<div className="flex items-center justify-between gap-2">
 									{steps.map((s, i) => (
 										<div key={s} className="flex-1 relative">
-											<button 
-												onClick={() => goToStep(i)} 
+											<button
+												onClick={() => goToStep(i)}
 												className={`w-full transition-all duration-300 ${i === step ? 'transform scale-105' : ''}`}
 											>
 												<div className="flex flex-col items-center">
-													<div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${
-														i === step 
-															? 'bg-teal-600 text-white shadow-lg ring-4 ring-teal-100' 
-															: isStepComplete(i)
+													<div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${i === step
+														? 'bg-teal-600 text-white shadow-lg ring-4 ring-teal-100'
+														: isStepComplete(i)
 															? 'bg-teal-500 text-white shadow-md'
 															: 'bg-gray-200 text-gray-500'
-													}`}>
+														}`}>
 														{isStepComplete(i) ? (
 															<svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
 																<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -849,19 +848,17 @@ export default function FillNDAHTML() {
 															<span className="font-bold">{i + 1}</span>
 														)}
 													</div>
-													<span className={`text-xs font-medium text-center transition-all duration-300 ${
-														i === step ? 'text-teal-600 font-semibold' : 'text-gray-500'
-													}`}>
+													<span className={`text-xs font-medium text-center transition-all duration-300 ${i === step ? 'text-teal-600 font-semibold' : 'text-gray-500'
+														}`}>
 														{s}
 													</span>
 												</div>
 											</button>
 											{i < steps.length - 1 && (
 												<div className="absolute top-6 left-[calc(50%+24px)] right-[calc(-50%+24px)] h-0.5 bg-gray-200 -z-10">
-													<div 
-														className={`h-full bg-teal-600 transition-all duration-500 ${
-															isStepComplete(i) ? 'w-full' : 'w-0'
-														}`}
+													<div
+														className={`h-full bg-teal-600 transition-all duration-500 ${isStepComplete(i) ? 'w-full' : 'w-0'
+															}`}
 													/>
 												</div>
 											)}
@@ -889,42 +886,42 @@ export default function FillNDAHTML() {
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 											<div className="md:col-span-2">
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Document Title *</label>
-												<input 
-													className={`${getFieldClass("docName")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all`} 
-													value={values.docName} 
-													onChange={(e) => setField("docName", e.target.value)} 
-													placeholder="e.g., Partnership NDA 2025" 
+												<input
+													className={`${getFieldClass("docName")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all`}
+													value={values.docName}
+													onChange={(e) => setField("docName", e.target.value)}
+													placeholder="e.g., Partnership NDA 2025"
 												/>
 											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Effective Date <span className="text-gray-700">*</span></label>
-												<input 
-													type="date" 
-													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all")}`} 
-													value={values.effective_date} 
-													onChange={(e) => setField("effective_date", e.target.value)} 
+												<input
+													type="date"
+													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all")}`}
+													value={values.effective_date}
+													onChange={(e) => setField("effective_date", e.target.value)}
 													required
 												/>
 												<div className="text-xs text-gray-500 mt-1">DD/MM/YYYY</div>
 											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Term (months) *</label>
-												<input 
+												<input
 													type="number"
-													className={`${getFieldClass("term_months")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all`} 
-													value={values.term_months} 
-													onChange={(e) => setField("term_months", e.target.value)} 
-													placeholder="e.g., 12" 
+													className={`${getFieldClass("term_months")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all`}
+													value={values.term_months}
+													onChange={(e) => setField("term_months", e.target.value)}
+													placeholder="e.g., 12"
 												/>
 											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Confidentiality Period (months) *</label>
-												<input 
+												<input
 													type="number"
-													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all`} 
-													value={values.confidentiality_period_months} 
-													onChange={(e) => setField("confidentiality_period_months", e.target.value)} 
-													placeholder="e.g., 24" 
+													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all`}
+													value={values.confidentiality_period_months}
+													onChange={(e) => setField("confidentiality_period_months", e.target.value)}
+													placeholder="e.g., 24"
 												/>
 											</div>
 										</div>
@@ -973,7 +970,7 @@ export default function FillNDAHTML() {
 												</svg>
 												<div>
 													<p className="text-sm text-green-800">
-														<strong>Tip:</strong> Click &quot;Auto-fill from Profile&quot; to quickly fill Party A with your saved company details. 
+														<strong>Tip:</strong> Click &quot;Auto-fill from Profile&quot; to quickly fill Party A with your saved company details.
 														You can manage your company profile in <a href="/companydetails" className="underline hover:text-green-900">Company Details</a>.
 													</p>
 												</div>
@@ -983,53 +980,63 @@ export default function FillNDAHTML() {
 										<div className="space-y-4">
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Party Name *</label>
-												<input 
-													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all`} 
-													value={values.party_a_name} 
-													onChange={(e) => setField("party_a_name", e.target.value)} 
-													placeholder="Enter party name" 
+												<input
+													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all`}
+													value={values.party_a_name}
+													onChange={(e) => setField("party_a_name", e.target.value)}
+													placeholder="Enter party name"
 												/>
 											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
-												<textarea 
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" 
+												<textarea
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
 													rows={3}
-													value={values.party_a_address} 
-													onChange={(e) => setField("party_a_address", e.target.value)} 
-													placeholder="Enter full address" 
+													value={values.party_a_address}
+													onChange={(e) => setField("party_a_address", e.target.value)}
+													placeholder="Enter full address"
 												/>
 											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-												<input 
+												<input
 													type="tel"
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" 
-													value={values.party_a_phone} 
-													onChange={(e) => setField("party_a_phone", e.target.value)} 
-													placeholder="e.g., +1 (555) 123-4567" 
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+													value={values.party_a_phone}
+													onChange={(e) => setField("party_a_phone", e.target.value)}
+													placeholder="e.g., +1 (555) 123-4567"
 												/>
 											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 												<div>
 													<label className="block text-sm font-semibold text-gray-700 mb-2">Signatory Name</label>
-													<input 
-														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" 
-														value={values.party_a_signatory_name} 
-														onChange={(e) => setField("party_a_signatory_name", e.target.value)} 
-														placeholder="Full name" 
+													<input
+														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+														value={values.party_a_signatory_name}
+														onChange={(e) => setField("party_a_signatory_name", e.target.value)}
+														placeholder="Full name"
 													/>
 												</div>
 												<div>
 													<label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
-													<input 
-														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" 
-														value={values.party_a_title} 
-														onChange={(e) => setField("party_a_title", e.target.value)} 
-														placeholder="e.g., CEO, Director" 
-														disabled={values.party_a_ask_receiver_fill} 
+													<input
+														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+														value={values.party_a_title}
+														onChange={(e) => setField("party_a_title", e.target.value)}
+														placeholder="e.g., CEO, Director"
+														disabled={values.party_a_ask_receiver_fill}
 													/>
 												</div>
+											</div>
+											<div>
+												<label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+												<input
+													type="email"
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+													value={values.party_a_email || ""}
+													onChange={(e) => setField("party_a_email", e.target.value)}
+													placeholder="email@example.com"
+												/>
 											</div>
 										</div>
 									</div>
@@ -1054,65 +1061,65 @@ export default function FillNDAHTML() {
 												<div className="flex items-center justify-between mb-2">
 													<label className="block text-sm font-semibold text-gray-700">Party Name *</label>
 													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-100 transition-colors">
-														<input 
-															type="checkbox" 
-															checked={values.party_b_name_ask_receiver} 
-															onChange={(e) => setField("party_b_name_ask_receiver", e.target.checked)} 
-															className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500" 
+														<input
+															type="checkbox"
+															checked={values.party_b_name_ask_receiver}
+															onChange={(e) => setField("party_b_name_ask_receiver", e.target.checked)}
+															className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500"
 														/>
 														<span className="font-medium text-teal-700">Ask receiver to fill</span>
 													</label>
 												</div>
-												<input 
-													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed`} 
-													value={values.party_b_name} 
-													onChange={(e) => setField("party_b_name", e.target.value)} 
-													placeholder="Enter party name" 
-													disabled={values.party_b_name_ask_receiver} 
+												<input
+													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed`}
+													value={values.party_b_name}
+													onChange={(e) => setField("party_b_name", e.target.value)}
+													placeholder="Enter party name"
+													disabled={values.party_b_name_ask_receiver}
 												/>
 											</div>
 											<div>
 												<div className="flex items-center justify-between mb-2">
 													<label className="block text-sm font-semibold text-gray-700">Address</label>
 													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-100 transition-colors">
-														<input 
-															type="checkbox" 
-															checked={values.party_b_address_ask_receiver} 
-															onChange={(e) => setField("party_b_address_ask_receiver", e.target.checked)} 
-															className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500" 
+														<input
+															type="checkbox"
+															checked={values.party_b_address_ask_receiver}
+															onChange={(e) => setField("party_b_address_ask_receiver", e.target.checked)}
+															className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500"
 														/>
 														<span className="font-medium text-teal-700">Ask receiver to fill</span>
 													</label>
 												</div>
-												<textarea 
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" 
+												<textarea
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
 													rows={3}
-													value={values.party_b_address} 
-													onChange={(e) => setField("party_b_address", e.target.value)} 
-													placeholder="Enter full address" 
-													disabled={values.party_b_address_ask_receiver} 
+													value={values.party_b_address}
+													onChange={(e) => setField("party_b_address", e.target.value)}
+													placeholder="Enter full address"
+													disabled={values.party_b_address_ask_receiver}
 												/>
 											</div>
 											<div>
 												<div className="flex items-center justify-between mb-2">
 													<label className="block text-sm font-semibold text-gray-700">Phone Number</label>
 													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-100 transition-colors">
-														<input 
-															type="checkbox" 
-															checked={values.party_b_phone_ask_receiver} 
-															onChange={(e) => setField("party_b_phone_ask_receiver", e.target.checked)} 
-															className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500" 
+														<input
+															type="checkbox"
+															checked={values.party_b_phone_ask_receiver}
+															onChange={(e) => setField("party_b_phone_ask_receiver", e.target.checked)}
+															className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500"
 														/>
 														<span className="font-medium text-teal-700">Ask receiver to fill</span>
 													</label>
 												</div>
-												<input 
+												<input
 													type="tel"
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" 
-													value={values.party_b_phone} 
-													onChange={(e) => setField("party_b_phone", e.target.value)} 
-													placeholder="e.g., +1 (555) 123-4567" 
-													disabled={values.party_b_phone_ask_receiver} 
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+													value={values.party_b_phone}
+													onChange={(e) => setField("party_b_phone", e.target.value)}
+													placeholder="e.g., +1 (555) 123-4567"
+													disabled={values.party_b_phone_ask_receiver}
 												/>
 											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1120,42 +1127,42 @@ export default function FillNDAHTML() {
 													<div className="flex items-center justify-between mb-2">
 														<label className="block text-sm font-semibold text-gray-700">Signatory Name</label>
 														<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-100 transition-colors">
-															<input 
-																type="checkbox" 
-																checked={values.party_b_signatory_name_ask_receiver} 
-																onChange={(e) => setField("party_b_signatory_name_ask_receiver", e.target.checked)} 
-																className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500" 
+															<input
+																type="checkbox"
+																checked={values.party_b_signatory_name_ask_receiver}
+																onChange={(e) => setField("party_b_signatory_name_ask_receiver", e.target.checked)}
+																className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500"
 															/>
 															<span className="font-medium text-teal-700">Ask receiver</span>
 														</label>
 													</div>
-													<input 
-														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" 
-														value={values.party_b_signatory_name} 
-														onChange={(e) => setField("party_b_signatory_name", e.target.value)} 
-														placeholder="Full name" 
-														disabled={values.party_b_signatory_name_ask_receiver} 
+													<input
+														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+														value={values.party_b_signatory_name}
+														onChange={(e) => setField("party_b_signatory_name", e.target.value)}
+														placeholder="Full name"
+														disabled={values.party_b_signatory_name_ask_receiver}
 													/>
 												</div>
 												<div>
 													<div className="flex items-center justify-between mb-2">
 														<label className="block text-sm font-semibold text-gray-700">Title</label>
 														<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-100 transition-colors">
-															<input 
-																type="checkbox" 
-																checked={values.party_b_title_ask_receiver} 
-																onChange={(e) => setField("party_b_title_ask_receiver", e.target.checked)} 
-																className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500" 
+															<input
+																type="checkbox"
+																checked={values.party_b_title_ask_receiver}
+																onChange={(e) => setField("party_b_title_ask_receiver", e.target.checked)}
+																className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500"
 															/>
 															<span className="font-medium text-teal-700">Ask receiver</span>
 														</label>
 													</div>
-													<input 
-														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" 
-														value={values.party_b_title} 
-														onChange={(e) => setField("party_b_title", e.target.value)} 
-														placeholder="e.g., CEO, Director" 
-														disabled={values.party_b_title_ask_receiver} 
+													<input
+														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+														value={values.party_b_title}
+														onChange={(e) => setField("party_b_title", e.target.value)}
+														placeholder="e.g., CEO, Director"
+														disabled={values.party_b_title_ask_receiver}
 													/>
 												</div>
 											</div>
@@ -1163,22 +1170,22 @@ export default function FillNDAHTML() {
 												<div className="flex items-center justify-between mb-2">
 													<label className="block text-sm font-semibold text-gray-700">Email Address *</label>
 													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-100 transition-colors">
-														<input 
-															type="checkbox" 
-															checked={values.party_b_email_ask_receiver} 
-															onChange={(e) => setField("party_b_email_ask_receiver", e.target.checked)} 
-															className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500" 
+														<input
+															type="checkbox"
+															checked={values.party_b_email_ask_receiver}
+															onChange={(e) => setField("party_b_email_ask_receiver", e.target.checked)}
+															className="form-checkbox h-3 w-3 text-teal-600 rounded focus:ring-2 focus:ring-teal-500"
 														/>
 														<span className="font-medium text-teal-700">Ask receiver to fill</span>
 													</label>
 												</div>
-												<input 
+												<input
 													type="email"
-													className={`${getFieldClass("party_b_email", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed`} 
-													value={values.party_b_email} 
-													onChange={(e) => setField("party_b_email", e.target.value)} 
-													placeholder="email@example.com" 
-													disabled={values.party_b_email_ask_receiver} 
+													className={`${getFieldClass("party_b_email", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed`}
+													value={values.party_b_email}
+													onChange={(e) => setField("party_b_email", e.target.value)}
+													placeholder="email@example.com"
+													disabled={values.party_b_email_ask_receiver}
 												/>
 											</div>
 										</div>
@@ -1202,41 +1209,51 @@ export default function FillNDAHTML() {
 										<div className="space-y-4">
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Governing Law</label>
-												<input 
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" 
-													value={values.governing_law} 
-													onChange={(e) => setField("governing_law", e.target.value)} 
-													placeholder="e.g., State of California" 
+												<input
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+													value={values.governing_law}
+													onChange={(e) => setField("governing_law", e.target.value)}
+													placeholder="e.g., State of California"
 												/>
 											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">IP Ownership Clause</label>
-												<textarea 
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" 
+												<textarea
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
 													rows={3}
-													value={values.ip_ownership} 
-													onChange={(e) => setField("ip_ownership", e.target.value)} 
-													placeholder="Specify intellectual property ownership terms..." 
+													value={values.ip_ownership}
+													onChange={(e) => setField("ip_ownership", e.target.value)}
+													placeholder="Specify intellectual property ownership terms..."
 												/>
 											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Non-Solicitation Clause</label>
-												<textarea 
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" 
+												<textarea
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
 													rows={3}
-													value={values.non_solicit} 
-													onChange={(e) => setField("non_solicit", e.target.value)} 
-													placeholder="Define non-solicitation terms..." 
+													value={values.non_solicit}
+													onChange={(e) => setField("non_solicit", e.target.value)}
+													placeholder="Define non-solicitation terms..."
 												/>
 											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Exclusivity Clause</label>
-												<textarea 
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" 
+												<textarea
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
 													rows={3}
-													value={values.exclusivity} 
-													onChange={(e) => setField("exclusivity", e.target.value)} 
-													placeholder="Specify exclusivity arrangements..." 
+													value={values.exclusivity}
+													onChange={(e) => setField("exclusivity", e.target.value)}
+													placeholder="Specify exclusivity arrangements..."
+												/>
+											</div>
+											<div>
+												<label className="block text-sm font-semibold text-gray-700 mb-2">Additional Terms</label>
+												<textarea
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+													rows={3}
+													value={values.additional_terms}
+													onChange={(e) => setField("additional_terms", e.target.value)}
+													placeholder="Enter any additional terms or clauses..."
 												/>
 											</div>
 										</div>
@@ -1331,14 +1348,13 @@ export default function FillNDAHTML() {
 							{/* Navigation Buttons */}
 							<div className="mt-8 flex items-center justify-between gap-4 pt-6 border-t border-gray-200">
 								<div className="flex gap-3">
-									<button 
-										onClick={goBack} 
-										disabled={step === 0} 
-										className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
-											step === 0 
-												? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-												: 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-md'
-										}`}
+									<button
+										onClick={goBack}
+										disabled={step === 0}
+										className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${step === 0
+											? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+											: 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-md'
+											}`}
 									>
 										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1346,8 +1362,8 @@ export default function FillNDAHTML() {
 										Back
 									</button>
 									{step < steps.length - 1 && (
-										<button 
-											onClick={goNext} 
+										<button
+											onClick={goNext}
 											className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200 shadow-sm flex items-center gap-2"
 										>
 											Next
@@ -1359,8 +1375,8 @@ export default function FillNDAHTML() {
 									{step === steps.length - 1 && (
 										<>
 											{draftId && (
-												<button 
-													onClick={() => setShowSendModal(true)} 
+												<button
+													onClick={sendForSignature}
 													className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200 shadow-sm flex items-center gap-2"
 												>
 													<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1373,22 +1389,25 @@ export default function FillNDAHTML() {
 									)}
 								</div>
 								<div className="flex gap-3">
-									<button 
-										onClick={saveDraft} 
-										disabled={saving} 
-										className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 ${
-											saving 
-												? 'bg-gray-400 text-white cursor-not-allowed' 
-												: 'bg-teal-600 text-white hover:bg-teal-700'
-										}`}
+									<button
+										onClick={saveDraft}
+										disabled={saving}
+										className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 ${saving
+											? 'bg-gray-400 text-white cursor-not-allowed'
+											: 'bg-teal-600 text-white hover:bg-teal-700'
+											}`}
 									>
 										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
 										</svg>
 										{saving ? "Saving..." : "Save Draft"}
 									</button>
-									<button 
-										onClick={() => setShowExitWarningModal(true)} 
+									<button
+										onClick={() => {
+											if (JSON.stringify(values) === JSON.stringify(lastSavedValues) || window.confirm("any unsaved changes may be deleted")) {
+												router.push('/dashboard');
+											}
+										}}
 										className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200 hover:shadow-md flex items-center gap-2"
 									>
 										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1476,11 +1495,25 @@ export default function FillNDAHTML() {
 							)}
 							{livePreviewHtml && !previewError ? (
 								<iframe
+									ref={iframeRef}
 									srcDoc={livePreviewHtml}
 									className="w-full border-0"
 									style={{ minHeight: '1200px', height: 'auto' }}
 									title="NDA Preview"
 									sandbox="allow-same-origin"
+									onLoad={() => {
+										// Restore scroll position after reload
+										if (iframeRef.current && iframeRef.current.contentWindow) {
+											try {
+												const savedScroll = scrollPosRef.current;
+												if (savedScroll > 0) {
+													iframeRef.current.contentWindow.scrollTo(0, savedScroll);
+												}
+											} catch (e) {
+												console.warn("Could not restore scroll position", e);
+											}
+										}
+									}}
 								/>
 							) : !previewLoading && !previewError ? (
 								<div className="text-center py-20 text-gray-400">
@@ -1493,538 +1526,232 @@ export default function FillNDAHTML() {
 						</div>
 					</div>
 				)}
-			</div>
 
-			{/* Send for Signature Modal */}
-			{showSendModal && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
-					<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-						<div className="bg-gray-50 p-6 border-b border-gray-200">
-							<div className="flex items-center gap-3 mb-2">
-								<div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
-									<svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-									</svg>
-								</div>
-								<div className="flex-1">
-									<h2 className="text-xl font-bold text-gray-800">
-										{hasEmptyPartyBFields() ? "Send to Party B" : "Ready to Sign"}
-									</h2>
-									<p className="text-sm text-gray-500 mt-1">
-										{hasEmptyPartyBFields() 
-											? "Party B will fill in their details before signing" 
-											: "All fields are complete. Proceed to signature page"}
-									</p>
-								</div>
-								<button 
-									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg" 
-									onClick={() => setShowSendModal(false)} 
-									aria-label="Close modal"
-								>
-									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-									</svg>
-								</button>
-							</div>
-						</div>
-						<div className="p-6">
-							<div className="mb-6">
-								<label className="block text-sm font-semibold text-gray-700 mb-2">Signer&apos;s Email Address</label>
-								<div className="relative">
-									<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-										<svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 018 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-										</svg>
-									</div>
-									<input 
-										type="email"
-										value={signersEmail} 
-										onChange={(e) => {
-											const value = e.target.value;
-											handleEmailChange(value);
-										}}
-										onFocus={() => {
-											if (signersEmail.length >= 2) {
-												fetchEmailSuggestions(signersEmail);
-											}
-										}}
-										onBlur={() => {
-											// Delay hiding to allow click on suggestion
-											setTimeout(() => setShowEmailSuggestions(false), 200);
-										}}
-										className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" 
-										placeholder="signer@example.com"
-										autoFocus
-										autoComplete="off"
-									/>
-									
-									{/* Email Suggestions Dropdown */}
-									{showEmailSuggestions && emailSuggestions.length > 0 && (
-										<div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-y-auto">
-											{emailSuggestions.map((suggestion, index) => (
-												<button
-													key={index}
-													type="button"
-													onClick={() => selectEmailSuggestion(suggestion.email)}
-													className="w-full px-4 py-3 text-left hover:bg-teal-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-start gap-3"
-												>
-													<div className="flex-shrink-0 w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-														{suggestion.email.charAt(0).toUpperCase()}
-													</div>
-													<div className="flex-1 min-w-0">
-														<div className="font-medium text-gray-900 truncate">
-															{suggestion.email}
-														</div>
-														<div className="text-xs text-gray-500 mt-0.5 flex items-center gap-2 flex-wrap">
-															<span className="flex items-center gap-1">
-																<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-																</svg>
-																{suggestion.count} {suggestion.count === 1 ? 'NDA' : 'NDAs'}
-															</span>
-															{suggestion.hasSignedBefore && (
-																<span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-																	<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-																	</svg>
-																	Signed before
-																</span>
-															)}
-														</div>
-														{suggestion.recentNda && (
-															<div className="text-xs text-gray-400 mt-1 truncate">
-																Recent: {suggestion.recentNda}
-															</div>
-														)}
-													</div>
-												</button>
-											))}
-										</div>
-									)}
-									
-									{loadingSuggestions && (
-										<div className="absolute right-3 top-1/2 -translate-y-1/2">
-											<svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-											</svg>
-										</div>
-									)}
-								</div>
-								<p className="mt-2 text-xs text-gray-500">The recipient will receive an email with a link to sign the document</p>
-							</div>
-							<div className="flex gap-3 justify-end">
-								<button 
-									onClick={() => setShowSendModal(false)} 
-									className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200"
-								>
-									Cancel
-								</button>
-								<button 
-									onClick={sendForSignature} 
-									disabled={sendingForSignature || !signersEmail} 
-									className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
-										sendingForSignature || !signersEmail
-											? 'bg-gray-400 text-white cursor-not-allowed' 
-											: 'bg-teal-600 text-white hover:bg-teal-700 shadow-sm'
-									}`}
-								>
-									{sendingForSignature ? (
-										<>
-											<svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-											</svg>
-											Sending...
-										</>
-									) : (
-										<>
-											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-											</svg>
-											{hasEmptyPartyBFields() ? "Send to Party B" : "Continue to Sign"}
-										</>
-									)}
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* Save Confirmation Modal */}
-			{showSaveConfirmModal && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
-					<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-						<div className="bg-gray-50 p-6 border-b border-gray-200">
-							<div className="flex items-center gap-3 mb-2">
-								<div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-									<svg className="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-									</svg>
-								</div>
-								<div className="flex-1">
-									<h2 className="text-xl font-bold text-gray-800">Save Changes?</h2>
-									<p className="text-sm text-gray-600">This will overwrite existing data</p>
-								</div>
-								<button 
-									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg" 
-									onClick={() => setShowSaveConfirmModal(false)} 
-									aria-label="Close modal"
-								>
-									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-									</svg>
-								</button>
-							</div>
-						</div>
-						<div className="p-6">
-							<div className="mb-6">
-								<p className="text-gray-700 mb-2">
-									Are you sure you want to save changes? This will overwrite the saved data for:
-								</p>
-								<div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-									<p className="font-semibold text-gray-900">{values.docName || "Untitled NDA"}</p>
-								</div>
-								<p className="mt-3 text-sm text-gray-500">
-									This action cannot be undone. The previous version will be permanently replaced.
-								</p>
-							</div>
-							<div className="flex gap-3 justify-end">
-								<button 
-									onClick={() => setShowSaveConfirmModal(false)} 
-									className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200"
-								>
-									Cancel
-								</button>
-								<button 
-									onClick={performSave} 
-									disabled={saving} 
-									className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
-										saving
-											? 'bg-gray-400 text-white cursor-not-allowed' 
-											: 'bg-teal-600 text-white hover:bg-teal-700 shadow-sm'
-									}`}
-								>
-									{saving ? (
-										<>
-											<svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-											</svg>
-											Saving...
-										</>
-									) : (
-										<>
-											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-											</svg>
-											Save Changes
-										</>
-									)}
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* Shareable Link Modal */}
-			{showShareLinkModal && (
-				<div 
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
-					onClick={(e) => {
-						// Close modal when clicking on backdrop
-						if (e.target === e.currentTarget) {
-							setShowShareLinkModal(false);
-							router.push("/mydrafts");
-						}
-					}}
-				>
-					<div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden relative">
-						{/* Close X Button - Top Right - HIGHLY VISIBLE */}
-						<button 
-							className="absolute top-3 right-3 z-50 bg-red-500 text-white hover:bg-red-600 transition-all p-2.5 rounded-full shadow-xl border-2 border-white hover:scale-110" 
-							onClick={() => {
+				{/* Shareable Link Modal */}
+				{showShareLinkModal && (
+					<div
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						onClick={(e) => {
+							// Close modal when clicking on backdrop
+							if (e.target === e.currentTarget) {
 								setShowShareLinkModal(false);
 								router.push("/mydrafts");
-							}} 
-							aria-label="Close modal"
-							title="Close"
-						>
-							<svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-								<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-							</svg>
-						</button>
-						
-						<div className="bg-gray-50 p-6 border-b border-gray-200">
-							<div className="flex items-center gap-3 mb-2">
-								<div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
-									<svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-								</div>
-								<div className="flex-1">
-									<h2 className="text-xl font-bold text-gray-800">NDA Ready to Share!</h2>
-									<p className="text-sm text-gray-600">Share this link with the recipient</p>
-								</div>
-							</div>
-						</div>
-						<div className="p-6">
-							{/* Email Sent Success Message */}
-							<div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-								<svg className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+							}
+						}}
+					>
+						<div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden relative">
+							{/* Close X Button - Top Right - HIGHLY VISIBLE */}
+							<button
+								className="absolute top-3 right-3 z-50 bg-red-500 text-white hover:bg-red-600 transition-all p-2.5 rounded-full shadow-xl border-2 border-white hover:scale-110"
+								onClick={() => {
+									setShowShareLinkModal(false);
+									router.push("/mydrafts");
+								}}
+								aria-label="Close modal"
+								title="Close"
+							>
+								<svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+									<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
 								</svg>
-								<div>
-									<p className="font-semibold text-green-800 mb-1">✅ NDA Ready to Share!</p>
-									<p className="text-sm text-green-700">Share the link below with <strong>{signersEmail}</strong> to review and sign.</p>
+							</button>
+
+							<div className="bg-gray-50 p-6 border-b border-gray-200">
+								<div className="flex items-center gap-3 mb-2">
+									<div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+										<svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+										</svg>
+									</div>
+									<div className="flex-1">
+										<h2 className="text-xl font-bold text-gray-800">NDA Ready to Share!</h2>
+										<p className="text-sm text-gray-600">Share this link with the recipient</p>
+									</div>
 								</div>
 							</div>
-							
-							<div className="mb-6">
-								<p className="text-gray-700 mb-4">
-									The recipient can use this link to review, fill their details, make changes if needed, and sign the NDA.
-								</p>
-								
-								{/* Shareable Link */}
-								<div className="bg-gray-50 rounded-lg p-4 border-2 border-teal-200">
-									<label className="block text-sm font-semibold text-gray-700 mb-2">Shareable Link</label>
-									<div className="flex gap-2">
-										<input 
-											type="text"
-											value={shareableLink}
-											readOnly
-											className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg font-mono text-sm text-gray-700"
-											onClick={(e) => e.currentTarget.select()}
-										/>
-										<button
-											onClick={() => {
-												navigator.clipboard.writeText(shareableLink);
-												setWarning("Link copied to clipboard!");
-												setTimeout(() => setWarning(""), 2000);
-											}}
-											className="px-4 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center gap-2"
-										>
-											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-											</svg>
-											Copy
-										</button>
+							<div className="p-6">
+								{/* Email Sent Success Message */}
+								<div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+									<svg className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+									</svg>
+									<div>
+										<p className="font-semibold text-green-800 mb-1">✅ NDA Ready to Share!</p>
+										<p className="text-sm text-green-700">Share the link below with <strong>{signersEmail}</strong> to review and sign.</p>
 									</div>
 								</div>
 
-								{/* Share Options */}
-								<div className="mt-6">
-									<p className="text-sm font-semibold text-gray-700 mb-3">Or share via:</p>
-									<div className="grid grid-cols-2 gap-3">
-										<a
-											href={`mailto:${signersEmail}?subject=Please review and sign our NDA&body=Hi,%0D%0A%0D%0APlease review and sign our Non-Disclosure Agreement using this link:%0D%0A${encodeURIComponent(shareableLink)}%0D%0A%0D%0AYou can review all details, make changes if needed, and sign electronically.%0D%0A%0D%0AThank you!`}
-											className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300"
-										>
-											<svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-											</svg>
-											<span className="font-medium text-gray-700">Email</span>
-										</a>
-										<a
-											href={`https://wa.me/?text=${encodeURIComponent(`Please review and sign our NDA: ${shareableLink}`)}`}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="flex items-center justify-center gap-2 px-4 py-3 bg-green-100 hover:bg-green-200 rounded-lg transition-colors border border-green-300"
-										>
-											<svg className="w-5 h-5 text-green-700" fill="currentColor" viewBox="0 0 24 24">
-												<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-											</svg>
-											<span className="font-medium text-green-700">WhatsApp</span>
-										</a>
-										<a
-											href={`https://t.me/share/url?url=${encodeURIComponent(shareableLink)}&text=${encodeURIComponent('Please review and sign our NDA')}`}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="flex items-center justify-center gap-2 px-4 py-3 bg-teal-100 hover:bg-blue-200 rounded-lg transition-colors border border-blue-300"
-										>
-											<svg className="w-5 h-5 text-teal-700" fill="currentColor" viewBox="0 0 24 24">
-												<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-											</svg>
-											<span className="font-medium text-teal-700">Telegram</span>
-										</a>
-										<button
-											onClick={() => {
-												const shareData = {
-													title: 'NDA Signature Request',
-													text: 'Please review and sign our NDA',
-													url: shareableLink
-												};
-												if (navigator.share) {
-													navigator.share(shareData).catch(() => {});
-												} else {
+								<div className="mb-6">
+									<p className="text-gray-700 mb-4">
+										The recipient can use this link to review, fill their details, make changes if needed, and sign the NDA.
+									</p>
+
+									{/* Shareable Link */}
+									<div className="bg-gray-50 rounded-lg p-4 border-2 border-teal-200">
+										<label className="block text-sm font-semibold text-gray-700 mb-2">Shareable Link</label>
+										<div className="flex gap-2">
+											<input
+												type="text"
+												value={shareableLink}
+												readOnly
+												className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg font-mono text-sm text-gray-700"
+												onClick={(e) => e.currentTarget.select()}
+											/>
+											<button
+												onClick={() => {
 													navigator.clipboard.writeText(shareableLink);
-													setWarning("Link copied!");
+													setWarning("Link copied to clipboard!");
 													setTimeout(() => setWarning(""), 2000);
-												}
-											}}
-											className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors border border-purple-300"
-										>
-											<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-											</svg>
-											<span className="font-medium text-teal-700">More</span>
-										</button>
+												}}
+												className="px-4 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center gap-2"
+											>
+												<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+												</svg>
+												Copy
+											</button>
+										</div>
 									</div>
-								</div>
 
-								<div className="mt-6 p-4 bg-teal-50 rounded-lg border border-teal-200">
-									<div className="flex gap-3">
-										<svg className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-										</svg>
-										<div className="text-sm text-blue-800">
-											<p className="font-semibold mb-1">What the recipient can do:</p>
-											<ul className="list-disc list-inside space-y-1 text-teal-700">
-												<li>Review all NDA terms and details</li>
-												<li>Fill in their party information</li>
-												<li>Make changes or suggestions to any fields</li>
-												<li>Sign electronically when ready</li>
-											</ul>
+									{/* Share Options */}
+									<div className="mt-6">
+										<p className="text-sm font-semibold text-gray-700 mb-3">Or share via:</p>
+										<div className="grid grid-cols-2 gap-3">
+											<a
+												href={`mailto:${signersEmail}?subject=Please review and sign our NDA&body=Hi,%0D%0A%0D%0APlease review and sign our Non-Disclosure Agreement using this link:%0D%0A${encodeURIComponent(shareableLink)}%0D%0A%0D%0AYou can review all details, make changes if needed, and sign electronically.%0D%0A%0D%0AThank you!`}
+												className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300"
+											>
+												<svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+												</svg>
+												<span className="font-medium text-gray-700">Email</span>
+											</a>
+											<a
+												href={`https://wa.me/?text=${encodeURIComponent(`Please review and sign our NDA: ${shareableLink}`)}`}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="flex items-center justify-center gap-2 px-4 py-3 bg-green-100 hover:bg-green-200 rounded-lg transition-colors border border-green-300"
+											>
+												<svg className="w-5 h-5 text-green-700" fill="currentColor" viewBox="0 0 24 24">
+													<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+												</svg>
+												<span className="font-medium text-green-700">WhatsApp</span>
+											</a>
+											<a
+												href={`https://t.me/share/url?url=${encodeURIComponent(shareableLink)}&text=${encodeURIComponent('Please review and sign our NDA')}`}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="flex items-center justify-center gap-2 px-4 py-3 bg-teal-100 hover:bg-blue-200 rounded-lg transition-colors border border-blue-300"
+											>
+												<svg className="w-5 h-5 text-teal-700" fill="currentColor" viewBox="0 0 24 24">
+													<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z" />
+												</svg>
+												<span className="font-medium text-teal-700">Telegram</span>
+											</a>
+											<button
+												onClick={() => {
+													const shareData = {
+														title: 'NDA Signature Request',
+														text: 'Please review and sign our NDA',
+														url: shareableLink
+													};
+													if (navigator.share) {
+														navigator.share(shareData).catch(() => { });
+													} else {
+														navigator.clipboard.writeText(shareableLink);
+														setWarning("Link copied!");
+														setTimeout(() => setWarning(""), 2000);
+													}
+												}}
+												className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors border border-purple-300"
+											>
+												<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+												</svg>
+												<span className="font-medium text-teal-700">More</span>
+											</button>
+										</div>
+									</div>
+
+									<div className="mt-6 p-4 bg-teal-50 rounded-lg border border-teal-200">
+										<div className="flex gap-3">
+											<svg className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+											</svg>
+											<div className="text-sm text-blue-800">
+												<p className="font-semibold mb-1">What the recipient can do:</p>
+												<ul className="list-disc list-inside space-y-1 text-teal-700">
+													<li>Review all NDA terms and details</li>
+													<li>Fill in their party information</li>
+													<li>Make changes or suggestions to any fields</li>
+													<li>Sign electronically when ready</li>
+												</ul>
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
-							
-							<div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
-								<button 
-									onClick={() => {
-										setShowShareLinkModal(false);
-										router.push("/mydrafts");
-									}} 
-									className="px-8 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-sm flex items-center gap-2"
-								>
-									<span>Close & Go to My Drafts</span>
-									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-									</svg>
-								</button>
+
+								<div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+									<button
+										onClick={() => {
+											setShowShareLinkModal(false);
+											router.push("/mydrafts");
+										}}
+										className="px-8 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-sm flex items-center gap-2"
+									>
+										<span>Close & Go to My Drafts</span>
+										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+										</svg>
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			)}
+				)}
 
-			{/* Exit Warning Modal */}
-			{showExitWarningModal && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
-					<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-						<div className="bg-gray-50 p-6 border-b border-gray-200">
-							<div className="flex items-center gap-3 mb-2">
-								<div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-									<svg className="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-									</svg>
+				{/* Exit Warning Modal */}
+
+
+				{/* PDF Preview Modal (fallback for blocked popups) */}
+				{showPdfPreview && pdfPreviewUrl && (
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
+						<div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full relative flex flex-col overflow-hidden" style={{ height: '90vh' }}>
+							<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
+								<div className="flex items-center gap-3">
+									<div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+										<svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+										</svg>
+									</div>
+									<div>
+										<h3 className="font-semibold text-gray-900 text-lg">PDF Preview</h3>
+										<p className="text-xs text-gray-600">Generated NDA document</p>
+									</div>
 								</div>
-								<div className="flex-1">
-									<h2 className="text-xl font-bold text-gray-800">Save Changes?</h2>
-									<p className="text-sm text-gray-600">You have unsaved changes</p>
-								</div>
-								<button 
-									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg" 
-									onClick={() => setShowExitWarningModal(false)} 
-									aria-label="Close modal"
+								<button
+									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg"
+									onClick={() => {
+										setShowPdfPreview(false);
+										setPdfPreviewUrl('');
+									}}
+									aria-label="Close preview"
 								>
 									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 									</svg>
 								</button>
 							</div>
-						</div>
-						<div className="p-6">
-							<div className="mb-6">
-								<p className="text-gray-700 mb-3">
-									Are you sure you want to exit? Any unsaved data will be deleted.
-								</p>
-								<div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-									<p className="text-sm text-orange-800">
-										<strong>Warning:</strong> All your changes will be lost if you don&apos;t save them first.
-									</p>
-								</div>
-							</div>
-							<div className="flex gap-3 justify-end flex-wrap">
-								<button 
-									onClick={() => setShowExitWarningModal(false)} 
-									className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200"
-								>
-									Stay & Continue Editing
-								</button>
-								<button 
-									onClick={async () => {
-										setShowExitWarningModal(false);
-										await saveDraft();
-										setTimeout(() => router.push('/dashboard'), 500);
-									}} 
-									className="px-5 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-all duration-200 flex items-center gap-2"
-								>
-									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-									</svg>
-									Save & Exit
-								</button>
-								<button 
-									onClick={() => {
-										setShowExitWarningModal(false);
-										router.push('/dashboard');
-									}} 
-									className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all duration-200 flex items-center gap-2"
-								>
-									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-									</svg>
-									Exit Without Saving
-								</button>
+							<div className="flex-1 overflow-hidden bg-gray-100">
+								<iframe
+									src={pdfPreviewUrl}
+									className="w-full h-full border-0"
+									title="PDF Preview"
+								/>
 							</div>
 						</div>
 					</div>
-				</div>
-			)}
-
-			{/* PDF Preview Modal (fallback for blocked popups) */}
-			{showPdfPreview && pdfPreviewUrl && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
-					<div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full relative flex flex-col overflow-hidden" style={{ height: '90vh' }}>
-						<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
-							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-									<svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-									</svg>
-								</div>
-								<div>
-									<h3 className="font-semibold text-gray-900 text-lg">PDF Preview</h3>
-									<p className="text-xs text-gray-600">Generated NDA document</p>
-								</div>
-							</div>
-							<button 
-								className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg" 
-								onClick={() => {
-									setShowPdfPreview(false);
-									setPdfPreviewUrl('');
-								}} 
-								aria-label="Close preview"
-							>
-								<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-								</svg>
-							</button>
-						</div>
-						<div className="flex-1 overflow-hidden bg-gray-100">
-							<iframe
-								src={pdfPreviewUrl}
-								className="w-full h-full border-0"
-								title="PDF Preview"
-							/>
-						</div>
-					</div>
-				</div>
-			)}
+				)}
+			</div>
 		</div>
 	);
 }

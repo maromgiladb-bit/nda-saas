@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  serverExternalPackages: ['docusign-esign'],
   webpack: (config, { isServer }) => {
     // Exclude docusign-esign from client-side bundle
     if (!isServer) {

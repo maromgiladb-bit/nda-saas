@@ -1,32 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { PrismaClient } from '@/generated/prisma';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // GET - Retrieve company profile
 export async function GET() {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find the user in our database
-    const user = await prisma.users.findUnique({
-      where: { external_id: userId }
+    // Find the user and their organization
+    const user = await prisma.user.findUnique({
+      where: { externalId: userId },
+      include: { memberships: true }
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get company profile for this user
-    const profile = await prisma.company_profile.findFirst({
+    // Assuming single organization for now or taking the first one
+    const membership = user.memberships[0];
+    if (!membership) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 404 });
+    }
+
+    // Get company profile for this organization
+    const profile = await prisma.companyProfile.findUnique({
       where: {
-        userid: user.id,
-        isdefault: true
+        organizationId: membership.organizationId
       }
     });
 
@@ -48,81 +52,82 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const data = await request.json();
-    
-    // Find the user in our database
-    const user = await prisma.users.findUnique({
-      where: { external_id: userId }
+
+    // Find the user and their organization
+    const user = await prisma.user.findUnique({
+      where: { externalId: userId },
+      include: { memberships: true }
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    const membership = user.memberships[0];
+    if (!membership) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 404 });
+    }
+
     // Check if profile exists
-    const existingProfile = await prisma.company_profile.findFirst({
+    const existingProfile = await prisma.companyProfile.findUnique({
       where: {
-        userid: user.id,
-        isdefault: true
+        organizationId: membership.organizationId
       }
     });
 
     let profile;
-    
+
     if (existingProfile) {
       // Update existing profile
-      profile = await prisma.company_profile.update({
+      profile = await prisma.companyProfile.update({
         where: { id: existingProfile.id },
         data: {
-          companyname: data.companyname,
+          companyName: data.companyname,
           email: data.email,
           phone: data.phone || null,
           website: data.website || null,
-          addressline1: data.addressline1,
-          addressline2: data.addressline2 || null,
+          address: data.addressline1,
+          addressLine2: data.addressline2 || null,
           city: data.city,
           state: data.state || null,
-          postalcode: data.postalcode || null,
+          zipCode: data.postalcode || null,
           country: data.country,
-          signatoryname: data.signatoryname,
-          signatorytitle: data.signatorytitle || null,
-          meta: data.meta || null,
-          updatedat: new Date()
+          signatoryName: data.signatoryname,
+          signatoryTitle: data.signatorytitle || null,
+          // meta: data.meta || null, // Removed as not in schema
         }
       });
     } else {
       // Create new profile
-      profile = await prisma.company_profile.create({
+      profile = await prisma.companyProfile.create({
         data: {
-          id: `${user.id}_default`,
-          userid: user.id,
-          companyname: data.companyname,
+          organizationId: membership.organizationId,
+          companyName: data.companyname,
           email: data.email,
           phone: data.phone || null,
           website: data.website || null,
-          addressline1: data.addressline1,
-          addressline2: data.addressline2 || null,
+          address: data.addressline1,
+          addressLine2: data.addressline2 || null,
           city: data.city,
           state: data.state || null,
-          postalcode: data.postalcode || null,
+          zipCode: data.postalcode || null,
           country: data.country,
-          signatoryname: data.signatoryname,
-          signatorytitle: data.signatorytitle || null,
-          meta: data.meta || null,
-          isdefault: true
+          signatoryName: data.signatoryname,
+          signatoryTitle: data.signatorytitle || null,
         }
       });
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       profile,
-      message: 'Company profile saved successfully' 
+      message: 'Company profile saved successfully'
     });
   } catch (error) {
     console.error('Error saving company profile:', error);

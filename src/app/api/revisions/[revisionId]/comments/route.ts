@@ -28,12 +28,12 @@ export async function POST(
     }
 
     // Get revision
-    const revision = await prisma.nda_revisions.findUnique({
+    const revision = await prisma.ndaRevision.findUnique({
       where: { id: revisionId },
       include: {
         draft: {
           include: {
-            users: true
+            createdBy: true
           }
         }
       }
@@ -44,13 +44,22 @@ export async function POST(
     }
 
     // Verify authorization (TODO: add proper token-based auth for recipient)
-    if (author === 'OWNER' && userId && revision.draft.users.external_id !== userId) {
+    if (author === 'OWNER' && userId && revision.draft.createdBy.externalId !== userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     // Get current comments
-    const currentComments = (revision.comments as Record<string, Array<{ author: string; text: string; ts: string }>>) || {}
-    const pathComments = currentComments[path] || []
+    const currentComments = (revision.content as any)?.comments || {} // Assuming comments are stored in content or a separate field?
+    // Wait, schema check: NdaRevision has `content Json`. It does NOT have `comments` field.
+    // Old schema had `comments Json?`.
+    // I need to adapt. Store comments in `content.comments`?
+    // Or did I miss `comments` field in NdaRevision?
+    // Prompt said: "NdaRevision: id, draftId, content, createdAt". No comments field.
+    // So I must store comments in `content`.
+
+    const revisionContent = (revision.content as Record<string, any>) || {}
+    const comments = revisionContent.comments || {}
+    const pathComments = comments[path] || []
 
     // Add new comment
     const newComment = {
@@ -59,13 +68,15 @@ export async function POST(
       ts: new Date().toISOString()
     }
     pathComments.push(newComment)
-    currentComments[path] = pathComments
+    comments[path] = pathComments
+
+    revisionContent.comments = comments
 
     // Update revision
-    await prisma.nda_revisions.update({
+    await prisma.ndaRevision.update({
       where: { id: revisionId },
       data: {
-        comments: currentComments
+        content: revisionContent
       }
     })
 
@@ -93,16 +104,17 @@ export async function GET(
     const path = url.searchParams.get('path')
 
     // Get revision
-    const revision = await prisma.nda_revisions.findUnique({
+    const revision = await prisma.ndaRevision.findUnique({
       where: { id: revisionId },
-      select: { comments: true }
+      select: { content: true }
     })
 
     if (!revision) {
       return NextResponse.json({ error: 'Revision not found' }, { status: 404 })
     }
 
-    const allComments = (revision.comments as Record<string, Array<{ author: string; text: string; ts: string }>>) || {}
+    const revisionContent = (revision.content as Record<string, any>) || {}
+    const allComments = revisionContent.comments || {}
 
     if (path) {
       return NextResponse.json({

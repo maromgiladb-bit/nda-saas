@@ -10,12 +10,22 @@ export default async function DashboardPage() {
     redirect('/');
   }
 
-  const user = await prisma.users.findUnique({
-    where: { external_id: userId },
+  const user = await prisma.user.findUnique({
+    where: { externalId: userId },
     include: {
-      nda_drafts: {
-        orderBy: { created_at: 'desc' },
+      createdDrafts: {
+        orderBy: { createdAt: 'desc' },
       },
+      signers: {
+        include: {
+          signRequest: {
+            include: {
+              draft: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }
     },
   });
 
@@ -23,53 +33,35 @@ export default async function DashboardPage() {
     redirect('/');
   }
 
-  // Get received NDAs (where user is a signer but not the creator)
-  const receivedNdasFromSigners = await prisma.signers.findMany({
-    where: {
-      user_id: user.id,
-      nda_drafts: {
-        created_by_id: {
-          not: user.id,
-        },
-      },
-    },
-    include: {
-      nda_drafts: true,
-    },
-    orderBy: {
-      created_at: 'desc',
-    },
-  });
-
   // Transform created/sent NDAs
-  const createdNdas = user.nda_drafts.map((draft) => {
-    const draftData = draft.data as Record<string, unknown>;
+  const createdNdas = user.createdDrafts.map((draft) => {
+    const draftData = draft.content as Record<string, unknown>;
     const partyBName = typeof draftData?.party_b_name === 'string' ? draftData.party_b_name : '';
     const partyAName = typeof draftData?.party_a_name === 'string' ? draftData.party_a_name : '';
-    
+
     return {
       id: draft.id,
       partyName: partyBName || partyAName || 'Untitled NDA',
       status: draft.status?.toLowerCase() || 'draft',
-      createdAt: draft.created_at || new Date(),
-      signedAt: draft.provisional_recipient_signed_at,
+      createdAt: draft.createdAt || new Date(),
+      signedAt: null, // Logic for signedAt needs to come from SignRequest if linked, but for draft list it's simple
       type: 'created' as const,
     };
   });
 
   // Transform received NDAs
-  const receivedNdas = receivedNdasFromSigners.map((signer) => {
-    const draft = signer.nda_drafts;
-    const draftData = draft.data as Record<string, unknown>;
+  const receivedNdas = user.signers.map((signer) => {
+    const draft = signer.signRequest.draft;
+    const draftData = draft.content as Record<string, unknown>;
     const partyBName = typeof draftData?.party_b_name === 'string' ? draftData.party_b_name : '';
     const partyAName = typeof draftData?.party_a_name === 'string' ? draftData.party_a_name : '';
-    
+
     return {
       id: draft.id,
       partyName: partyBName || partyAName || 'Untitled NDA',
-      status: draft.status?.toLowerCase() || 'draft',
-      createdAt: draft.created_at || new Date(),
-      signedAt: signer.signed_at,
+      status: signer.status?.toLowerCase() || 'pending',
+      createdAt: draft.createdAt || new Date(),
+      signedAt: signer.updatedAt, // Approximation
       type: 'received' as const,
     };
   });

@@ -11,24 +11,55 @@ export async function POST(request: NextRequest) {
 
     const { email } = await request.json()
 
-    // Check if user already exists
-    const existingUser = await prisma.users.findUnique({
-      where: { external_id: userId }
+    // 1. Find or Create User
+    let user = await prisma.user.findUnique({
+      where: { externalId: userId },
+      include: { memberships: true }
     })
 
-    if (existingUser) {
-      return NextResponse.json({ user: existingUser })
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          externalId: userId,
+          email: email
+        },
+        include: { memberships: true }
+      })
     }
 
-    // Create new user
-    const user = await prisma.users.create({
+    // 2. Check Memberships
+    if (user.memberships.length > 0) {
+      // User already has an organization, return user info
+      return NextResponse.json({ user })
+    }
+
+    // 3. Create Organization (if no memberships)
+    // Generate a slug from email (e.g., "john.doe" from "john.doe@example.com")
+    const name = email.split('@')[0]
+    let slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-')
+
+    // Ensure uniqueness (simple check, can be improved with loop if needed)
+    const existingOrg = await prisma.organization.findUnique({ where: { slug } })
+    if (existingOrg) {
+      slug = `${slug}-${Math.floor(Math.random() * 1000)}`
+    }
+
+    const org = await prisma.organization.create({
       data: {
-        external_id: userId,
-        email: email
+        name: name,
+        slug: slug,
+        ownerUserId: user.id,
+        memberships: {
+          create: {
+            userId: user.id,
+            role: 'OWNER'
+          }
+        }
       }
     })
 
-    return NextResponse.json({ user })
+    return NextResponse.json({ user, organization: org })
+
   } catch (error) {
     console.error('User sync error:', error)
     return NextResponse.json({ error: 'Failed to sync user' }, { status: 500 })
@@ -42,8 +73,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const user = await prisma.users.findUnique({
-      where: { external_id: userId }
+    const user = await prisma.user.findUnique({
+      where: { externalId: userId }
     })
 
     if (!user) {

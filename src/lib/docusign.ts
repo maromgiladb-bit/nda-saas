@@ -5,7 +5,7 @@ import path from "path";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let docusignModule: any = null;
 
-async function getDocuSignSDK() {
+export async function getDocuSignSDK() {
   if (!docusignModule) {
     docusignModule = await import("docusign-esign");
   }
@@ -31,7 +31,7 @@ export async function getDocuSignToken(): Promise<string> {
   // Generate new token
   try {
     const docusign = await getDocuSignSDK();
-    
+
     const IK = process.env.DOCUSIGN_INTEGRATION_KEY!;
     const USER_ID = process.env.DOCUSIGN_USER_ID!;
     const privateKeyPath = path.join(process.cwd(), "private.key");

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { SignatureBlock } from "@/components/SignatureBlock";
 import PDFPreview from "@/components/PDFPreview";
 
 export default function SignPage() {
@@ -54,17 +53,17 @@ export default function SignPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ htmlContent: ndaData.htmlContent }),
       })
-      .then(res => res.json())
-      .then(data => {
-        setPdfPreviewUrl(data.fileUrl);
-      })
-      .catch(error => {
-        console.error("Failed to generate PDF preview:", error);
-        alert("Could not generate PDF preview.");
-      })
-      .finally(() => {
-        setGeneratingPreview(false);
-      });
+        .then(res => res.json())
+        .then(data => {
+          setPdfPreviewUrl(data.fileUrl);
+        })
+        .catch(error => {
+          console.error("Failed to generate PDF preview:", error);
+          alert("Could not generate PDF preview.");
+        })
+        .finally(() => {
+          setGeneratingPreview(false);
+        });
     }
   }, [ndaData?.htmlContent]);
 
@@ -101,10 +100,10 @@ export default function SignPage() {
       if (!response.ok) throw new Error("Failed to save signatures");
 
       await response.json();
-      
+
       // Clear session storage
       sessionStorage.removeItem('ndaSignData');
-      
+
       alert("✅ Signatures saved! PDF generated with signature fields.");
       router.push(`/dashboard`);
     } catch (error) {
@@ -136,10 +135,10 @@ export default function SignPage() {
       if (!response.ok) throw new Error("Failed to send via DocuSign");
 
       const data = await response.json();
-      
+
       // Clear session storage
       sessionStorage.removeItem('ndaSignData');
-      
+
       alert(`✅ NDA sent via DocuSign!\n\nEnvelope ID: ${data.envelopeId}\n\nBoth parties will receive an email to sign.`);
       router.push(`/dashboard`);
     } catch (error) {
@@ -184,7 +183,7 @@ export default function SignPage() {
             {!signatureMethod && (
               <div className="space-y-5">
                 <h2 className="text-2xl font-bold mb-6 text-gray-900">Choose Your Signing Method</h2>
-                
+
                 {/* DocuSign Option */}
                 <button
                   onClick={() => setSignatureMethod("docusign")}
@@ -274,7 +273,7 @@ export default function SignPage() {
                   <p className="text-teal-800 mb-6 leading-relaxed">
                     Both you and Party B will receive an email with instructions to sign electronically.
                   </p>
-                  
+
                   <div className="bg-white rounded-lg p-5 mb-6 border border-teal-200 shadow-sm">
                     <p className="text-sm font-semibold text-gray-700 mb-3">Party B will receive:</p>
                     <ul className="text-sm text-gray-600 space-y-2">
@@ -337,7 +336,7 @@ export default function SignPage() {
                   <p className="text-gray-700 mb-6 leading-relaxed">
                     Enter your signature information. Party B will fill theirs later.
                   </p>
-                  
+
                   {/* Party A Only */}
                   <div className="bg-white border-2 border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
                     <h3 className="font-bold mb-4 text-gray-800 text-lg">Party A Signature (You)</h3>
@@ -430,7 +429,7 @@ export default function SignPage() {
                 </svg>
                 <span className="text-lg font-semibold text-gray-800">PDF Preview</span>
               </div>
-              
+
               {/* Document Content */}
               <div className="flex-1 overflow-hidden">
                 {generatingPreview ? (

@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user to verify ownership
-    const user = await prisma.users.findUnique({
-      where: { external_id: userId }
+    const user = await prisma.user.findUnique({
+      where: { externalId: userId }
     })
 
     if (!user) {
@@ -40,46 +40,46 @@ export async function POST(request: NextRequest) {
     }
 
     // Update draft status to SENT
-    const draft = await prisma.nda_drafts.update({
-      where: { 
+    const draft = await prisma.ndaDraft.update({
+      where: {
         id: draftId,
-        created_by_id: user.id
+        createdByUserId: user.id
       },
       data: { status: 'SENT' }
     })
 
-    // Create signer record
-    const signer = await prisma.signers.create({
+    // Create sign request
+    const token = randomBytes(32).toString('hex')
+    // const expiresAt = new Date()
+    // expiresAt.setDate(expiresAt.getDate() + 30) // 30 days
+
+    const signRequest = await prisma.signRequest.create({
       data: {
-        draft_id: draftId,
+        organizationId: draft.organizationId,
+        draftId: draftId,
+        createdByUserId: user.id,
+        status: 'SENT',
+      }
+    })
+
+    // Create signer record
+    const signer = await prisma.signer.create({
+      data: {
+        signRequestId: signRequest.id,
         email: signerEmail,
-        role: signerRole || 'Party B',
+        role: 'SIGNER', // Default role mapping needed if 'Party B' passed
         status: 'PENDING'
       }
     })
 
-    // Create sign request - temporarily without scope until Prisma regenerates
-    const token = randomBytes(32).toString('hex')
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 30) // 30 days
-
-    await prisma.sign_requests.create({
-      data: {
-        signer_id: signer.id,
-        token: token,
-        scope: 'REVIEW', // Allow Party B to review, edit, and sign
-        expires_at: expiresAt
-      }
-    })
-
     // Create audit event
-    await prisma.audit_events.create({
+    await prisma.auditEvent.create({
       data: {
-        organization_id: draft.organization_id,
-        draft_id: draft.id,
-        actor_user_id: user.id,
-        type: 'NDA_SENT',
-        meta: {
+        organizationId: draft.organizationId,
+        draftId: draft.id,
+        userId: user.id,
+        eventType: 'SENT',
+        metadata: {
           recipient_email: signerEmail,
           recipient_role: signerRole || 'Party B'
         }
@@ -91,22 +91,22 @@ export async function POST(request: NextRequest) {
     console.log('📧 Preparing to send email to:', signerEmail)
     console.log('📧 Review link:', signLink)
     console.log('📧 Draft title:', draft.title)
-    
+
     try {
       // Generate PDF snapshot of current draft
       console.log('📄 Generating PDF attachment...')
-      const formData = (draft.data as Record<string, unknown>) || {}
+      const formData = (draft.content as Record<string, unknown>) || {}
       const html = await renderNdaHtml(formData)
       const pdfBuffer = await htmlToPdf(html)
       const pdfBase64 = pdfBuffer.toString('base64')
-      
+
       console.log('📄 PDF generated, size:', pdfBuffer.length, 'bytes')
 
       await sendEmail({
         to: signerEmail,
         subject: `Please review & sign your NDA – ${draft.title || 'NDA'}`,
         html: recipientEditEmailHtml(
-          draft.title || 'Untitled NDA', 
+          draft.title || 'Untitled NDA',
           signLink,
           'Please review the attached NDA document. Click the link below to access the agreement, review your information, and sign the document. No account required.'
         ),
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if email fails, but log it
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       draft,
       signer,
@@ -134,8 +134,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Send for signature error:', error)
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to send for signature' 
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Failed to send for signature'
     }, { status: 500 })
   }
 }

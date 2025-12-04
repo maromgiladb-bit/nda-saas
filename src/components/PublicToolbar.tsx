@@ -5,60 +5,73 @@ import Image from 'next/image'
 import { useAuth, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { useState } from 'react'
 
-export default function PublicToolbar() {
+interface PublicToolbarProps {
+  onLinkClick?: (e: React.MouseEvent) => void;
+}
+
+export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
   const { userId } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Don't show public toolbar if user is signed in
   if (userId) return null
 
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (onLinkClick) {
+      onLinkClick(e);
+    }
+    if (!e.defaultPrevented) {
+      setIsMobileMenuOpen(false);
+    }
+  }
+
   return (
-    <nav className="bg-white shadow-md border-b-2 border-gray-200 sticky top-0 z-50">
+    <nav className="bg-white shadow-md border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0">
+            <Link href="/" className="flex-shrink-0" onClick={onLinkClick}>
               <div className="flex items-center">
-                <Image 
-                  src="/agreedo-logo.png" 
-                  alt="Agreedo" 
-                  width={200} 
+                <Image
+                  src="/agreedo-logo.png"
+                  alt="Agreedo"
+                  width={200}
                   height={50}
                   className="h-30 w-auto"
                   priority
                 />
               </div>
             </Link>
-            
+
             {/* Desktop Navigation */}
             <div className="hidden md:ml-8 md:flex md:space-x-2">
-              <Link href="/" className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 text-sm font-semibold transition-all">
+              <Link href="/" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)] text-sm font-semibold transition-all">
                 Home
               </Link>
-              <Link href="/about" className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 text-sm font-semibold transition-all">
+              <Link href="/about" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)] text-sm font-semibold transition-all">
                 About
               </Link>
-              <Link href="/plans" className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 text-sm font-semibold transition-all">
+              <Link href="/plans" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)] text-sm font-semibold transition-all">
                 Plans
               </Link>
-              <Link href="/contact" className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 text-sm font-semibold transition-all">
+              <Link href="/contact" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)] text-sm font-semibold transition-all">
                 Contact
               </Link>
             </div>
           </div>
-          
+
           {/* Desktop Buttons */}
           <div className="hidden md:flex items-center space-x-3">
             <SignInButton mode="modal">
-              <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 text-sm font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all">
+              <button className="inline-flex items-center px-5 py-2.5 border border-gray-200 text-sm font-semibold rounded-lg text-[var(--navy-700)] bg-white hover:bg-gray-50 hover:border-gray-300 transition-all">
                 Sign In
               </button>
             </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all">
-                  Get Started →
-                </button>
-              </SignUpButton>
+            <SignUpButton mode="modal">
+              <button className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-[var(--teal-600)] hover:bg-[var(--teal-700)] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                Get Started →
+              </button>
+            </SignUpButton>
           </div>
 
           {/* Mobile menu button */}
@@ -90,28 +103,28 @@ export default function PublicToolbar() {
             <Link
               href="/"
               className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={handleLinkClick}
             >
               Home
             </Link>
             <Link
               href="/about"
               className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={handleLinkClick}
             >
               About
             </Link>
             <Link
               href="/plans"
               className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={handleLinkClick}
             >
               Plans
             </Link>
             <Link
               href="/contact"
               className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={handleLinkClick}
             >
               Contact
             </Link>
@@ -119,21 +132,21 @@ export default function PublicToolbar() {
           <div className="pt-4 pb-4 border-t-2 border-gray-200">
             <div className="px-4 space-y-2">
               <SignInButton mode="modal">
-                <button 
+                <button
                   className="w-full flex items-center justify-center px-5 py-3 border border-gray-300 text-base font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
                 </button>
               </SignInButton>
-                <SignUpButton mode="modal">
-                  <button 
-                    className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Get Started →
-                  </button>
-                </SignUpButton>
+              <SignUpButton mode="modal">
+                <button
+                  className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Get Started →
+                </button>
+              </SignUpButton>
             </div>
           </div>
         </div>
