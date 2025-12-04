@@ -22,6 +22,7 @@
     "handlebars": "^4.7.8",
     "jsdom": "^27.2.0",
     "jsondiffpatch": "^0.7.3",
+    "mammoth": "^1.8.0",
     "lucide-react": "^0.554.0",
     "next": "15.5.4",
     "openai": "^6.9.1",

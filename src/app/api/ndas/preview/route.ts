@@ -30,25 +30,36 @@ export async function POST(request: NextRequest) {
       // Load from database (only works with authenticated users)
       if (!userId) {
         return NextResponse.json({
-          error: 'Authentication required to load drafts',
-          formData = (draft.content as Record<string, unknown>) || {}
+          error: 'Authentication required to load drafts'
+        }, { status: 401 })
+      }
+
+      const draft = await prisma.nDA.findFirst({
+        where: { id: body.draftId, userId }
+      })
+
+      if (!draft) {
+        return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+      }
+
+      formData = (draft.content as Record<string, unknown>) || {}
 
       // Allow template override from request even when loading from draft
-      if(body.templateId) {
-          templateId = body.templateId
-          console.log('📋 Using templateId from request (with draftId):', templateId)
-        }
-      } else {
-        // Use provided data directly
-        formData = { ...body }
-        delete formData.draftId // Clean up if present
-        // Allow template override from request
-        if (body.templateId) {
-          templateId = body.templateId
-          delete formData.templateId // Remove from formData to avoid confusion
-          console.log('📋 Using templateId from request:', templateId)
-        }
+      if (body.templateId) {
+        templateId = body.templateId
+        console.log('📋 Using templateId from request (with draftId):', templateId)
       }
+    } else {
+      // Use provided data directly
+      formData = { ...body }
+      delete formData.draftId // Clean up if present
+      // Allow template override from request
+      if (body.templateId) {
+        templateId = body.templateId
+        delete formData.templateId // Remove from formData to avoid confusion
+        console.log('📋 Using templateId from request:', templateId)
+      }
+    }
 
       // Process "ask receiver to fill" placeholders
       const processedData = { ...formData }
