@@ -49,3 +49,11 @@ next-env.d.ts
 /.clerk/
 
 /src/generated/prisma
+
+# Cleanup files
+node_modules_trash/
+*.log
+tsc_*.log
+tsc_*.txt
+prisma_error*.log
+test-prisma.ts
