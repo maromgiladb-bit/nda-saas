@@ -5,6 +5,8 @@ import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import Image from "next/image";
 import PublicToolbar from "@/components/PublicToolbar";
 
+export const dynamic = 'force-dynamic';
+
 interface Template {
   id: string;
   name: string;

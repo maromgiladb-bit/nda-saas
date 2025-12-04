@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 const PDF_PATH = "/pdfs/mutual-nda-v3-fillable.pdf";
 const viewerSrc = `/pdfjs/web/viewer.html?file=${encodeURIComponent(PDF_PATH)}`;
 

@@ -6,6 +6,8 @@ import PublicToolbar from "@/components/PublicToolbar";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
 
+export const dynamic = 'force-dynamic';
+
 type FormValues = {
 	docName: string;
 	effective_date: string;

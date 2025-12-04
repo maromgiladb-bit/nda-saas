@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+export const dynamic = 'force-dynamic';
 import { Cedarville_Cursive } from 'next/font/google';
 import PrivateToolbar from "@/components/PrivateToolbar";
 

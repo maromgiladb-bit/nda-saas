@@ -1,8 +1,10 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function PreviewTemplatePage() {
+export const dynamic = 'force-dynamic';
+
+function PreviewTemplateContent() {
   const searchParams = useSearchParams();
   const templateId = searchParams.get('template') || 'design_mutual_nda_v1';
   const [html, setHtml] = useState('');
@@ -166,5 +168,13 @@ export default function PreviewTemplatePage() {
         </ul>
       </div>
     </div>
+  );
+}
+
+export default function PreviewTemplatePage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading...</div>}>
+      <PreviewTemplateContent />
+    </Suspense>
   );
 }

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { sendEmail, getAppUrl } from "@/lib/email";
 import { renderNdaHtml } from "@/lib/renderNdaHtml";
 import { htmlToPdf } from "@/lib/htmlToPdf";
 import { randomBytes } from "crypto";
-
-const prisma = new PrismaClient();
 
 export async function POST(
 	request: NextRequest,
