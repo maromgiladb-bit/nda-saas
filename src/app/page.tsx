@@ -35,12 +35,6 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      router.push("/dashboard");
-    }
-  }, [isLoaded, isSignedIn, router]);
-
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">

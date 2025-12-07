@@ -37,7 +37,7 @@ export default function SignUpPage() {
         <div className="bg-white py-8 px-6 shadow rounded-lg">
           <SignUp 
             routing="hash"
-            redirectUrl="/dashboard"
+            redirectUrl="/"
             appearance={{
               elements: {
                 footerAction: { display: 'none' },

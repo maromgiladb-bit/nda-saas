@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import DashboardClient from '@/components/dashboard/DashboardClient';
 
@@ -10,7 +10,7 @@ export default async function DashboardPage() {
     redirect('/');
   }
 
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { externalId: userId },
     include: {
       createdDrafts: {
@@ -30,7 +30,24 @@ export default async function DashboardPage() {
   });
 
   if (!user) {
-    redirect('/');
+    // If auth exists but checking DB failed to find user, try to sync/create
+    const { email } = await currentUser().then(u => ({ email: u?.emailAddresses[0]?.emailAddress }));
+
+    if (email) {
+      user = await prisma.user.create({
+        data: {
+          externalId: userId,
+          email: email
+        },
+        include: {
+          createdDrafts: { orderBy: { createdAt: 'desc' } },
+          signers: { include: { signRequest: { include: { draft: true } } }, orderBy: { createdAt: 'desc' } }
+        }
+      });
+    } else {
+      // connecting issues or no email
+      redirect('/');
+    }
   }
 
   // Transform created/sent NDAs

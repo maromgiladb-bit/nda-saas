@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import ToolbarSwitcher from '@/components/ToolbarSwitcher'
-import Footer from '@/components/Footer'
+import FooterWrapper from '@/components/FooterWrapper'
 import './globals.css'
 
 const geistSans = Geist({
@@ -33,7 +33,7 @@ export default function RootLayout({
           <div className="flex-1">
             {children}
           </div>
-          <Footer />
+          <FooterWrapper />
         </body>
       </html>
     </ClerkProvider>

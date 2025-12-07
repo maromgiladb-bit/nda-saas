@@ -1,35 +1,32 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 
-// Define public routes (routes that don't require authentication)
+// 1. Define public routes
+// Explicitly include /coming-soon and sign-in/up routes if they exist, 
+// though strictly speaking user asked only for /coming-soon. 
+// Adding sign-in/up to matcher prevents redirect loops if Clerk redirects there.
 const isPublicRoute = createRouteMatcher([
-  '/coming-soon',         // Coming soon page
-  '/api/access-check',    // Password check API
+  '/coming-soon',
+  '/sign-in(.*)',
+  '/sign-up(.*)'
 ])
 
-// Protect everything except public routes
-export default clerkMiddleware(async (auth, req: NextRequest) => {
-  // Check if user has access via cookie
-  const hasAccess = req.cookies.get('site-access')?.value === 'granted'
-  
-  // Allow public routes
-  if (isPublicRoute(req)) {
-    return NextResponse.next()
-  }
-  
-  // If no access cookie, redirect to coming soon
-  if (!hasAccess) {
+export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth()
+
+  // 2. Protect all routes except public ones
+  if (!isPublicRoute(req) && !userId) {
+    // Redirect to coming soon if not signed in and not on a public route
     return NextResponse.redirect(new URL('/coming-soon', req.url))
   }
-  
-  // Has access cookie, proceed with Clerk auth
-  await auth.protect()
+
+  // 3. Allow access if authenticated or public
+  return NextResponse.next()
 })
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
+    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',

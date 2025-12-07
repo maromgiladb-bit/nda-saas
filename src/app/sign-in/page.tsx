@@ -37,7 +37,7 @@ export default function SignInPage() {
         <div className="bg-white py-8 px-6 shadow rounded-lg">
           <SignIn 
             routing="hash"
-            redirectUrl="/dashboard"
+            redirectUrl="/"
             appearance={{
               elements: {
                 footerAction: { display: 'none' },
