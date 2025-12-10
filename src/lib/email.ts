@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const APP_URL = process.env.APP_URL || 'http://localhost:3000'
-const MAIL_FROM = process.env.MAIL_FROM || 'noreply@agreedo.app'
+const MAIL_FROM = process.env.MAIL_FROM || 'noreply@formalizeit.app'
 
 export interface EmailAttachment {
   filename: string
@@ -22,22 +22,22 @@ export async function sendEmail({ to, subject, html, attachments }: SendEmailPar
   console.log('📧 RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
   console.log('📧 MAIL_FROM:', MAIL_FROM)
   console.log('📧 APP_URL:', APP_URL)
-  
+
   if (!resend) {
     console.warn('⚠️  Email not sent: RESEND_API_KEY not configured. Set it in .env to enable email notifications.')
     return
   }
-  
+
   try {
     console.log('📧 Attempting to send email via Resend...')
-    
+
     // Prepare attachments in Resend format
     const resendAttachments = attachments?.map(att => ({
       filename: att.filename,
       content: att.content, // Base64 string
       contentType: att.contentType || 'application/octet-stream'
     }))
-    
+
     const { data, error } = await resend.emails.send({
       from: MAIL_FROM,
       to,
@@ -46,7 +46,7 @@ export async function sendEmail({ to, subject, html, attachments }: SendEmailPar
       replyTo: MAIL_FROM,
       attachments: resendAttachments
     })
-    
+
     if (error) {
       console.error('❌ Resend API Error:', error)
       if (error.message?.includes('You can only send testing emails')) {
@@ -59,7 +59,7 @@ export async function sendEmail({ to, subject, html, attachments }: SendEmailPar
       }
       throw new Error(error.message || 'Email sending failed')
     }
-    
+
     console.log('✅ Email sent successfully!', data)
     console.log('✅ Email sent to:', to)
   } catch (error) {
@@ -99,7 +99,7 @@ export function recipientEditEmailHtml(
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">agreedo</div>
+            <div class="logo">Formalize It</div>
           </div>
           <div class="content">
             <h2>Review & Edit Your NDA</h2>
@@ -111,7 +111,7 @@ export function recipientEditEmailHtml(
             <p style="color: #6b7280; font-size: 14px;">This link will expire in 30 days.</p>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} agreedo. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -125,12 +125,12 @@ export function ownerReviewEmailHtml(
   reviewLink: string,
   changes: Array<{ field: string; before: string; after: string }>
 ): string {
-  const changesList = changes.slice(0, 5).map(c => 
+  const changesList = changes.slice(0, 5).map(c =>
     `<li><strong>${c.field}:</strong> <span style="color: #dc2626;">${c.before || '(empty)'}</span> → <span style="color: #16a34a;">${c.after || '(removed)'}</span></li>`
   ).join('')
-  
+
   const moreChanges = changes.length > 5 ? `<p style="color: #6b7280;">...and ${changes.length - 5} more changes</p>` : ''
-  
+
   return `
     <!DOCTYPE html>
     <html>
@@ -153,7 +153,7 @@ export function ownerReviewEmailHtml(
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">agreedo</div>
+            <div class="logo">Formalize It</div>
           </div>
           <div class="content">
             <h2>Review Requested: Changes to NDA <span class="badge">R${revisionNumber}</span></h2>
@@ -169,7 +169,7 @@ export function ownerReviewEmailHtml(
             <p style="color: #6b7280; font-size: 14px;">This link will expire in 30 days.</p>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} agreedo. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -200,7 +200,7 @@ export function finalSignedEmailHtml(
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">agreedo</div>
+            <div class="logo">Formalize It</div>
           </div>
           <div class="content">
             <div class="success">✓</div>
@@ -210,7 +210,7 @@ export function finalSignedEmailHtml(
             <a href="${downloadLink}" class="button">Download Final PDF</a>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} agreedo. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -240,7 +240,7 @@ export function recipientSignRequestEmailHtml(
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">agreedo</div>
+            <div class="logo">Formalize It</div>
           </div>
           <div class="content">
             <h2>Please Review & Sign Your NDA</h2>
@@ -250,7 +250,7 @@ export function recipientSignRequestEmailHtml(
             <p style="color: #6b7280; font-size: 14px;">This link will expire in 30 days.</p>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} agreedo. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
           </div>
         </div>
       </body>

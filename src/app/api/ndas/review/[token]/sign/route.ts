@@ -195,7 +195,7 @@ function partyASignedNotificationHtml(
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">agreedo</div>
+            <div class="logo">Formalize It</div>
           </div>
           <div class="content">
             <div class="success">✓</div>
@@ -226,7 +226,7 @@ function partyASignedNotificationHtml(
             <a href="${dashboardLink}" class="button">View in Dashboard</a>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} agreedo. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
           </div>
         </div>
       </body>

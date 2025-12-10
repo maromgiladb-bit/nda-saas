@@ -33,8 +33,8 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
             <Link href="/" className="flex-shrink-0" onClick={onLinkClick}>
               <div className="flex items-center">
                 <Image
-                  src="/agreedo-logo.png"
-                  alt="Agreedo"
+                  src="/formalizeIt-logo.png"
+                  alt="FormalizeIt"
                   width={200}
                   height={50}
                   className="h-30 w-auto"

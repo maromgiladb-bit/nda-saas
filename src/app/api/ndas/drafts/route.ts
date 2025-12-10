@@ -1,42 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth, currentUser } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
+import prisma from '@/lib/prisma'
+import { createDraftWithLimitCheck } from '@/organizations/limits'
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const user = await currentUser()
-    const userEmail = user?.emailAddresses?.[0]?.emailAddress || `user-${userId}@example.com`
+    const payload = await req.json()
+    const { title, draftId } = payload
+    // use the whole payload as content, consistent with previous behavior? 
+    // Or maybe payload has a 'data' field?
+    // Looking at "content: data" in the previous snippet, and if 'data' meant the payload...
+    // Let's assume payload IS the content.
+    const content = payload
 
-    const { draftId, title, data } = await request.json()
-
-    // Ensure user exists in database
-    let dbUser = await prisma.user.findUnique({
+    // 1. Get user and memberships
+    const dbUser = await prisma.user.findUnique({
       where: { externalId: userId },
-      include: { memberships: true }
+      include: {
+        memberships: {
+          include: { organization: true },
+          take: 1
+        }
+      }
     })
 
     if (!dbUser) {
-      // Create user if doesn't exist
-      dbUser = await prisma.user.create({
-        data: {
-          externalId: userId,
-          email: userEmail,
-        },
-        include: { memberships: true }
-      })
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Ensure default organization exists
-    let organizationId = dbUser.memberships[0]?.organizationId
+    let organizationId: string
 
-    if (!organizationId) {
-      // Create default org if none exists (fallback logic, though sync should handle this)
-      const orgName = userEmail.split('@')[0]
+    if (dbUser.memberships.length > 0) {
+      organizationId = dbUser.memberships[0].organizationId
+    } else {
+      // Create default org
+      const orgName = dbUser.email.split('@')[0]
       const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000)
 
       const org = await prisma.organization.create({
@@ -76,39 +79,26 @@ export async function POST(request: NextRequest) {
       // Update existing draft
       draft = await prisma.ndaDraft.update({
         where: { id: draftId, createdByUserId: dbUser.id },
-        data: { title, content: data, updatedAt: new Date() }
+        data: { title, content: content, updatedAt: new Date() }
       })
     } else {
-      // Create new draft - check free plan limit (simplified for now)
-      // TODO: Implement proper plan checking with new schema if needed
-
-      const ndaCount = await prisma.ndaDraft.count({
-        where: { createdByUserId: dbUser.id }
-      })
-
-      // Assuming FREE plan logic still applies but checking Organization billingPlan might be better
-      // For now, keeping it simple to avoid breaking flow
-      if (ndaCount >= 3 && !userEmail.includes('maromgiladb')) { // Simple override for dev
-        // return NextResponse.json({ error: 'Limit reached' }, { status: 403 }) 
-        // Commented out to prevent blocking during dev/test
-      }
-
-      // Create new draft
-      draft = await prisma.ndaDraft.create({
-        data: {
-          createdByUserId: dbUser.id,
-          title: title || 'Untitled NDA',
-          content: data,
-          status: 'DRAFT',
-          templateId: template.id,
-          organizationId: organizationId
-        }
+      // Create new draft - check limits
+      draft = await createDraftWithLimitCheck({
+        organizationId,
+        createdByUserId: dbUser.id,
+        templateId: template.id,
+        title: title || 'Untitled NDA',
+        content: content
       })
     }
 
-    return NextResponse.json({ draftId: draft.id, draft })
-  } catch (error) {
-    console.error('Draft save error:', error)
+    return NextResponse.json({ draft })
+
+  } catch (error: any) {
+    console.error('Draft creation/update error:', error)
+    if (error.message && error.message.includes('maximum number of NDAs')) {
+      return NextResponse.json({ error: error.message, code: 'LIMIT_REACHED' }, { status: 403 })
+    }
     return NextResponse.json({
       error: 'Failed to save draft',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -147,11 +137,6 @@ export async function GET() {
         }
       }
     })
-
-    // Transform to match expected frontend format if needed, or return as is
-    // Frontend expects 'signers' on the draft object?
-    // The previous code returned `signers` directly on draft.
-    // I should map it.
 
     const transformedDrafts = drafts.map(d => ({
       ...d,

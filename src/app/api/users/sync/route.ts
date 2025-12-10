@@ -12,28 +12,45 @@ export async function POST(request: NextRequest) {
     const { email } = await request.json()
 
     // 1. Find or Create User
+    // First try by externalId (Clerk ID)
     let user = await prisma.user.findUnique({
       where: { externalId: userId },
       include: { memberships: true }
     })
 
+    // If not found by ID, try by Email (Invited user case)
     if (!user) {
-      user = await prisma.user.create({
-        data: {
-          externalId: userId,
-          email: email
-        },
+      const existingUserByEmail = await prisma.user.findUnique({
+        where: { email },
         include: { memberships: true }
       })
+
+      if (existingUserByEmail) {
+        // Link the Clerk Account to the existing invited user
+        user = await prisma.user.update({
+          where: { id: existingUserByEmail.id },
+          data: { externalId: userId }, // Update placeholder ID with real Clerk ID
+          include: { memberships: true }
+        })
+      } else {
+        // Create new user if absolutely no record exists
+        user = await prisma.user.create({
+          data: {
+            externalId: userId,
+            email: email
+          },
+          include: { memberships: true }
+        })
+      }
     }
 
     // 2. Check Memberships
     if (user.memberships.length > 0) {
-      // User already has an organization, return user info
+      // User already has an organization (was invited or already exists), return user info
       return NextResponse.json({ user })
     }
 
-    // 3. Create Organization (if no memberships)
+    // 3. Create Organization (if no memberships) - ONLY for completely new users
     // Generate a slug from email (e.g., "john.doe" from "john.doe@example.com")
     const name = email.split('@')[0]
     let slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-')

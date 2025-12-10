@@ -113,11 +113,23 @@ model Organization {
   name          String
   slug          String        @unique
   ownerUserId   String        @map("owner_user_id") @db.Uuid
+
   billingPlan   BillingPlan   @default(FREE) @map("billing_plan")
   billingStatus BillingStatus @default(ACTIVE) @map("billing_status")
-  settings      Json?         @default("{}")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  // Billing integration (you can leave them unused at first)
+  billingCustomerId     String?   @map("billing_customer_id")
+  billingSubscriptionId String?   @map("billing_subscription_id")
+  trialEndsAt           DateTime? @map("trial_ends_at")
+  canceledAt            DateTime? @map("canceled_at")
+
+  // Usage / limits – org-level, not per user
+  maxUsers        Int? @map("max_users")          // null = use defaults in code
+  maxActiveDrafts Int? @map("max_active_drafts")  // same here, default in code
+
+  settings  Json?    @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   owner          User            @relation("OwnedOrganizations", fields: [ownerUserId], references: [id])
@@ -130,6 +142,7 @@ model Organization {
 
   @@map("organizations")
 }
+
 
 model Membership {
   id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

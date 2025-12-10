@@ -5,7 +5,13 @@ import { usePathname } from 'next/navigation'
 import PrivateToolbar from './PrivateToolbar'
 import PublicToolbar from './PublicToolbar'
 
-export default function ToolbarSwitcher() {
+
+interface OrganizationData {
+  organizations: { id: string; name: string; slug: string }[]
+  activeOrgId: string
+}
+
+export default function ToolbarSwitcher({ organizationData }: { organizationData?: OrganizationData | null }) {
   const { userId, isLoaded } = useAuth()
   const pathname = usePathname()
 
@@ -13,5 +19,5 @@ export default function ToolbarSwitcher() {
   if (!isLoaded || pathname === '/coming-soon') return null
 
   // Show appropriate toolbar based on authentication state
-  return userId ? <PrivateToolbar /> : <PublicToolbar />
+  return userId ? <PrivateToolbar organizationData={organizationData} /> : <PublicToolbar />
 }

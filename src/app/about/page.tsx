@@ -29,9 +29,9 @@ export default function About() {
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
-          <h1 className="text-6xl font-bold mb-6 animate-fade-in">About Agreedo</h1>
+          <h1 className="text-6xl font-bold mb-6 animate-fade-in">About Formalize It</h1>
           <p className="text-2xl text-gray-200 max-w-3xl leading-relaxed animate-fade-in-delay">
-            We make NDAs fast, clear, and collaborative. No more email ping-pong, 
+            We make NDAs fast, clear, and collaborative. No more email ping-pong,
             version confusion, or formatting drama.
           </p>
         </div>
@@ -44,8 +44,8 @@ export default function About() {
             <div>
               <h2 className="text-5xl font-bold text-teal-600 mb-6">Why we built it</h2>
               <p className="text-xl text-gray-700 leading-relaxed">
-                NDAs shouldn&apos;t take hours to create. We kept seeing the same pain: unclear changes, 
-                copy-paste errors, and endless back-and-forth. Agreedo makes NDAs collaborative 
+                NDAs shouldn&apos;t take hours to create. We kept seeing the same pain: unclear changes,
+                copy-paste errors, and endless back-and-forth. Formalize It makes NDAs collaborative
                 and accurate—without changing your legal language.
               </p>
             </div>

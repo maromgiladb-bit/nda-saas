@@ -43,6 +43,12 @@ export default function Home() {
     );
   }
 
+  useEffect(() => {
+    if (isSignedIn) {
+      router.push("/dashboard");
+    }
+  }, [isSignedIn, router]);
+
   if (isSignedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center">

@@ -1,4 +1,4 @@
-'use client'
+// Checked layout.tsx
 
 import Link from 'next/link'
 import Image from 'next/image'
@@ -6,7 +6,14 @@ import { useAuth, UserButton } from '@clerk/nextjs'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 
-export default function PrivateToolbar() {
+import OrgSwitcher from './OrgSwitcher'
+
+interface OrganizationData {
+  organizations: { id: string; name: string; slug: string }[]
+  activeOrgId: string
+}
+
+export default function PrivateToolbar({ organizationData }: { organizationData?: OrganizationData | null }) {
   const { userId } = useAuth()
   const pathname = usePathname()
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
@@ -24,7 +31,7 @@ export default function PrivateToolbar() {
     { name: 'My NDAs', href: '/mynda', current: pathname === '/mynda' },
     { name: 'My Drafts', href: '/mydrafts', current: pathname === '/mydrafts' },
     { name: 'Company Profile', href: '/companydetails', current: pathname === '/companydetails' },
-    { name: 'Settings', href: '/settings', current: pathname === '/settings' },
+    { name: 'Settings', href: '/settings', current: pathname?.startsWith('/settings') },
   ]
 
   const additionalLinks = [
@@ -42,6 +49,7 @@ export default function PrivateToolbar() {
     { name: '📝 Review & Sign', href: '/review-nda/test-token-123' },
     { name: '📋 Review NDA as Fill', href: '/review-nda-asfill/test-token-123' },
     { name: '💡 Review Suggestions', href: '/review-suggestions/dev-test' },
+    { name: '🏠 Homepage', href: '/' },
     { name: '📋 Templates', href: '/templates' },
   ]
 
@@ -78,15 +86,24 @@ export default function PrivateToolbar() {
             <Link href="/dashboard" className="flex-shrink-0">
               <div className="flex items-center">
                 <Image
-                  src="/agreedo-logo.png"
-                  alt="Agreedo"
+                  src="/formalizeIt-logo.png"
+                  alt="FormalizeIt"
                   width={200}
                   height={50}
-                  className="h-30 w-auto"
+                  className="h-35 w-auto"
                   priority
                 />
               </div>
             </Link>
+
+            {/* Organization Switcher - Hidden by default for now as requested
+            {organizationData && (
+              <OrgSwitcher
+                organizations={organizationData.organizations}
+                activeOrgId={organizationData.activeOrgId}
+              />
+            )}
+            */}
 
             {/* Desktop Navigation - Show first 4 items */}
             <div className="hidden xl:ml-8 xl:flex xl:space-x-1">
@@ -102,8 +119,6 @@ export default function PrivateToolbar() {
                   {item.name}
                 </Link>
               ))}
-
-              {/* More Dropdown for desktop */}
               <div className="relative" ref={moreMenuRef}>
                 <button
                   onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
@@ -324,72 +339,74 @@ export default function PrivateToolbar() {
       </div>
 
       {/* Mobile menu dropdown */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden border-t-2 border-gray-200 bg-white shadow-xl">
-          <div className="px-4 pt-2 pb-3 space-y-1">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`block px-4 py-3 rounded-xl text-base font-bold transition-all ${item.current
-                  ? 'bg-teal-50 text-teal-700'
-                  : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
-                  }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-            <div className="border-t-2 border-gray-200 my-2"></div>
-            {additionalLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            {isDev && (
-              <>
-                <div className="border-t-2 border-gray-200 my-2"></div>
-                <div className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
-                  🔧 Dev Tools
-                </div>
-                {devLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className="block px-4 py-3 rounded-xl text-base font-semibold text-purple-700 hover:text-purple-900 hover:bg-purple-50 transition-all"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </>
-            )}
-          </div>
-          <div className="pt-4 pb-4 border-t-2 border-gray-200">
-            <div className="flex items-center px-4 mb-3">
-              <UserButton afterSignOutUrl="/" />
-              <span className="ml-3 text-sm font-semibold text-gray-700">Your Account</span>
+      {
+        isMobileMenuOpen && (
+          <div className="lg:hidden border-t-2 border-gray-200 bg-white shadow-xl">
+            <div className="px-4 pt-2 pb-3 space-y-1">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`block px-4 py-3 rounded-xl text-base font-bold transition-all ${item.current
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
+                    }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              <div className="border-t-2 border-gray-200 my-2"></div>
+              {additionalLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              {isDev && (
+                <>
+                  <div className="border-t-2 border-gray-200 my-2"></div>
+                  <div className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
+                    🔧 Dev Tools
+                  </div>
+                  {devLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className="block px-4 py-3 rounded-xl text-base font-semibold text-purple-700 hover:text-purple-900 hover:bg-purple-50 transition-all"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                  ))}
+                </>
+              )}
             </div>
-            <div className="px-4">
-              <Link
-                href="/templates"
-                className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                New NDA
-              </Link>
+            <div className="pt-4 pb-4 border-t-2 border-gray-200">
+              <div className="flex items-center px-4 mb-3">
+                <UserButton afterSignOutUrl="/" />
+                <span className="ml-3 text-sm font-semibold text-gray-700">Your Account</span>
+              </div>
+              <div className="px-4">
+                <Link
+                  href="/templates"
+                  className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  New NDA
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </nav>
+        )
+      }
+    </nav >
   )
 }
