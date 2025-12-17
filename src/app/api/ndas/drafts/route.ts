@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { createDraftWithLimitCheck } from '@/organizations/limits'
 
 export async function POST(req: Request) {
@@ -11,12 +11,9 @@ export async function POST(req: Request) {
     }
 
     const payload = await req.json()
-    const { title, draftId } = payload
-    // use the whole payload as content, consistent with previous behavior? 
-    // Or maybe payload has a 'data' field?
-    // Looking at "content: data" in the previous snippet, and if 'data' meant the payload...
-    // Let's assume payload IS the content.
-    const content = payload
+    const { title, draftId, data } = payload
+    // Frontend sends form data in 'data' field, backend stores it as 'content'
+    const content = data
 
     // 1. Get user and memberships
     const dbUser = await prisma.user.findUnique({
@@ -79,7 +76,7 @@ export async function POST(req: Request) {
       // Update existing draft
       draft = await prisma.ndaDraft.update({
         where: { id: draftId, createdByUserId: dbUser.id },
-        data: { title, content: content, updatedAt: new Date() }
+        data: { title, content: content }
       })
     } else {
       // Create new draft - check limits
@@ -92,7 +89,7 @@ export async function POST(req: Request) {
       })
     }
 
-    return NextResponse.json({ draft })
+    return NextResponse.json({ draft, draftId: draft.id, id: draft.id })
 
   } catch (error: any) {
     console.error('Draft creation/update error:', error)

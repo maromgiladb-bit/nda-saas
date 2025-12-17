@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, Plus, FileText, Edit } from 'lucide-react';
+import { Eye, Plus, FileText, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface NDA {
@@ -19,8 +19,47 @@ interface DashboardClientProps {
 
 export default function DashboardClient({ ndas }: DashboardClientProps) {
   const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed'>('all');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [localNdas, setLocalNdas] = useState(ndas);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  const filteredNdas = ndas.filter((nda) => {
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(id);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/ndas/drafts/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete draft');
+      }
+
+      // Remove from local state
+      setLocalNdas(prev => prev.filter(nda => nda.id !== id));
+      setMessage({ type: 'success', text: 'Draft deleted successfully' });
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error('Delete error:', error);
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to delete draft'
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+
+  const filteredNdas = localNdas.filter((nda) => {
     if (filter === 'all') return true;
     if (filter === 'sent') return nda.type === 'created' && (nda.status === 'sent' || nda.status === 'pending');
     if (filter === 'received') return nda.type === 'received' && nda.status !== 'signed';
@@ -30,11 +69,11 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
   });
 
   const stats = {
-    total: ndas.length,
-    draft: ndas.filter((n) => n.status === 'draft' && n.type === 'created').length,
-    sent: ndas.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending')).length,
-    received: ndas.filter((n) => n.type === 'received' && n.status !== 'signed').length,
-    signed: ndas.filter((n) => n.status === 'signed').length,
+    total: localNdas.length,
+    draft: localNdas.filter((n) => n.status === 'draft' && n.type === 'created').length,
+    sent: localNdas.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending')).length,
+    received: localNdas.filter((n) => n.type === 'received' && n.status !== 'signed').length,
+    signed: localNdas.filter((n) => n.status === 'signed').length,
   };
 
   return (
@@ -64,13 +103,32 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Message Banner */}
+        {message && (
+          <div className={`mb-6 p-4 rounded-xl border-2 ${message.type === 'success'
+              ? 'bg-green-50 border-green-500 text-green-800'
+              : 'bg-red-50 border-red-500 text-red-800'
+            } flex items-center gap-3 animate-fade-in`}>
+            {message.type === 'success' ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span className="font-semibold">{message.text}</span>
+          </div>
+        )}
+
         {/* Stats Cards - Now clickable filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <button
             onClick={() => setFilter('all')}
             className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'all'
-                ? 'bg-[var(--teal-50)] border-[var(--teal-600)]'
-                : 'bg-white border-gray-200 hover:border-[var(--teal-100)]'
+              ? 'bg-[var(--teal-50)] border-[var(--teal-600)]'
+              : 'bg-white border-gray-200 hover:border-[var(--teal-100)]'
               }`}
           >
             <div className="flex items-center justify-between">
@@ -88,8 +146,8 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
           <button
             onClick={() => setFilter('draft')}
             className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'draft'
-                ? 'bg-yellow-50 border-yellow-500'
-                : 'bg-white border-gray-200 hover:border-yellow-300'
+              ? 'bg-yellow-50 border-yellow-500'
+              : 'bg-white border-gray-200 hover:border-yellow-300'
               }`}
           >
             <div className="flex items-center justify-between">
@@ -109,8 +167,8 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
           <button
             onClick={() => setFilter('sent')}
             className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'sent'
-                ? 'bg-purple-50 border-purple-500'
-                : 'bg-white border-gray-200 hover:border-purple-300'
+              ? 'bg-purple-50 border-purple-500'
+              : 'bg-white border-gray-200 hover:border-purple-300'
               }`}
           >
             <div className="flex items-center justify-between">
@@ -130,8 +188,8 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
           <button
             onClick={() => setFilter('received')}
             className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'received'
-                ? 'bg-orange-50 border-orange-500'
-                : 'bg-white border-gray-200 hover:border-orange-300'
+              ? 'bg-orange-50 border-orange-500'
+              : 'bg-white border-gray-200 hover:border-orange-300'
               }`}
           >
             <div className="flex items-center justify-between">
@@ -151,8 +209,8 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
           <button
             onClick={() => setFilter('signed')}
             className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'signed'
-                ? 'bg-green-50 border-green-500'
-                : 'bg-white border-gray-200 hover:border-green-300'
+              ? 'bg-green-50 border-green-500'
+              : 'bg-white border-gray-200 hover:border-green-300'
               }`}
           >
             <div className="flex items-center justify-between">
@@ -202,12 +260,12 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                       )}
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold ${nda.status === 'signed'
-                            ? 'bg-green-100 text-green-800'
-                            : nda.status === 'draft'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : nda.status === 'sent' || nda.status === 'pending'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-gray-100 text-gray-800'
+                          ? 'bg-green-100 text-green-800'
+                          : nda.status === 'draft'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : nda.status === 'sent' || nda.status === 'pending'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-gray-100 text-gray-800'
                           }`}
                       >
                         {nda.status.toUpperCase()}
@@ -238,12 +296,31 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                       </button>
                     </Link>
                     {nda.status === 'draft' && (
-                      <Link href={`/fillndahtml?draftId=${nda.id}`}>
-                        <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2">
-                          <Edit className="h-4 w-4" />
-                          Edit
+                      <>
+                        <Link href={`/fillndahtml?draftId=${nda.id}`}>
+                          <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2">
+                            <Edit className="h-4 w-4" />
+                            Edit
+                          </button>
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(nda.id, nda.partyName)}
+                          disabled={deletingId === nda.id}
+                          className="px-4 py-2 bg-white border-2 border-red-300 rounded-xl text-red-700 font-semibold hover:bg-red-50 hover:border-red-500 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingId === nda.id ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-red-700 border-t-transparent rounded-full animate-spin"></div>
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </>
+                          )}
                         </button>
-                      </Link>
+                      </>
                     )}
                   </div>
                 </div>

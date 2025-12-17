@@ -15,18 +15,18 @@ export async function GET(
     }
 
     // Verify user owns this draft
-    const user = await prisma.users.findUnique({
-      where: { external_id: userId }
+    const user = await prisma.user.findUnique({
+      where: { externalId: userId }
     })
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const draft = await prisma.nda_drafts.findUnique({
+    const draft = await prisma.ndaDraft.findUnique({
       where: {
         id: params.id,
-        created_by_id: user.id
+        createdByUserId: user.id
       }
     })
 
@@ -40,8 +40,8 @@ export async function GET(
     const filepath = path.join(tmpDir, filename)
 
     if (!fs.existsSync(filepath)) {
-      return NextResponse.json({ 
-        error: 'PDF not found. Please generate preview first.' 
+      return NextResponse.json({
+        error: 'PDF not found. Please generate preview first.'
       }, { status: 404 })
     }
 

@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { resolveLimits } from "@/billing/planLimits"
 
 export async function assertCanAddMember(organizationId: string) {

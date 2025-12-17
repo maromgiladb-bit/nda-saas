@@ -11,8 +11,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const dbUser = await prisma.users.findUnique({
-      where: { external_id: userId }
+    const dbUser = await prisma.user.findUnique({
+      where: { externalId: userId }
     })
 
     if (!dbUser) {
@@ -20,12 +20,12 @@ export async function GET() {
     }
 
     // Get count of NDAs created by user
-    const ndaCount = await prisma.nda_drafts.count({
-      where: { created_by_id: dbUser.id }
+    const ndaCount = await prisma.ndaDraft.count({
+      where: { createdByUserId: dbUser.id }
     })
 
     const plan = dbUser.plan || 'FREE'
-    
+
     // Developer and Pro plans have unlimited access
     const canCreate = plan === 'DEVELOPER' || plan === 'PRO' || plan === 'ENTERPRISE' || (plan === 'FREE' && ndaCount < FREE_PLAN_LIMIT)
 

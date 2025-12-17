@@ -137,22 +137,31 @@ export default function FillNDAHTML() {
 
 			if (data.profile) {
 				const profile = data.profile;
-				const address = [
-					profile.addressline1,
-					profile.addressline2,
-					`${profile.city}${profile.state ? ', ' + profile.state : ''}${profile.postalcode ? ' ' + profile.postalcode : ''}`,
-					profile.country
-				].filter(Boolean).join(', ');
+
+				// Build address only if we have address components
+				let address = '';
+				if (profile.address || profile.addressLine2 || profile.city || profile.state || profile.zipCode || profile.country) {
+					const addressParts = [
+						profile.address,
+						profile.addressLine2,
+						[profile.city, profile.state].filter(Boolean).join(', '),
+						profile.zipCode,
+						profile.country
+					].filter(Boolean);
+					address = addressParts.join(', ');
+				}
 
 				setValues(prev => ({
 					...prev,
-					party_a_name: profile.companyname || prev.party_a_name,
-					party_a_address: address || prev.party_a_address,
-					party_a_phone: profile.phone || prev.party_a_phone,
-					party_a_signatory_name: profile.signatoryname || prev.party_a_signatory_name,
-					party_a_title: profile.signatorytitle || prev.party_a_title,
-					party_a_email: profile.email || prev.party_a_email
-				})); console.log('✅ Auto-filled Party A from company profile');
+					// Only update fields if profile has a non-null/non-empty value
+					...(profile.companyName && { party_a_name: profile.companyName }),
+					...(address && { party_a_address: address }),
+					...(profile.phone && { party_a_phone: profile.phone }),
+					...(profile.signatoryName && { party_a_signatory_name: profile.signatoryName }),
+					...(profile.signatoryTitle && { party_a_title: profile.signatoryTitle }),
+					...(profile.email && { party_a_email: profile.email })
+				}));
+				console.log('✅ Auto-filled Party A from company profile');
 			}
 		} catch (error) {
 			console.error('Error loading company profile:', error);
@@ -378,10 +387,10 @@ export default function FillNDAHTML() {
 
 			if (!res.ok) throw new Error(json.error || "Failed to load draft");
 
-			if (json.draft?.data) {
-				console.log('Setting form values from draft data:', json.draft.data)
+			if (json.draft?.content) {
+				console.log('Setting form values from draft content:', json.draft.content)
 				// Compute next values in one pass, then set once
-				const next = { ...DEFAULTS, ...json.draft.data };
+				const next = { ...DEFAULTS, ...json.draft.content };
 				if (json.draft.title) next.docName = json.draft.title;
 				setValues(next);
 				setLastSavedValues(next);

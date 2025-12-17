@@ -10,14 +10,14 @@ export async function GET(
   try {
     const { userId } = await auth()
     console.log('Auth userId:', userId)
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Find user in database
-    const dbUser = await prisma.users.findUnique({
-      where: { external_id: userId }
+    const dbUser = await prisma.user.findUnique({
+      where: { externalId: userId }
     })
     console.log('Database user found:', dbUser)
 
@@ -28,36 +28,10 @@ export async function GET(
     const id = params.id
     console.log('Draft ID:', id)
 
-    const draft = await prisma.nda_drafts.findUnique({
-      where: { 
+    const draft = await prisma.ndaDraft.findUnique({
+      where: {
         id: id,
-        created_by_id: dbUser.id 
-      },
-      include: {
-        signers: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-            status: true,
-            signed_at: true,
-            created_at: true,
-            sign_requests: {
-              select: {
-                token: true,
-                scope: true,
-                consumed_at: true
-              },
-              where: {
-                consumed_at: null
-              },
-              orderBy: {
-                created_at: 'desc'
-              },
-              take: 1
-            }
-          }
-        }
+        createdByUserId: dbUser.id
       }
     })
     console.log('Draft found:', draft ? 'Yes' : 'No')
@@ -78,7 +52,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   console.log('=== PUT /api/ndas/drafts/[id] ===')
-  
+
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -86,8 +60,8 @@ export async function PUT(
     }
 
     // Find user in database
-    const dbUser = await prisma.users.findUnique({
-      where: { external_id: userId }
+    const dbUser = await prisma.user.findUnique({
+      where: { externalId: userId }
     })
 
     if (!dbUser) {
@@ -96,15 +70,14 @@ export async function PUT(
 
     const { title, data } = await request.json()
 
-    const draft = await prisma.nda_drafts.update({
-      where: { 
+    const draft = await prisma.ndaDraft.update({
+      where: {
         id: params.id,
-        created_by_id: dbUser.id 
+        createdByUserId: dbUser.id
       },
-      data: { 
-        title, 
-        data,
-        updated_at: new Date()
+      data: {
+        title,
+        content: data
       }
     })
 
@@ -120,7 +93,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   console.log('=== DELETE /api/ndas/drafts/[id] ===')
-  
+
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -128,18 +101,18 @@ export async function DELETE(
     }
 
     // Find user in database
-    const dbUser = await prisma.users.findUnique({
-      where: { external_id: userId }
+    const dbUser = await prisma.user.findUnique({
+      where: { externalId: userId }
     })
 
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    await prisma.nda_drafts.delete({
-      where: { 
+    await prisma.ndaDraft.delete({
+      where: {
         id: params.id,
-        created_by_id: dbUser.id 
+        createdByUserId: dbUser.id
       }
     })
 

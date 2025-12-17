@@ -52,13 +52,9 @@ export default async function DashboardPage() {
 
   // Transform created/sent NDAs
   const createdNdas = user.createdDrafts.map((draft) => {
-    const draftData = draft.content as Record<string, unknown>;
-    const partyBName = typeof draftData?.party_b_name === 'string' ? draftData.party_b_name : '';
-    const partyAName = typeof draftData?.party_a_name === 'string' ? draftData.party_a_name : '';
-
     return {
       id: draft.id,
-      partyName: partyBName || partyAName || 'Untitled NDA',
+      partyName: draft.title || 'Untitled NDA',
       status: draft.status?.toLowerCase() || 'draft',
       createdAt: draft.createdAt || new Date(),
       signedAt: null, // Logic for signedAt needs to come from SignRequest if linked, but for draft list it's simple
@@ -69,13 +65,10 @@ export default async function DashboardPage() {
   // Transform received NDAs
   const receivedNdas = user.signers.map((signer) => {
     const draft = signer.signRequest.draft;
-    const draftData = draft.content as Record<string, unknown>;
-    const partyBName = typeof draftData?.party_b_name === 'string' ? draftData.party_b_name : '';
-    const partyAName = typeof draftData?.party_a_name === 'string' ? draftData.party_a_name : '';
 
     return {
       id: draft.id,
-      partyName: partyBName || partyAName || 'Untitled NDA',
+      partyName: draft.title || 'Untitled NDA',
       status: signer.status?.toLowerCase() || 'pending',
       createdAt: draft.createdAt || new Date(),
       signedAt: signer.updatedAt, // Approximation

@@ -24,19 +24,19 @@ export async function POST(request: NextRequest) {
     if (body.draftId) {
       // Load from database
       console.log('🌐 Loading draft from database:', body.draftId)
-      
-      const user = await prisma.users.findUnique({
-        where: { external_id: userId }
+
+      const user = await prisma.user.findUnique({
+        where: { externalId: userId }
       })
 
       if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
       }
 
-      const draft = await prisma.nda_drafts.findUnique({
+      const draft = await prisma.ndaDraft.findUnique({
         where: {
           id: body.draftId,
-          created_by_id: user.id
+          createdByUserId: user.id
         }
       })
 
@@ -44,13 +44,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
       }
 
-      formData = (draft.data as Record<string, unknown>) || {}
+      formData = (draft.content as Record<string, unknown>) || {}
     } else {
       // Use provided data directly
       formData = { ...body }
       delete formData.draftId // Clean up if present
     }
-    
+
     // Allow template override from request
     if (body.templateId) {
       templateId = body.templateId
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Process "ask receiver to fill" placeholders for individual Party B fields
     const processedData = { ...formData }
-    
+
     if (formData.party_a_ask_receiver_fill) {
       processedData.party_a_name = formData.party_a_name || "[To be filled by receiving party]"
       processedData.party_a_address = formData.party_a_address || "[To be filled by receiving party]"
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       processedData.party_a_title = formData.party_a_title || "[To be filled by receiving party]"
       console.log('🌐 Party A: ask receiver to fill')
     }
-    
+
     // Handle individual Party B fields
     if (formData.party_b_name_ask_receiver) {
       processedData.party_b_name = formData.party_b_name || "[To be filled by receiving party]"
