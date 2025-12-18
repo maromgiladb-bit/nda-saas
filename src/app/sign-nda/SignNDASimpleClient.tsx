@@ -223,9 +223,9 @@ export default function SignNDASimpleClient() {
           <p className="text-gray-600">Review and sign your non-disclosure agreement</p>
         </div>
 
-        <div className="flex gap-6">
-          {/* Signature Section - 30% width on LEFT */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6" style={{ width: '30%' }}>
+        <div className="flex gap-6 items-start">
+          {/* Signature Section - 35% width on LEFT */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col" style={{ width: '35%', minWidth: '350px' }}>
             <h2 className="text-xl font-bold text-gray-900 mb-4">Your Signature</h2>
 
             {/* Form Fields */}
@@ -366,7 +366,7 @@ export default function SignNDASimpleClient() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 mt-auto">
               <button
                 onClick={() => router.back()}
                 className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all"
@@ -381,6 +381,24 @@ export default function SignNDASimpleClient() {
                 {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Signature'}
               </button>
             </div>
+          </div>
+
+          {/* Document Preview - 60% width on RIGHT */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col" style={{ width: '60%' }}>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Document Review</h2>
+
+            {!hasScrolledToBottom && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+                ⚠️ Please scroll to the bottom of the document to continue
+              </div>
+            )}
+
+            <div
+              ref={documentRef}
+              onScroll={handleScroll}
+              className="h-[750px] overflow-y-auto border border-gray-300 rounded-lg p-6 bg-white"
+              dangerouslySetInnerHTML={{ __html: ndaData.htmlContent }}
+            />
           </div>
         </div>
       </div>

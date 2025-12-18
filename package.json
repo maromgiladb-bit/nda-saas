@@ -13,7 +13,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.953.0",
     "@clerk/nextjs": "^6.33.1",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "5.22.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@sparticuz/chromium": "^131.0.0",
     "@types/dompurify": "^3.0.5",
@@ -34,7 +34,7 @@
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.4.149",
     "pizzip": "^3.2.0",
-    "prisma": "^5.22.0",
+    "prisma": "5.22.0",
     "puppeteer-core": "^23.11.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
