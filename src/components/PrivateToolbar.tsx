@@ -44,6 +44,8 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
     { name: '🔧 Fill NDA (Classic)', href: '/fillnda' },
     { name: '✨ Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
     { name: '📄 Sign PDF', href: '/sign-nda' },
+    { name: '✍️ Sign NDA (Dev)', href: '/sign-nda?draftId=test-draft-123' },
+    { name: '🔓 Sign NDA Public (Dev)', href: '/sign-nda-public/00000000-0000-0000-0000-000000000001' },
     { name: '📝 Review & Sign', href: '/review-nda/test-token-123' },
     { name: '📋 Review NDA as Fill', href: '/review-nda-asfill/test-token-123' },
     { name: '💡 Review Suggestions', href: '/review-suggestions/dev-test' },

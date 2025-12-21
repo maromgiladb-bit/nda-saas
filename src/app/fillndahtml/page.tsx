@@ -752,7 +752,7 @@ export default function FillNDAHTML() {
 			{/* Main Container with Fixed Layout */}
 			<div className="flex h-[calc(100vh-64px)]">
 				{/* LEFT SIDE: Form Content (Scrollable) */}
-				<div className={`transition-all duration-300 ${showLivePreview ? "w-[45%]" : "w-full"} overflow-y-auto`}>
+				<div className={`transition-all duration-300 ${showLivePreview ? "w-full lg:w-[45%]" : "w-full"} overflow-y-auto`}>
 					<div className="max-w-4xl mx-auto p-6">
 						{/* Header Card */}
 						<div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6 overflow-hidden">
@@ -1434,7 +1434,7 @@ export default function FillNDAHTML() {
 
 				{/* RIGHT SIDE: Live Preview (Fixed) */}
 				{showLivePreview && (
-					<div className="w-[55%] bg-white border-l border-gray-200 overflow-y-auto">
+					<div className="hidden lg:block w-[55%] bg-white border-l border-gray-200 overflow-y-auto">
 						<div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 z-10">
 							<div className="flex items-center justify-between">
 								<div>
