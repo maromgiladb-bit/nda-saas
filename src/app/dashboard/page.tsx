@@ -14,13 +14,21 @@ export default async function DashboardPage() {
     where: { externalId: userId },
     include: {
       createdDrafts: {
+        include: {
+          signRequests: {
+            include: {
+              ndaPdfs: true,
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       },
       signers: {
         include: {
           signRequest: {
             include: {
-              draft: true
+              draft: true,
+              ndaPdfs: true,
             }
           }
         },
@@ -40,8 +48,27 @@ export default async function DashboardPage() {
           email: email
         },
         include: {
-          createdDrafts: { orderBy: { createdAt: 'desc' } },
-          signers: { include: { signRequest: { include: { draft: true } } }, orderBy: { createdAt: 'desc' } }
+          createdDrafts: {
+            include: {
+              signRequests: {
+                include: {
+                  ndaPdfs: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' }
+          },
+          signers: {
+            include: {
+              signRequest: {
+                include: {
+                  draft: true,
+                  ndaPdfs: true,
+                }
+              }
+            },
+            orderBy: { createdAt: 'desc' }
+          }
         }
       });
     } else {
@@ -52,13 +79,18 @@ export default async function DashboardPage() {
 
   // Transform created/sent NDAs
   const createdNdas = user.createdDrafts.map((draft) => {
+    // Find the latest sign request and its PDF
+    const latestSignRequest = draft.signRequests?.[0];
+    const sentPdf = latestSignRequest?.ndaPdfs?.find((pdf: { kind: string }) => pdf.kind === 'SENT');
+
     return {
       id: draft.id,
       partyName: draft.title || 'Untitled NDA',
       status: draft.status?.toLowerCase() || 'draft',
       createdAt: draft.createdAt || new Date(),
-      signedAt: null, // Logic for signedAt needs to come from SignRequest if linked, but for draft list it's simple
+      signedAt: null,
       type: 'created' as const,
+      pdfId: sentPdf?.id || null,
     };
   });
 

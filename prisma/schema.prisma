@@ -85,6 +85,13 @@ enum NdaEventType {
   @@map("nda_event_type")
 }
 
+enum PdfKind {
+  SENT
+  SIGNED
+
+  @@map("pdf_kind")
+}
+
 // Models
 
 model User {
@@ -126,6 +133,7 @@ model Organization {
   templates      NdaTemplate[]
   drafts         NdaDraft[]
   signRequests   SignRequest[]
+  ndaPdfs        NdaPdf[]
   auditEvents    AuditEvent[]
   companyProfile CompanyProfile?
 
@@ -242,6 +250,7 @@ model SignRequest {
   revision     NdaRevision? @relation(fields: [revisionId], references: [id])
   createdBy    User         @relation("SignRequestCreator", fields: [createdByUserId], references: [id])
   signers      Signer[]
+  ndaPdfs      NdaPdf[]
   auditEvents  AuditEvent[]
 
   @@map("sign_requests")
@@ -286,4 +295,26 @@ model AuditEvent {
   signer       Signer?      @relation(fields: [signerId], references: [id])
 
   @@map("audit_events")
+}
+
+model NdaPdf {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  signRequestId  String   @map("sign_request_id") @db.Uuid
+  kind           PdfKind
+  s3Key          String   @map("s3_key")
+  fileName       String   @map("file_name")
+  mimeType       String   @default("application/pdf") @map("mime_type")
+  fileSize       Int      @map("file_size") // bytes
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  signRequest  SignRequest  @relation(fields: [signRequestId], references: [id], onDelete: Cascade)
+
+  // Constraints
+  @@unique([signRequestId, kind])
+  @@index([organizationId])
+  @@index([signRequestId])
+  @@map("nda_pdfs")
 }

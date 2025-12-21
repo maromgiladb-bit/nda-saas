@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, Plus, FileText, Edit, Trash2 } from 'lucide-react';
+import { Eye, Plus, FileText, Edit, Trash2, FileDown } from 'lucide-react';
 import Link from 'next/link';
 
 interface NDA {
@@ -11,6 +11,7 @@ interface NDA {
   createdAt: Date;
   signedAt: Date | null;
   type: 'created' | 'received';
+  pdfId?: string | null;
 }
 
 interface DashboardClientProps {
@@ -92,10 +93,10 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                 <p className="text-xl text-gray-200">Manage and track your non-disclosure agreements</p>
               </div>
             </div>
-            <Link href="/newnda">
+            <Link href="/templates">
               <button className="px-6 py-3 bg-[var(--teal-600)] text-white rounded-xl font-bold shadow-lg hover:bg-[var(--teal-700)] hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2">
                 <Plus className="h-5 w-5" />
-                Create New NDA
+                New NDA
               </button>
             </Link>
           </div>
@@ -106,8 +107,8 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
         {/* Message Banner */}
         {message && (
           <div className={`mb-6 p-4 rounded-xl border-2 ${message.type === 'success'
-              ? 'bg-green-50 border-green-500 text-green-800'
-              : 'bg-red-50 border-red-500 text-red-800'
+            ? 'bg-green-50 border-green-500 text-green-800'
+            : 'bg-red-50 border-red-500 text-red-800'
             } flex items-center gap-3 animate-fade-in`}>
             {message.type === 'success' ? (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,10 +235,10 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
               <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
               <h3 className="text-lg font-bold text-gray-900 mb-2">No NDAs found</h3>
-              <p className="text-gray-600 mb-6">Create your first NDA to get started.</p>
-              <Link href="/newnda">
+              <p className="text-gray-600 mb-6">Add a new NDA to get started.</p>
+              <Link href="/templates">
                 <button className="px-6 py-3 bg-[var(--teal-600)] text-white rounded-xl font-bold shadow-lg hover:bg-[var(--teal-700)] hover:shadow-xl hover:scale-105 transition-all duration-300">
-                  Create New NDA
+                  + New NDA
                 </button>
               </Link>
             </div>
@@ -295,6 +296,15 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                         View
                       </button>
                     </Link>
+                    {(nda.status === 'sent' || nda.status === 'pending') && nda.pdfId && (
+                      <button
+                        onClick={() => window.open(`/api/nda-pdfs/${nda.pdfId}/view`, '_blank')}
+                        className="px-4 py-2 bg-[var(--teal-600)] border-2 border-[var(--teal-600)] rounded-xl text-white font-semibold hover:bg-[var(--teal-700)] transition-all flex items-center gap-2"
+                      >
+                        <FileDown className="h-4 w-4" />
+                        View PDF
+                      </button>
+                    )}
                     {nda.status === 'draft' && (
                       <>
                         <Link href={`/fillndahtml?draftId=${nda.id}`}>

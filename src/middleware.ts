@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   '/coming-soon',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/sign-nda-public(.*)',
   '/api/s3-test'
 ])
 

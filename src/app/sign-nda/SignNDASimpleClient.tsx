@@ -43,6 +43,8 @@ export default function SignNDASimpleClient() {
   const [errorMessage, setErrorMessage] = useState("");
   const documentRef = useRef<HTMLDivElement>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [partyBInfo, setPartyBInfo] = useState({ email: '', name: '' });
 
   // Load data from session storage
   useEffect(() => {
@@ -258,6 +260,169 @@ export default function SignNDASimpleClient() {
     }
   };
 
+  // Generate and save PDF
+  const handleGenerateAndSave = async () => {
+    if (!ndaData) {
+      setErrorMessage("NDA data not found");
+      return;
+    }
+
+    if (!partyASignature.name || !partyASignature.title) {
+      setErrorMessage("Please fill in all required fields");
+      return;
+    }
+
+    setSubmitStatus('submitting');
+    setErrorMessage("");
+
+    try {
+      // Prepare form data with all NDA values and signatures
+      const formData = {
+        ...ndaData.values,
+        party_1_name: ndaData.partyAName,
+        party_1_signatory_name: partyASignature.name,
+        party_1_signatory_title: partyASignature.title,
+        party_2_name: ndaData.partyBName,
+      };
+
+      const response = await fetch('/api/ndas/generate-and-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          draftId: ndaData.draftId,
+          formData: formData,
+          signatureImage: signatureImage,
+          signerName: partyASignature.name,
+          signerTitle: partyASignature.title,
+          signerDate: partyASignature.date,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate and save PDF');
+      }
+
+      setSubmitStatus('success');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+    } catch (error) {
+      setSubmitStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to generate and save PDF');
+    }
+  };
+
+  // Preview PDF (dev purposes - doesn't save)
+  const handlePreviewPdf = async () => {
+    if (!ndaData) {
+      setErrorMessage("NDA data not found");
+      return;
+    }
+
+    try {
+      // Prepare form data
+      const formData = {
+        ...ndaData.values,
+        party_1_name: ndaData.partyAName,
+        party_1_signatory_name: partyASignature.name || 'John Doe',
+        party_1_signatory_title: partyASignature.title || 'CEO',
+        party_2_name: ndaData.partyBName,
+      };
+
+      const response = await fetch('/api/ndas/preview-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formData: formData,
+          signatureImage: signatureImage,
+          signerName: partyASignature.name || 'John Doe',
+          signerTitle: partyASignature.title || 'CEO',
+          signerDate: partyASignature.date,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate preview PDF');
+      }
+
+      // Get the PDF blob and open in new tab
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Preview PDF error:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to preview PDF');
+    }
+  };
+
+  // Send NDA via email
+  const handleSendNDA = async () => {
+    if (!ndaData) {
+      setErrorMessage("NDA data not found");
+      return;
+    }
+
+    if (!partyASignature.name || !partyASignature.title) {
+      setErrorMessage("Please fill in all required fields");
+      return;
+    }
+
+    if (!signatureImage) {
+      setErrorMessage("Please provide a signature");
+      return;
+    }
+
+    if (!partyBInfo.email || !partyBInfo.name) {
+      setErrorMessage("Please provide Party B email and name");
+      return;
+    }
+
+    setSubmitStatus('submitting');
+    setErrorMessage("");
+
+    try {
+      const formData = {
+        ...ndaData.values,
+        party_1_name: ndaData.partyAName,
+        party_1_signatory_name: partyASignature.name,
+        party_1_signatory_title: partyASignature.title,
+        party_2_name: partyBInfo.name,
+      };
+
+      const response = await fetch('/api/ndas/send-for-signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          draftId: ndaData.draftId,
+          partyBEmail: partyBInfo.email,
+          partyBName: partyBInfo.name,
+          signatureImage,
+          signerName: partyASignature.name,
+          signerTitle: partyASignature.title,
+          signerDate: partyASignature.date,
+          formData,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send NDA');
+      }
+
+      setSubmitStatus('success');
+      setShowSendModal(false);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+    } catch (error) {
+      setSubmitStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to send NDA');
+    }
+  };
+
   if (!ndaData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -312,7 +477,7 @@ export default function SignNDASimpleClient() {
                   <input
                     type="text"
                     value={partyASignature.title}
-                    onChange={(e) => setPartyASignature(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setPartyASignature(prev => ({ ...prev, title: e.target.value }))}
                     className="w-full p-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-[var(--teal-600)] focus:border-transparent"
                     placeholder="Your title"
                   />
@@ -439,12 +604,27 @@ export default function SignNDASimpleClient() {
                 >
                   Cancel
                 </button>
+                {isDev && (
+                  <button
+                    onClick={handlePreviewPdf}
+                    className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded font-bold hover:bg-blue-700 transition-all"
+                  >
+                    Preview PDF
+                  </button>
+                )}
                 <button
-                  onClick={handleSubmit}
-                  disabled={submitStatus === 'submitting' || !hasScrolledToBottom}
+                  onClick={handleGenerateAndSave}
+                  disabled={submitStatus === 'submitting'}
                   className="flex-1 px-3 py-1.5 text-xs bg-[var(--teal-600)] text-white rounded font-bold hover:bg-[var(--teal-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  {submitStatus === 'submitting' ? 'Submitting...' : 'Submit'}
+                  {submitStatus === 'submitting' ? 'Generating...' : 'Generate & Save PDF'}
+                </button>
+                <button
+                  onClick={() => setShowSendModal(true)}
+                  disabled={submitStatus === 'submitting' || !signatureImage}
+                  className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Send NDA
                 </button>
               </div>
             </div>
@@ -477,6 +657,64 @@ export default function SignNDASimpleClient() {
           </div>
         </div>
       </div>
+
+      {/* Send NDA Modal */}
+      {showSendModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Send NDA for Signature</h2>
+            <p className="text-gray-600 mb-6">Enter the recipient's details to send this NDA for signature.</p>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Name *</label>
+                <input
+                  type="text"
+                  value={partyBInfo.name}
+                  onChange={(e) => setPartyBInfo({ ...partyBInfo, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600"
+                  placeholder="Full name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                <input
+                  type="email"
+                  value={partyBInfo.email}
+                  onChange={(e) => setPartyBInfo({ ...partyBInfo, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600"
+                  placeholder="email@example.com"
+                />
+              </div>
+            </div>
+
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+                {errorMessage}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowSendModal(false);
+                  setErrorMessage('');
+                }}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg font-bold hover:bg-gray-50 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendNDA}
+                disabled={submitStatus === 'submitting'}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 transition-all"
+              >
+                {submitStatus === 'submitting' ? 'Sending...' : 'Send Email'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
