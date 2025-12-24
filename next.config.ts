@@ -19,21 +19,8 @@ const nextConfig: NextConfig = {
       };
     }
 
-    // Copy templates directory to output for serverless deployments
-    if (isServer) {
-      const CopyPlugin = require('copy-webpack-plugin');
-      config.plugins.push(
-        new CopyPlugin({
-          patterns: [
-            {
-              from: 'templates',
-              to: '../templates',
-              noErrorOnMissing: false,
-            },
-          ],
-        })
-      );
-    }
+    // Note: Templates are now bundled via bundledTemplates.generated.ts
+    // No need for copy-webpack-plugin anymore
 
     return config;
   },

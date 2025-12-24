@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prebuild": "node scripts/generate-bundled-templates.mjs",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "generate-templates": "node scripts/generate-bundled-templates.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.953.0",

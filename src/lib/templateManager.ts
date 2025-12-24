@@ -1,6 +1,5 @@
-import fs from 'fs';
-import path from 'path';
 import Handlebars from 'handlebars';
+import { TEMPLATE_CONFIG, getTemplateContent } from './bundledTemplates.generated';
 
 // Template configuration structure
 export interface TemplateConfig {
@@ -39,17 +38,15 @@ const compiledTemplateCache = new Map<string, HandlebarsTemplateDelegate>();
 let templateRegistry: TemplateRegistry | null = null;
 
 /**
- * Load template configuration from JSON file
+ * Load template configuration (now uses bundled config)
  */
 export function getTemplateRegistry(): TemplateRegistry {
   if (templateRegistry) {
     return templateRegistry;
   }
 
-  const configPath = path.join(process.cwd(), 'templates', 'template-config.json');
-  const configData = fs.readFileSync(configPath, 'utf-8');
-  templateRegistry = JSON.parse(configData) as TemplateRegistry;
-  
+  // Use bundled config instead of filesystem access
+  templateRegistry = TEMPLATE_CONFIG as unknown as TemplateRegistry;
   return templateRegistry;
 }
 
@@ -86,7 +83,7 @@ export function getTemplateFields(templateId: string): {
 } {
   const template = getTemplateById(templateId);
   const registry = getTemplateRegistry();
-  
+
   if (!template) {
     throw new Error(`Template not found: ${templateId}`);
   }
@@ -114,11 +111,10 @@ export function getTemplateFields(templateId: string): {
  * Uses caching for performance
  */
 export function getCompiledTemplate(templateId: string): HandlebarsTemplateDelegate {
-  // TEMPORARILY DISABLE CACHE to force reload of templates
   // Check cache first
-  // if (compiledTemplateCache.has(templateId)) {
-  //   return compiledTemplateCache.get(templateId)!;
-  // }
+  if (compiledTemplateCache.has(templateId)) {
+    return compiledTemplateCache.get(templateId)!;
+  }
 
   // Get template config
   const templateConfig = getTemplateById(templateId);
@@ -126,13 +122,14 @@ export function getCompiledTemplate(templateId: string): HandlebarsTemplateDeleg
     throw new Error(`Template not found: ${templateId}`);
   }
 
-  // Read template file
-  const templatePath = path.join(process.cwd(), 'templates', templateConfig.templateFile);
-  const templateSource = fs.readFileSync(templatePath, 'utf-8');
-  
-  console.log(`📄 Loading template from disk: ${templateId}`);
-  console.log(`📄 Template file: ${templateConfig.templateFile}`);
-  console.log(`📄 Template contains @media print: ${templateSource.includes('@media print')}`);
+  // Get bundled template content (no filesystem access needed)
+  const templateSource = getTemplateContent(templateId);
+  if (!templateSource) {
+    throw new Error(`Template content not found: ${templateId}. Run 'npm run generate-templates' to regenerate.`);
+  }
+
+  console.log(`📄 Loading bundled template: ${templateId}`);
+  console.log(`📄 Template size: ${templateSource.length} chars`);
 
   // Compile and cache
   const compiled = Handlebars.compile(templateSource);
@@ -182,7 +179,7 @@ export function validateTemplateData(
   data: Record<string, unknown>
 ): { isValid: boolean; errors: string[] } {
   const templateConfig = getTemplateById(templateId);
-  
+
   if (!templateConfig) {
     return { isValid: false, errors: [`Template not found: ${templateId}`] };
   }
