@@ -740,30 +740,58 @@ export default function FillNDAHTML() {
 			return;
 		}
 
-		// We no longer check for signersEmail here as it will be handled in the sign-nda page
-		// if it's missing from the form values.
-
 		setSendingForSignature(true);
 		setWarning("");
 
 		try {
-			// Check if Party B needs to fill fields
+			// Check if Party B needs to fill fields (any "ask receiver" checkbox is checked)
 			const needsReceiverFill = hasEmptyPartyBFields();
 
-			// Save the NDA data to session storage for the sign page
-			sessionStorage.setItem('ndaSignData', JSON.stringify({
-				draftId,
-				values,
-				htmlContent: livePreviewHtml,
-				partyAEmail: user?.primaryEmailAddress?.emailAddress || '',
-				partyAName: values.party_a_name,
-				partyBEmail: values.party_b_email, // Use form value directly
-				partyBName: values.party_b_name,
-				askReceiverToFill: needsReceiverFill
-			}));
+			if (needsReceiverFill) {
+				// Party B needs to fill fields - send for input first
+				if (!values.party_b_email?.trim()) {
+					setWarning("Please enter Party B's email address to send for input.");
+					setSendingForSignature(false);
+					return;
+				}
 
-			// Navigate to sign page
-			router.push('/sign-nda');
+				const response = await fetch('/api/ndas/send-for-input', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						draftId,
+						recipientEmail: values.party_b_email,
+						recipientName: values.party_b_name || undefined,
+						message: `Please complete your information for this NDA: ${values.docName || 'Untitled NDA'}`
+					})
+				});
+
+				const data = await response.json();
+
+				if (!response.ok) {
+					throw new Error(data.error || 'Failed to send for input');
+				}
+
+				// Success - show confirmation and redirect to dashboard
+				setWarning("");
+				router.push('/dashboard?message=sent-for-input');
+			} else {
+				// All fields filled - proceed to signature flow
+				// Save the NDA data to session storage for the sign page
+				sessionStorage.setItem('ndaSignData', JSON.stringify({
+					draftId,
+					values,
+					htmlContent: livePreviewHtml,
+					partyAEmail: user?.primaryEmailAddress?.emailAddress || '',
+					partyAName: values.party_a_name,
+					partyBEmail: values.party_b_email,
+					partyBName: values.party_b_name,
+					askReceiverToFill: false
+				}));
+
+				// Navigate to sign page
+				router.push('/sign-nda');
+			}
 
 		} catch (e) {
 			setWarning(e instanceof Error ? e.message : "Failed to send");
