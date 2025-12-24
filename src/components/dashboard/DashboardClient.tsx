@@ -119,7 +119,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                 <FileText className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-5xl font-bold mb-2">My NDAs</h1>
+                <h1 className="text-5xl font-bold mb-2">Your NDAs</h1>
                 <p className="text-xl text-gray-200">Manage and track your non-disclosure agreements</p>
               </div>
             </div>
