@@ -34,11 +34,11 @@ export default function ViewPDF() {
       if (!response.ok) {
         throw new Error('Failed to fetch draft')
       }
-      
+
       const data = await response.json()
       if (data.draft) {
         setDraft(data.draft)
-        
+
         // Generate preview PDF
         setGeneratingPdf(true)
         const pdfResponse = await fetch(`/api/ndas/preview/${params.id}`)
@@ -102,7 +102,7 @@ export default function ViewPDF() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Draft not found</h2>
           <p className="text-gray-600 mb-4">The requested NDA draft could not be found.</p>
-          <Link 
+          <Link
             href="/dashboard"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -120,7 +120,7 @@ export default function ViewPDF() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link 
+              <Link
                 href="/dashboard"
                 className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
               >
@@ -200,9 +200,9 @@ export default function ViewPDF() {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Created</dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    {new Date(draft.created_at).toLocaleDateString('en-US', { 
-                      month: 'long', 
-                      day: 'numeric', 
+                    {new Date(draft.created_at).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit'
@@ -212,9 +212,9 @@ export default function ViewPDF() {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    {new Date(draft.updated_at).toLocaleDateString('en-US', { 
-                      month: 'long', 
-                      day: 'numeric', 
+                    {new Date(draft.updated_at).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit'
@@ -273,7 +273,7 @@ export default function ViewPDF() {
                 )}
                 {draft.status === 'DRAFT' && (
                   <Link
-                    href={`/fillnda?draftId=${draft.id}`}
+                    href={`/fillndahtml?draftId=${draft.id}`}
                     className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-gray-300 text-sm font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-all"
                   >
                     <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -54,12 +54,12 @@ export default function ViewPDF() {
       const response = await fetch('/api/ndas/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           draftId: draftData.id,
-          data: draftData.data 
+          data: draftData.data
         })
       })
-      
+
       if (response.ok) {
         const blob = await response.blob()
         const url = URL.createObjectURL(blob)
@@ -82,9 +82,9 @@ export default function ViewPDF() {
       const response = await fetch('/api/ndas/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           draftId: draft.id,
-          signers 
+          signers
         })
       })
 
@@ -249,7 +249,7 @@ export default function ViewPDF() {
                 )}
                 {draft.status === 'DRAFT' && (
                   <a
-                    href={`/fillnda?draftId=${draft.id}`}
+                    href={`/fillndahtml?draftId=${draft.id}`}
                     className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50"
                   >
                     Edit Document

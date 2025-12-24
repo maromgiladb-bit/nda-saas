@@ -45,17 +45,13 @@ export default function TemplateSelectionPage() {
   };
 
   const handleSelectTemplate = (templateId: string) => {
-    // Check if mode is html, redirect to fillndahtml, otherwise fillnda
-    if (mode === "html") {
-      router.push(`/fillndahtml?templateId=${templateId}&new=true`);
-    } else {
-      router.push(`/fillnda?templateId=${templateId}&new=true`);
-    }
+    // Always redirect to fillndahtml
+    router.push(`/fillndahtml?templateId=${templateId}&new=true`);
   };
 
   const categories = ["all", ...new Set(templates.map(t => t.category))];
-  const filteredTemplates = selectedCategory === "all" 
-    ? templates 
+  const filteredTemplates = selectedCategory === "all"
+    ? templates
     : templates.filter(t => t.category === selectedCategory);
 
   if (!isLoaded) {
@@ -76,7 +72,7 @@ export default function TemplateSelectionPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <PublicToolbar />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
@@ -95,11 +91,10 @@ export default function TemplateSelectionPage() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 ${
-                selectedCategory === category
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 ${selectedCategory === category
                   ? "bg-teal-600 text-white shadow-md"
                   : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
-              }`}
+                }`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
             </button>
@@ -126,8 +121,8 @@ export default function TemplateSelectionPage() {
                 {/* Preview Image or Placeholder */}
                 <div className="h-48 bg-gradient-to-br from-teal-500 to-blue-600 relative overflow-hidden">
                   {template.previewImage ? (
-                    <Image 
-                      src={template.previewImage} 
+                    <Image
+                      src={template.previewImage}
                       alt={template.name}
                       width={400}
                       height={300}
@@ -154,7 +149,7 @@ export default function TemplateSelectionPage() {
                       {template.name}
                     </h3>
                   </div>
-                  
+
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                     {template.description}
                   </p>
@@ -162,7 +157,7 @@ export default function TemplateSelectionPage() {
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     {template.tags.slice(0, 3).map(tag => (
-                      <span 
+                      <span
                         key={tag}
                         className="px-2 py-1 bg-teal-50 text-teal-700 text-xs rounded-full font-medium"
                       >

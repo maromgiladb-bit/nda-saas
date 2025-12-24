@@ -128,6 +128,45 @@ export default function FillNDAHTML() {
 
 	const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
 
+	const isDev = process.env.NODE_ENV === 'development';
+
+	// Dev helper: Auto-fill with mock data
+	const autoFillMockData = () => {
+		const mockData: FormValues = {
+			docName: "Mock NDA Agreement",
+			effective_date: new Date().toISOString().slice(0, 10),
+			term_months: "24",
+			confidentiality_period_months: "36",
+			party_a_name: "Acme Corporation",
+			party_a_address: "123 Tech Street, San Francisco, CA 94105, USA",
+			party_a_phone: "+1-555-123-4567",
+			party_a_signatory_name: "John Smith",
+			party_a_title: "Chief Executive Officer",
+			party_a_email: "john.smith@acme.com",
+			party_b_name: "TechStart Inc.",
+			party_b_address: "456 Innovation Ave, Palo Alto, CA 94301, USA",
+			party_b_phone: "+1-555-987-6543",
+			party_b_signatory_name: "Jane Doe",
+			party_b_title: "Chief Technology Officer",
+			party_b_email: "jane.doe@techstart.com",
+			governing_law: "California",
+			ip_ownership: "Each party retains ownership of their respective intellectual property",
+			non_solicit: "Neither party shall solicit the other's employees during the term and for 12 months after",
+			exclusivity: "Non-exclusive agreement",
+			additional_terms: "This agreement may be terminated with 30 days written notice by either party.",
+			party_a_ask_receiver_fill: false,
+			party_b_name_ask_receiver: false,
+			party_b_address_ask_receiver: false,
+			party_b_phone_ask_receiver: false,
+			party_b_signatory_name_ask_receiver: false,
+			party_b_title_ask_receiver: false,
+			party_b_email_ask_receiver: false,
+		};
+		setValues(mockData);
+		setWarning("✨ Form auto-filled with mock data");
+		setTimeout(() => setWarning(""), 3000);
+	};
+
 	// Load company profile and auto-fill Party A fields
 	const loadCompanyProfile = async () => {
 		setLoadingCompanyProfile(true);
@@ -787,6 +826,18 @@ export default function FillNDAHTML() {
 										</svg>
 										{showLivePreview ? "Hide" : "Show"}
 									</button>
+									{isDev && (
+										<button
+											onClick={autoFillMockData}
+											className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-md"
+											title="Auto-fill with mock data (Dev only)"
+										>
+											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+											</svg>
+											Mock Data
+										</button>
+									)}
 								</div>
 							</div>
 
