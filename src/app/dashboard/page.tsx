@@ -87,6 +87,8 @@ export default async function DashboardPage() {
       id: draft.id,
       partyName: draft.title || 'Untitled NDA',
       status: draft.status?.toLowerCase() || 'draft',
+      workflowState: (draft as { workflowState?: string }).workflowState || 'FILLING',
+      recipientEmail: (draft as { recipientEmail?: string }).recipientEmail || undefined,
       createdAt: draft.createdAt || new Date(),
       signedAt: null,
       type: 'created' as const,

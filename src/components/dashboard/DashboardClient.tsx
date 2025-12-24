@@ -8,6 +8,8 @@ interface NDA {
   id: string;
   partyName: string;
   status: string;
+  workflowState?: string; // Workflow-specific state
+  recipientEmail?: string; // Party B email
   createdAt: Date;
   signedAt: Date | null;
   type: 'created' | 'received';
@@ -16,6 +18,34 @@ interface NDA {
 
 interface DashboardClientProps {
   ndas: NDA[];
+}
+
+// Helper function to get workflow status display
+function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColor: string } {
+  const workflowState = nda.workflowState;
+
+  switch (workflowState) {
+    case 'AWAITING_INPUT':
+      return { label: 'AWAITING INPUT', color: 'text-orange-800', bgColor: 'bg-orange-100' };
+    case 'REVIEWING_CHANGES':
+      return { label: 'REVIEW CHANGES', color: 'text-yellow-800', bgColor: 'bg-yellow-100' };
+    case 'READY_TO_SIGN':
+      return { label: 'READY TO SIGN', color: 'text-blue-800', bgColor: 'bg-blue-100' };
+    case 'AWAITING_SIGNATURE':
+      return { label: 'AWAITING SIGNATURE', color: 'text-purple-800', bgColor: 'bg-purple-100' };
+    case 'SIGNING_COMPLETE':
+      return { label: 'COMPLETE', color: 'text-green-800', bgColor: 'bg-green-100' };
+    case 'FILLING':
+    default:
+      // Fall back to status-based display
+      if (nda.status === 'signed') {
+        return { label: 'SIGNED', color: 'text-green-800', bgColor: 'bg-green-100' };
+      } else if (nda.status === 'sent' || nda.status === 'pending') {
+        return { label: 'SENT', color: 'text-purple-800', bgColor: 'bg-purple-100' };
+      } else {
+        return { label: 'DRAFT', color: 'text-yellow-800', bgColor: 'bg-yellow-100' };
+      }
+  }
 }
 
 export default function DashboardClient({ ndas }: DashboardClientProps) {
@@ -259,18 +289,19 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                           RECEIVED
                         </span>
                       )}
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold ${nda.status === 'signed'
-                          ? 'bg-green-100 text-green-800'
-                          : nda.status === 'draft'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : nda.status === 'sent' || nda.status === 'pending'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                      >
-                        {nda.status.toUpperCase()}
-                      </span>
+                      {(() => {
+                        const statusInfo = getWorkflowStatusInfo(nda);
+                        return (
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusInfo.bgColor} ${statusInfo.color}`}>
+                            {statusInfo.label}
+                          </span>
+                        );
+                      })()}
+                      {nda.recipientEmail && nda.workflowState === 'AWAITING_INPUT' && (
+                        <span className="text-xs text-gray-500">
+                          → {nda.recipientEmail}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600 font-medium">
                       <span className="flex items-center gap-1">

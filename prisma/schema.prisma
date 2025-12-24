@@ -45,6 +45,17 @@ enum NdaStatus {
   @@map("nda_status")
 }
 
+enum NdaWorkflowState {
+  FILLING           // Party A is filling the NDA
+  AWAITING_INPUT    // Waiting for Party B to fill requested fields
+  REVIEWING_CHANGES // Party A is reviewing Party B's changes
+  READY_TO_SIGN     // All fields filled, ready for signatures
+  AWAITING_SIGNATURE // Waiting for Party B to sign
+  SIGNING_COMPLETE  // Both parties have signed
+
+  @@map("nda_workflow_state")
+}
+
 enum SignRequestStatus {
   PENDING
   SENT
@@ -206,6 +217,9 @@ model NdaDraft {
   createdByUserId String    @map("created_by_user_id") @db.Uuid
   title           String?
   status          NdaStatus @default(DRAFT)
+  workflowState   NdaWorkflowState @default(FILLING) @map("workflow_state")
+  pendingInputFields Json?  @map("pending_input_fields") // Fields Party B needs to fill
+  recipientEmail  String?   @map("recipient_email") // Party B email for sending
   content         Json? // Storing form data/content
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
