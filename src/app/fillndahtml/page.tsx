@@ -88,7 +88,10 @@ export default function FillNDAHTML() {
 	const [showShareLinkModal, setShowShareLinkModal] = useState(false);
 	const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
 	const [step, setStep] = useState<number>(0);
-	// const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false); // Removed
+	// Send for input modal state
+	const [showSendForInputModal, setShowSendForInputModal] = useState(false);
+	const [inputRecipientEmail, setInputRecipientEmail] = useState("");
+	const [sendingForInput, setSendingForInput] = useState(false);
 
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
 	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
@@ -748,33 +751,11 @@ export default function FillNDAHTML() {
 			const needsReceiverFill = hasEmptyPartyBFields();
 
 			if (needsReceiverFill) {
-				// Party B needs to fill fields - send for input first
-				if (!values.party_b_email?.trim()) {
-					setWarning("Please enter Party B's email address to send for input.");
-					setSendingForSignature(false);
-					return;
-				}
-
-				const response = await fetch('/api/ndas/send-for-input', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						draftId,
-						recipientEmail: values.party_b_email,
-						recipientName: values.party_b_name || undefined,
-						message: `Please complete your information for this NDA: ${values.docName || 'Untitled NDA'}`
-					})
-				});
-
-				const data = await response.json();
-
-				if (!response.ok) {
-					throw new Error(data.error || 'Failed to send for input');
-				}
-
-				// Success - show confirmation and redirect to dashboard
-				setWarning("");
-				router.push('/dashboard?message=sent-for-input');
+				// Party B needs to fill fields - show modal to verify/enter recipient email
+				setInputRecipientEmail(values.party_b_email || "");
+				setShowSendForInputModal(true);
+				setSendingForSignature(false);
+				return;
 			} else {
 				// All fields filled - proceed to signature flow
 				// Save the NDA data to session storage for the sign page
@@ -797,6 +778,42 @@ export default function FillNDAHTML() {
 			setWarning(e instanceof Error ? e.message : "Failed to send");
 		} finally {
 			setSendingForSignature(false);
+		}
+	};
+
+	// Handle send for input from modal
+	const handleSendForInput = async () => {
+		if (!inputRecipientEmail?.trim()) {
+			setWarning("Please enter Party B's email address.");
+			return;
+		}
+
+		setSendingForInput(true);
+		try {
+			const response = await fetch('/api/ndas/send-for-input', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					draftId,
+					recipientEmail: inputRecipientEmail.trim(),
+					recipientName: values.party_b_name || undefined,
+					message: `Please complete your information for this NDA: ${values.docName || 'Untitled NDA'}`
+				})
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || 'Failed to send for input');
+			}
+
+			// Success
+			setShowSendForInputModal(false);
+			router.push('/dashboard?message=sent-for-input');
+		} catch (e) {
+			setWarning(e instanceof Error ? e.message : "Failed to send");
+		} finally {
+			setSendingForInput(false);
 		}
 	};
 
@@ -1613,6 +1630,65 @@ export default function FillNDAHTML() {
 									<p className="text-sm">Start filling the fields to see the preview</p>
 								</div>
 							) : null}
+						</div>
+					</div>
+				)}
+
+				{/* Send for Input Modal - Prompt for recipient email */}
+				{showSendForInputModal && (
+					<div
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						onClick={(e) => {
+							if (e.target === e.currentTarget) {
+								setShowSendForInputModal(false);
+							}
+						}}
+					>
+						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+							<div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6">
+								<div className="flex items-center gap-3">
+									<div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+										<svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+										</svg>
+									</div>
+									<div>
+										<h2 className="text-xl font-bold text-white">Verify Receiving Party's Email</h2>
+										<p className="text-sm text-white/80">Party B will fill in the missing fields</p>
+									</div>
+								</div>
+							</div>
+							<div className="p-6">
+								<p className="text-gray-600 mb-4">
+									Confirm or enter the email address of the person who will fill in the remaining fields:
+								</p>
+								<input
+									type="email"
+									value={inputRecipientEmail}
+									onChange={(e) => setInputRecipientEmail(e.target.value)}
+									placeholder="party-b@example.com"
+									className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+									autoFocus
+								/>
+								{warning && (
+									<p className="text-red-500 text-sm mt-2">{warning}</p>
+								)}
+								<div className="flex gap-3 mt-6">
+									<button
+										onClick={() => setShowSendForInputModal(false)}
+										className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition"
+									>
+										Cancel
+									</button>
+									<button
+										onClick={handleSendForInput}
+										disabled={sendingForInput || !inputRecipientEmail.trim()}
+										className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-amber-600 transition disabled:opacity-50"
+									>
+										{sendingForInput ? "Sending..." : "Send Now"}
+									</button>
+								</div>
+							</div>
 						</div>
 					</div>
 				)}

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   console.log('=== GET /api/ndas/drafts/[id] ===')
   try {
@@ -25,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const id = params.id
+    const { id } = await params
     console.log('Draft ID:', id)
 
     const draft = await prisma.ndaDraft.findUnique({
@@ -49,7 +49,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   console.log('=== PUT /api/ndas/drafts/[id] ===')
 
@@ -68,11 +68,12 @@ export async function PUT(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const { id } = await params
     const { title, data } = await request.json()
 
     const draft = await prisma.ndaDraft.update({
       where: {
-        id: params.id,
+        id,
         createdByUserId: dbUser.id
       },
       data: {
@@ -90,7 +91,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   console.log('=== DELETE /api/ndas/drafts/[id] ===')
 
@@ -109,9 +110,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const { id } = await params
     await prisma.ndaDraft.delete({
       where: {
-        id: params.id,
+        id,
         createdByUserId: dbUser.id
       }
     })
