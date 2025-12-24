@@ -12,8 +12,11 @@ interface FillNDAPublicClientProps {
     formData: Record<string, unknown>;
     templateId: string;
     pendingInputFields: string[];
+    allEditableFields: string[]; // All fields Party B can edit
     initialHtml: string;
     draftId: string;
+    hasPartyAChanges: boolean; // True if Party A made changes since last submission
+    partyAChanges: Record<string, string>; // Changes Party A made
 }
 
 // Field labels for display
@@ -34,8 +37,11 @@ export default function FillNDAPublicClient({
     formData: initialFormData,
     templateId,
     pendingInputFields,
+    allEditableFields,
     initialHtml,
     draftId,
+    hasPartyAChanges,
+    partyAChanges,
 }: FillNDAPublicClientProps) {
     const [formValues, setFormValues] = useState<Record<string, string>>({});
     const [suggestedChanges, setSuggestedChanges] = useState<Record<string, string>>({});
